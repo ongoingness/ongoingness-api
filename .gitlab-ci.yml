@@ -19,4 +19,5 @@ run_tests:
     - docker
   script:
     - npm ci
+    - tsc
     - npm test

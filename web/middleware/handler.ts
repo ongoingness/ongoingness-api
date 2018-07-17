@@ -29,6 +29,8 @@ const handleResponse: express.ErrorRequestHandler = (err: Error, req: express.Re
 function getError(code: number): Reply {
   let message
   switch (code) {
+    case 400:
+      message = 'bad request'
     case 401:
       message = 'unauthorised'
       break

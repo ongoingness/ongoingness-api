@@ -160,10 +160,13 @@ describe('api', function () {
     let device2Id: string = ''
     const dummyMAC: string = '02:00:00:00:00:00'
 
-    after(function () {
-      Axios.delete(`${URL}/api/devices/destory/${device2Id}`).then((response: AxiosResponse) => {
-        expect(response.status).to.equal(200)
-      })
+    before(async function() {
+      const userData = {
+        username: 'tester-devices',
+        password: 'secret'
+      }
+      const response: AxiosResponse = await Axios.post(`${URL}/api/auth/register`, userData)
+      token = response.data.payload.token
     })
 
     describe('Add a device', function () {
@@ -171,44 +174,56 @@ describe('api', function () {
         const deviceData = {
           mac: dummyMAC
         }
-        Axios.post(`${URL}/api/devices/add`, deviceData).then((response: AxiosResponse) => {
+        Axios.post(`${URL}/api/devices/add`, deviceData, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
           expect(response.status).to.equal(200)
           device1Id = response.data.payload._id
           done()
+        }).catch((error: AxiosError) => {
+          console.log(error.message)
+          throw error
         })
       })
     })
 
     describe('Pair devices', function () {
-      before(function () {
+      before(async function () {
         const deviceData = {
           mac: '03:00:00:00:00:00'
         }
-        Axios.post(`${URL}/api/devices/add`, deviceData).then((response: AxiosResponse) => {
-          expect(response.status).to.equal(200)
-          device2Id = response.data.payload._id
-        })
+        const response: AxiosResponse = await Axios.post(`${URL}/api/devices/add`, deviceData, {headers: {'x-access-token': token}})
+        device2Id = response.data.payload._id
       })
       it('Should pair two devices', function (done) {
         const deviceData = {
-          device_1: device1Id,
-          device_2: device2Id
+          device1: device1Id,
+          device2: device2Id
         }
 
-        Axios.post(`${URL}/api/devices/pair`, deviceData).then((response: AxiosResponse) => {
+        Axios.post(`${URL}/api/devices/pair`, deviceData, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
           expect(response.status).to.equal(200)
           done()
+        }).catch((error: AxiosError) => {
+          console.log(error.message)
+          throw error
         })
       })
     })
 
     describe('Destroy device', function () {
       it('Should destroy a device', function (done) {
-        Axios.delete(`${URL}/api/devices/destory/${device1Id}`).then((response: AxiosResponse) => {
+        Axios.delete(`${URL}/api/devices/destroy/${device1Id}`, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
           expect(response.status).to.equal(200)
           done()
+        }).catch((error: AxiosError) => {
+          console.log(error.message)
+          throw error
         })
       })
+    })
+
+    after(async function () {
+      await Axios.delete(`${URL}/api/devices/destroy/${device2Id}`, {headers: {'x-access-token': token}})
+      await Axios.delete(`${URL}/api/user/destroy`, {headers: {'x-access-token': token}})
     })
   })
 })

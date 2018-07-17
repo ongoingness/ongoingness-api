@@ -51,7 +51,8 @@ const auth = () => {
 
     // create a payload
     const payload = {
-      user: user
+      id: user._id,
+      username: user.username
     }
     // create and sign token against the app secret
     const token = jwt.sign(payload, process.env.SECRET, {

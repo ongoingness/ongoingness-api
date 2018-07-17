@@ -1,0 +1,26 @@
+version: '2'
+services:
+  web:
+      build: .
+      ports:
+      - 3000:3000
+      volumes:
+      - "./web:/app/web"
+      - "./app.ts:/app/app.ts"
+      - "./.env:/app/.env"
+      - "./dist:/app/dist"
+      - "./test:/app/test"
+      depends_on:
+        - mongo
+      links:
+        - mongo
+      environment:
+        MONGO_URI: mongodb://mongo/ongoingness
+  mongo:
+    image: mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - 'mongo:/data/db'
+volumes:
+  mongo:

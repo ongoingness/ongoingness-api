@@ -19,5 +19,6 @@ run_tests:
     - docker
   script:
     - npm ci
+    - npm install -g typescript
     - tsc
     - npm test

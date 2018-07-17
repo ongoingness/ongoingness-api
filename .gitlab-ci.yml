@@ -10,11 +10,11 @@ stages:
 run_tests:
   stage: test
   image: node:10-alpine
-  environment:
-    MONGO_URI: mongodb://127.0.0.1/stub
-    SECRET: thisismyappsecret
-    DEBUG: true
-    TEST: true
+  variables:
+    MONGO_URI: "mongodb://127.0.0.1/stub"
+    SECRET: "thisismyappsecret"
+    DEBUG: "true"
+    TEST: "true"
   tags:
     - docker
   script:

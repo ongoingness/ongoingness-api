@@ -1,9 +1,9 @@
 import { Express } from 'express'
 
 import home from './home'
-import auth from './api/auth'
-import user from './api/user'
-import devices from './api/devices'
+import { authRouter } from './api/auth'
+import { userRouter } from './api/user'
+import { devicesRouter } from './api/devices'
 
 /**
  * [use description]
@@ -13,9 +13,9 @@ import devices from './api/devices'
  */
 const addRoutes = (app: Express) => {
   app.use('/', home())
-  app.use('/api/auth', auth())
-  app.use('/api/user', user())
-  app.use('/api/devices', devices())
+  app.use('/api/auth', authRouter())
+  app.use('/api/user', userRouter())
+  app.use('/api/devices', devicesRouter())
   return app
 }
 

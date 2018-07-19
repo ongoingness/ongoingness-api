@@ -10,7 +10,7 @@ import {NextFunction} from "express";
 
 let router : express.Router
 
-const user = () => {
+export const userRouter = () => {
   router = express.Router()
 
   router.use(checkToken)
@@ -45,4 +45,3 @@ const user = () => {
 
   return router
 }
-export default user

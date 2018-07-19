@@ -8,7 +8,7 @@ import models from '../../models'
 
 let router: Router
 
-const devices = () => {
+export const devicesRouter = () => {
   router = Router()
   router.use(checkToken)
   /**
@@ -120,5 +120,3 @@ const devices = () => {
 
   return router
 }
-
-export default devices

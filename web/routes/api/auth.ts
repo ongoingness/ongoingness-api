@@ -7,7 +7,7 @@ import { IUser } from "../../schemas/user"
 
 let routes: Router
 
-const auth = () => {
+export const authRouter = () => {
   routes = Router()
   routes.post('/register', async (req: Request, res: Response, next: NextFunction) => {
     // Get username and password
@@ -20,48 +20,16 @@ const auth = () => {
       return next(e)
     }
 
-    // check for an existing user
-    let sUser: IUser
+    let user: IUser
     try {
-      sUser = await models.User.findOne({username})
-    } catch (error) {
-      error.message = '500'
+      user = await storeUser(username, password)
+    } catch(error) {
       return next(error)
     }
 
-    if (sUser) {
-      let e: Error = new Error('403')
-      return next(e)
-    }
+    const token = generateToken(user)
 
-    // Hash user's given password after mixing with a random id
-    let iv: string
-    const hash: crypto.Hash = crypto.createHash('sha256')
-    iv = crypto.randomBytes(16).toString('hex')
-    hash.update(`${iv}${password}`)
-    password = hash.digest('hex')
-
-    let user = null;
-    try {
-      user = await models.User.create({username, password, iv})
-    } catch (e) {
-      e.message = '500'
-      return next(e)
-    }
-
-    // create a payload
-    const payload = {
-      id: user._id,
-      username: user.username
-    }
-    // create and sign token against the app secret
-    const token = jwt.sign(payload, process.env.SECRET, {
-      expiresIn: '1 day' // expires in 24 hours
-    })
-
-    // let response = responses.success
     let response = new Reply(200, 'success', false, { user, token })
-    // response.payload = { user, token }
     return res.json(response)
   })
 
@@ -74,41 +42,14 @@ const auth = () => {
     const username: string = req.body.username
     let password: string = req.body.password
 
-    // Look for user with matching username
     let user: IUser
     try {
-      user = await models.User.findOne({username})
-    } catch (e) {
-      return next(e)
+      user = await authenticateUser(username, password)
+    } catch(error) {
+      return next(error)
     }
 
-    if (!user) {
-      res.locals.customErrorMessage = 'password or email is incorrect'
-      let e = new Error('401')
-      return next(e)
-    }
-
-    // Hash given password with matching user's stored iv
-    const hash: crypto.Hash = crypto.createHash('sha256')
-    hash.update(`${user.iv}${password}`)
-    password = hash.digest('hex')
-    // Compare passwords and abort if no match
-    if (user.password !== password) {
-      res.locals.customErrorMessage = 'password or email is incorrect'
-      let e = new Error('401')
-      return next(e)
-    }
-
-    // create a payload
-    let payload = {
-      id: user.id,
-      username: user.username
-    }
-
-    // create and sign token against the app secret
-    const token = jwt.sign(payload, process.env.SECRET, {
-      expiresIn: '1 day' // expires in 24 hours
-    })
+    const token = generateToken(user)
 
     let response = new Reply(200, 'success', false, { token })
     return res.json(response)
@@ -116,4 +57,87 @@ const auth = () => {
   return routes
 }
 
-export default auth
+/**
+ * Store the user in a database
+ * @param  username username
+ * @param  password password
+ * @return          IUser
+ */
+export async function storeUser(username: string, password: string): Promise<IUser> {
+  let sUser: IUser
+  try {
+    sUser = await models.User.findOne({username})
+  } catch (error) {
+    error.message = '500'
+    throw error
+  }
+
+  if (sUser) {
+    let error: Error = new Error('403')
+    throw error
+  }
+
+  let iv: string
+  const hash: crypto.Hash = crypto.createHash('sha256')
+  iv = crypto.randomBytes(16).toString('hex')
+  hash.update(`${iv}${password}`)
+  password = hash.digest('hex')
+
+  let user: IUser = null;
+  try {
+    user = await models.User.create({username, password, iv})
+  } catch (error) {
+    error.message = '500'
+    throw error
+  }
+
+  return user
+}
+
+/**
+ * Authenticate a user
+ * @param  username username
+ * @param  password password
+ * @return {IUser} Matched user
+ */
+export async function authenticateUser(username: string, password: string): Promise<IUser> {
+  let user: IUser
+  try {
+    user = await models.User.findOne({username})
+  } catch (error) {
+    throw error
+  }
+
+  if (!user) {
+    throw new Error('401')
+  }
+
+  // Hash given password with matching user's stored iv
+  const hash: crypto.Hash = crypto.createHash('sha256')
+  hash.update(`${user.iv}${password}`)
+  password = hash.digest('hex')
+  // Compare passwords and abort if no match
+  if (user.password !== password) {
+    throw new Error('401')
+  }
+
+  return user
+}
+
+/**
+ * Create a JWT token for the user
+ * @param  user IUser
+ * @return
+ */
+export function generateToken(user: IUser): string {
+  const payload = {
+    id: user._id,
+    username: user.username
+  }
+  // create and sign token against the app secret
+  let token: string = jwt.sign(payload, process.env.SECRET, {
+    expiresIn: '1 day' // expires in 24 hours
+  })
+
+  return token
+}

@@ -4,7 +4,7 @@
   "description": "API for synchronising android watchfaces",
   "main": "dist/app.js",
   "scripts": {
-    "test": "nyc mocha dist/test/test.js --exit",
+    "test": "nyc mocha dist/test/test.js --reporter landing --exit",
     "build": "tsc"
   },
   "repository": {

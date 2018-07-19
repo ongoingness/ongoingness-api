@@ -4,7 +4,7 @@ import { IDevice } from '../../schemas/device'
 import { IPair } from '../../schemas/pair'
 import { Reply } from '../../reply'
 import { Schema } from 'mongoose'
-import models from '../../models'
+import {createPair, destroyDevice, getDevice, storeDevice} from "../../controllers/device";
 
 let router: Router
 
@@ -30,7 +30,7 @@ export const devicesRouter = () => {
 
     try {
       // Try and store the device
-      device = await models.Device.create({owner: owner, mac: mac})
+      device = await storeDevice(owner, mac)
     } catch (error) {
       // Error is probably a unique mac violation
       error.message = '400'
@@ -45,37 +45,14 @@ export const devicesRouter = () => {
       return next(new Error(`${res.locals.error}`))
     }
 
-    const owner: string = res.locals.user.id
+    const owner: Schema.Types.ObjectId = res.locals.user.id
     const device1Id: Schema.Types.ObjectId = req.body.device1
     const device2Id: Schema.Types.ObjectId = req.body.device2
 
-    // check devices and owner exist
-    let device1: IDevice
-    let device2: IDevice
-
-    try {
-      device1 = await models.Device.findOne({_id: device1Id})
-      device2 = await models.Device.findOne({_id: device2Id})
-    } catch (error) {
-      error.message = '500'
-      return next(error)
-    }
-
-    // throw 404 if devices or owner do not exist
-    if (!(device1 && device2)) {
-      return next(new Error('404'))
-    }
-
     let pair: IPair
     try {
-      pair = await models.Pair.create({
-        owner: owner,
-        device1: device1._id,
-        device2: device2._id
-      })
-    }
-    catch (error) {
-      error.message = '500'
+      pair = await createPair(owner, device1Id, device2Id)
+    } catch(error) {
       return next(error)
     }
 
@@ -88,11 +65,11 @@ export const devicesRouter = () => {
     }
 
     const owner: Schema.Types.ObjectId = res.locals.user.id
-    const deviceId: Schema.Types.ObjectId = req.params.id
+    const deviceId: string = req.params.id
 
     let device: IDevice
     try {
-      device = await models.Device.findOne({_id: deviceId})
+      device = await getDevice(deviceId)
     } catch (error) {
       error.message = '500'
       return next(error)
@@ -109,13 +86,13 @@ export const devicesRouter = () => {
     }
 
     try {
-      await models.Device.deleteOne({_id: device._id})
+      await destroyDevice(deviceId)
     } catch (error) {
       error.message = '500'
       return next(error)
     }
 
-    return res.json(new Reply(200, 'sucess', false, ''))
+    return res.json(new Reply(200, 'success', false, ''))
   })
 
   return router

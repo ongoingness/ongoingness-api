@@ -25,6 +25,10 @@ describe('api', function () {
     await server.close()
   })
 
+  // describe('Display', function () {
+  //   require('./display')
+  // })
+
   // For the home routes.
   describe('Home', function () {
     // Test the landing page renders

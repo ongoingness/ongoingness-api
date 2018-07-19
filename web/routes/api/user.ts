@@ -7,6 +7,7 @@ import checkToken from '../../middleware/authenticate'
 import {Request} from "express";
 import {Response} from "express";
 import {NextFunction} from "express";
+import {destroyUser, getUser} from "../../controllers/user";
 
 let router : express.Router
 
@@ -22,10 +23,12 @@ export const userRouter = () => {
     const userId: string = res.locals.user.id
     let user: IUser
     try {
-      user = await models.User.findOne({ _id: userId })
+      user = await getUser(userId)
     } catch (e) {
+      e.message = '500'
       return next(e)
     }
+
     return res.json(new Reply(200, 'success', false, { user }))
   })
 
@@ -35,8 +38,9 @@ export const userRouter = () => {
     }
     const userId: string = res.locals.user.id
     try {
-      await models.User.deleteOne({ _id: userId })
+      await destroyUser(userId)
     } catch (e) {
+      e.message = '500'
       return next(e)
     }
 

@@ -38,10 +38,20 @@ export async function storeUser(username: string, password: string): Promise<IUs
   return user
 }
 
+/**
+ * Get a user by id
+ * @param {string} id
+ * @returns {Promise<IUser>}
+ */
 export async function getUser(id: string): Promise<IUser> {
   return await models.User.findOne({ _id: id })
 }
 
+/**
+ * Destroy a user record
+ * @param {string} id
+ * @returns {Promise<void>}
+ */
 export async function destroyUser(id: string): Promise<void> {
   return await models.User.deleteOne({ _id: id })
 }

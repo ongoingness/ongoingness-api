@@ -48,8 +48,8 @@ describe('display', function () {
       Axios.post(`${URL}/api/display`, deviceData, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
         expect(response.status).to.equal(200)
         done()
-      }).catch((AxiosError) => {
-        throw AxiosError
+      }).catch((error: AxiosError) => {
+        throw error
       })
     })
   })

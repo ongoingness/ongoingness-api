@@ -2,7 +2,11 @@ import * as express from "express"
 import { Reply } from '../reply'
 
 const handleResponse: express.ErrorRequestHandler = (err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const code: number = parseInt(err.message)
+  let code: number = parseInt(err.message)
+
+  if (isNaN(code)) {
+    code = 500
+  }
 
   let response = getError(code)
   if (res.locals.customErrorMessage) {
@@ -16,7 +20,6 @@ const handleResponse: express.ErrorRequestHandler = (err: Error, req: express.Re
   if (process.env.TEST !== 'true') {
     console.error(err.stack)
   }
-
   res.status(code)
   return res.json(response)
 }

@@ -3,6 +3,12 @@ import models from "../models";
 import {IPair} from "../schemas/pair";
 import {Schema} from "mongoose";
 
+/**
+ * Store a device
+ * @param {string} owner
+ * @param {string} mac
+ * @returns {Promise<IDevice>}
+ */
 export async function storeDevice(owner: string, mac: string): Promise<IDevice> {
   let device: IDevice
   try {
@@ -15,14 +21,31 @@ export async function storeDevice(owner: string, mac: string): Promise<IDevice> 
   return device
 }
 
+/**
+ * Get a device by id
+ * @param {string} id
+ * @returns {Promise<IDevice>}
+ */
 export async function getDevice(id: string): Promise<IDevice> {
   return await models.Device.findOne({_id: id})
 }
 
+/**
+ * Destroy a record of a device
+ * @param {string} id
+ * @returns {Promise<IDevice>}
+ */
 export async function destroyDevice(id: string): Promise<IDevice> {
   return await models.Device.deleteOne({_id: id})
 }
 
+/**
+ * Create a pair of devices
+ * @param {module:mongoose.Schema.Types.ObjectId} owner
+ * @param {module:mongoose.Schema.Types.ObjectId} device1Id
+ * @param {module:mongoose.Schema.Types.ObjectId} device2Id
+ * @returns {Promise<IPair>}
+ */
 export async function createPair(owner: Schema.Types.ObjectId, device1Id: Schema.Types.ObjectId, device2Id: Schema.Types.ObjectId): Promise<IPair> {
   let device1: IDevice
   let device2: IDevice

@@ -29,6 +29,10 @@ describe('api', function () {
   //   require('./display')
   // })
 
+  describe('Media', function () {
+    require('./media')
+  })
+
   // For the home routes.
   describe('Home', function () {
     // Test the landing page renders
@@ -182,9 +186,6 @@ describe('api', function () {
           expect(response.status).to.equal(200)
           device1Id = response.data.payload._id
           done()
-        }).catch((error: AxiosError) => {
-          console.log(error.message)
-          throw error
         })
       })
     })
@@ -206,9 +207,6 @@ describe('api', function () {
         Axios.post(`${URL}/api/devices/pair`, deviceData, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
           expect(response.status).to.equal(200)
           done()
-        }).catch((error: AxiosError) => {
-          console.log(error.message)
-          throw error
         })
       })
     })
@@ -218,9 +216,6 @@ describe('api', function () {
         Axios.delete(`${URL}/api/devices/destroy/${device1Id}`, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
           expect(response.status).to.equal(200)
           done()
-        }).catch((error: AxiosError) => {
-          console.log(error.message)
-          throw error
         })
       })
     })

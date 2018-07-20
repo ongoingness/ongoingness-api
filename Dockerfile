@@ -25,6 +25,8 @@ COPY app.ts /app/app.ts
 COPY tsconfig.json /app/tsconfig.json
 COPY web /app/web
 COPY test /app/test
+COPY test.jpg /app/test.jpg
+RUN mkdir uploads
 
 RUN npm run build
 

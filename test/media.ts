@@ -20,6 +20,7 @@ let testFilePath: string
 let token: string
 let device1: IDevice
 let device2: IDevice
+let media: IMedia
 
 describe('Media', function () {
   before(async () => {
@@ -31,11 +32,20 @@ describe('Media', function () {
 
     device1 = await storeDevice(user._id, '1')
     device2 = await storeDevice(user._id, '2')
+
+    const filepath: string = await storeMedia(path.join(__dirname, '../../test.jpg'), 'test.jpg', 'jpg')
+    media = await storeMediaRecord(filepath, 'image/jpeg', user)
+
+    fs.createReadStream(media.path).pipe(fs.createWriteStream(path.join(__dirname, '../../test.jpg')));
   })
 
   after (async () => {
     await destroyDevice(user._id, device1._id)
     await destroyDevice(user._id, device2._id)
+
+    await rename(media.path, path.join(__dirname, '../../test.jpg'))
+    await destroyMedia(media._id)
+
     await destroyUser(user._id)
   })
 
@@ -77,17 +87,6 @@ describe('Media', function () {
   })
 
   describe('Record media', function ()  {
-    let media: IMedia
-    before(async function () {
-      const filepath: string = await storeMedia(path.join(__dirname, '../../test.jpg'), 'test.jpg', 'jpg')
-      media = await storeMediaRecord(filepath, 'image/jpeg', user)
-    })
-
-    after(async function () {
-      await rename(media.path, path.join(__dirname, '../../test.jpg'))
-      await destroyMedia(media._id)
-    })
-
     it('Should record device display', function (done) {
       const deviceData = {
         mediaId: media._id,
@@ -101,19 +100,13 @@ describe('Media', function () {
       })
     })
   })
-  //
-  // describe('Get media', function () {
-  //   it('Should get the media id to display on device', function (done) {
-  //     Axios.get(`${URL}/api/media/display/${device2._id}`, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
-  //       expect(response.status).to.equal(200)
-  //       done()
-  //     })
-  //   })
-  // })
 
-  // describe('Get paired media', function () {
-  //   it('Should return the semantic pair of a media item', function () {
-  //     // const
-  //   })
-  // })
+   describe('Get linked media', function () {
+     it('Should get the media id to display on device', function (done) {
+       Axios.get(`${URL}/api/media/links/${media._id}`, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
+         expect(response.status).to.equal(200)
+         done()
+       })
+     })
+   })
 })

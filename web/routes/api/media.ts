@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response, Router} from "express"
 import * as multer from 'multer'
-import {getMedia, storeMedia, storeMediaRecord} from "../../controllers/media"
+import {getMediaRecord, storeMedia, storeMediaRecord} from "../../controllers/media"
 import checkToken from '../../middleware/authenticate'
 import {IUser} from "../../schemas/user"
 import {getUser} from "../../controllers/user"
@@ -8,10 +8,8 @@ import {Reply} from "../../reply"
 import {IMedia} from "../../schemas/media"
 import {Schema} from "mongoose";
 import {IDevice} from "../../schemas/device";
-import {getDevice} from "../../controllers/device";
 import {IState} from "../../schemas/state";
 import storeState from "../../controllers/state";
-import {error} from "util";
 
 let upload = multer({ dest: 'uploads/' })
 let router: Router
@@ -90,7 +88,25 @@ export const mediaRouter = () => {
 
     // Return state
     return res.json(new Reply(200, 'success', false, state))
+  })
 
+  /**
+   * Get paired media
+   */
+  router.get('/links/:id', async (req: Request, res: Response, next: NextFunction) => {
+    let mediaId: Schema.Types.ObjectId = req.params.id
+    let media: IMedia
+    try {
+      media = await getMediaRecord(mediaId)
+    } catch (e) {
+      e.message = '500'
+      return next(e)
+    }
+    if (!media) {
+      return next(new Error('404'))
+    }
+
+    return res.json(new Reply(200, 'success', false, media.links))
   })
 
   return router

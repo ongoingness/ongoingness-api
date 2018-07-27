@@ -46,6 +46,15 @@ export async function storeMediaRecord(path: string, mimetype: string, user: IUs
 }
 
 /**
+ * Get a media record by id
+ * @param {Schema.Types.ObjectId} id
+ * @returns {Promise<IMedia>}
+ */
+export async function getMediaRecord(id: Schema.Types.ObjectId): Promise<IMedia> {
+  return await models.Media.findOne({_id: id})
+}
+
+/**
  * Return a record of a media item
  * @param {module:mongoose.Schema.Types.ObjectId} id
  * @returns {Promise<IMedia>}

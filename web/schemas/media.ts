@@ -1,4 +1,5 @@
 import { Schema, Document } from 'mongoose'
+import {getMediaRecord} from "../controllers/media";
 
 const schemaOptions = {
   timestamps: true
@@ -12,6 +13,9 @@ export interface IMedia extends Document {
   era: string
   createdAt: string
   updatedAt: string
+
+  // Functions
+  createLink(linkId: Schema.Types.ObjectId): Promise<void>
 }
 
 export const MediaSchema = new Schema({
@@ -41,3 +45,21 @@ export const MediaSchema = new Schema({
     required: true
   }
 }, schemaOptions)
+
+MediaSchema.methods.createLink = async function (linkId: Schema.Types.ObjectId): Promise<void> {
+  const link: IMedia = await getMediaRecord(linkId)
+
+  // Cancel if link does not exist
+  if (!link) {
+    return
+  }
+
+  // Check they are not the same era
+  if (!(link.era === this.era)) {
+    // Check link does not already exist
+    if (this.links.indexOf(link._id.toString()) !== -1) {
+      this.links.push(linkId)
+      await this.save()
+    }
+  }
+}

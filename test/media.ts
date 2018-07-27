@@ -92,21 +92,45 @@ describe('Media', function () {
         mediaId: media._id,
         deviceId: device1._id
       }
-      Axios.post(`${URL}/api/media/display/store`, deviceData, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
-        expect(response.status).to.equal(200)
-        done()
-      }).catch((error: AxiosError) => {
-        throw error
+      Axios.post(`${URL}/api/media/display/store`, deviceData, {headers: {'x-access-token': token}})
+        .then((response: AxiosResponse) => {
+          expect(response.status).to.equal(200)
+          done()
       })
     })
   })
 
-   describe('Get linked media', function () {
-     it('Should get the media id to display on device', function (done) {
-       Axios.get(`${URL}/api/media/links/${media._id}`, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
-         expect(response.status).to.equal(200)
-         done()
-       })
+  describe('Get linked media', function () {
+   it('Should get the media id to display on device', function (done) {
+     Axios.get(`${URL}/api/media/links/${media._id}`, {headers: {'x-access-token': token}})
+       .then((response: AxiosResponse) => {
+          expect(response.status).to.equal(200)
+          done()
      })
    })
+  })
+
+  describe('Store a semantic link between media items', function () {
+    let newMedia: IMedia
+    before(async function () {
+      newMedia = await storeMediaRecord('path', 'image/jpeg', user, 'present')
+    })
+    after(async function () {
+      await destroyMedia(newMedia._id)
+    })
+    it('should store a semantic link', function (done) {
+      const linkData = {
+        mediaId: media._id,
+        linkId: newMedia._id
+      }
+
+      console.log(linkData)
+
+      Axios.post(`${URL}/api/media/link/store`, linkData, {headers: {'x-access-token': token}})
+        .then((response: AxiosResponse) => {
+          expect(response.status).to.equal(200)
+          done()
+        })
+    })
+  })
 })

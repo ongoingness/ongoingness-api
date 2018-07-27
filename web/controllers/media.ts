@@ -34,10 +34,11 @@ export async function storeMedia(storedPath: string, fileName: string, ext: stri
  * @param {string} path
  * @param {string} mimetype
  * @param {IUser} user
+ * @param {string?} era
  * @returns {Promise<IMedia>}
  */
-export async function storeMediaRecord(path: string, mimetype: string, user: IUser): Promise<IMedia> {
-  const media: IMedia = await models.Media.create({path: path, mimetype: mimetype, user: user._id})
+export async function storeMediaRecord(path: string, mimetype: string, user: IUser, era?: string): Promise<IMedia> {
+  const media: IMedia = await models.Media.create({path: path, mimetype: mimetype, user: user._id, era: era})
 
   user.media.push(media._id)
   await user.save()

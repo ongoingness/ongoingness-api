@@ -46,9 +46,10 @@ export const mediaRouter = () => {
     let media: IMedia
     try {
       imagePath = await storeMedia(req.file.path, req.file.originalname, ext)
-      media = await storeMediaRecord(imagePath, mimeType, user)
+      media = await storeMediaRecord(imagePath, mimeType, user, <string>req.headers['era'] || 'past')
     } catch (e) {
       e.message = '500'
+      return next(e)
     }
 
     return res.json(new Reply(200, 'success', false, media))
@@ -107,6 +108,32 @@ export const mediaRouter = () => {
     }
 
     return res.json(new Reply(200, 'success', false, media.links))
+  })
+
+  /**
+   * Store a link between two media items
+   */
+  router.post('/link/store', async (req: Request, res: Response, next: NextFunction) => {
+    let mediaId: Schema.Types.ObjectId = req.body.mediaId
+    let linkId: Schema.Types.ObjectId = req.body.linkId
+
+    let user: IUser
+    try {
+      user = await getUser(res.locals.user.id)
+    } catch (e) {
+      e.message = '500'
+    }
+
+    const media = await user.getMedia(mediaId)
+    const link = await user.getMedia(linkId)
+
+    if (!media || !link) {
+      return next(new Error('404'))
+    }
+
+    await media.createLink(link._id)
+
+    return res.json(new Reply(200, 'success', false, null))
   })
 
   return router

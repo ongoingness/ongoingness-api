@@ -1,6 +1,6 @@
 import {destroyUser, storeUser} from "../web/controllers/user";
 import {IUser} from "../web/schemas/user";
-import {storeMedia} from "../web/controllers/media";
+import {destroyMedia, storeMedia, storeMediaRecord} from "../web/controllers/media";
 import * as path from "path";
 import * as fs from "fs";
 import {expect} from 'chai'
@@ -8,12 +8,18 @@ import {promisify} from "util";
 import * as FormData from 'form-data'
 import Axios, {AxiosError, AxiosResponse} from "axios";
 import {generateToken} from "../web/controllers/auth";
+import {describe} from "mocha";
+import {destroyDevice, storeDevice} from "../web/controllers/device";
+import {IDevice} from "../web/schemas/device";
+import {IMedia} from "../web/schemas/media";
 
 const rename = promisify(fs.rename)
 const URL: string = 'http://localhost:8888'
 let user: IUser
 let testFilePath: string
 let token: string
+let device1: IDevice
+let device2: IDevice
 
 describe('Media', function () {
   before(async () => {
@@ -22,9 +28,14 @@ describe('Media', function () {
 
     user = await storeUser(username, password)
     token = await generateToken(user)
+
+    device1 = await storeDevice(user._id, '1')
+    device2 = await storeDevice(user._id, '2')
   })
 
   after (async () => {
+    await destroyDevice(user._id, device1._id)
+    await destroyDevice(user._id, device2._id)
     await destroyUser(user._id)
   })
 
@@ -64,4 +75,45 @@ describe('Media', function () {
       })
     })
   })
+
+  describe('Record media', function ()  {
+    let media: IMedia
+    before(async function () {
+      const filepath: string = await storeMedia(path.join(__dirname, '../../test.jpg'), 'test.jpg', 'jpg')
+      media = await storeMediaRecord(filepath, 'image/jpeg', user)
+    })
+
+    after(async function () {
+      await rename(media.path, path.join(__dirname, '../../test.jpg'))
+      await destroyMedia(media._id)
+    })
+
+    it('Should record device display', function (done) {
+      const deviceData = {
+        mediaId: media._id,
+        deviceId: device1._id
+      }
+      Axios.post(`${URL}/api/media/display/store`, deviceData, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
+        expect(response.status).to.equal(200)
+        done()
+      }).catch((error: AxiosError) => {
+        throw error
+      })
+    })
+  })
+  //
+  // describe('Get media', function () {
+  //   it('Should get the media id to display on device', function (done) {
+  //     Axios.get(`${URL}/api/media/display/${device2._id}`, {headers: {'x-access-token': token}}).then((response: AxiosResponse) => {
+  //       expect(response.status).to.equal(200)
+  //       done()
+  //     })
+  //   })
+  // })
+
+  // describe('Get paired media', function () {
+  //   it('Should return the semantic pair of a media item', function () {
+  //     // const
+  //   })
+  // })
 })

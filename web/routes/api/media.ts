@@ -59,10 +59,11 @@ export const mediaRouter = () => {
   /**
    * Store the current image a display is presenting
    */
-  router.post('/store/display', async (req: Request, res: Response, next: NextFunction) => {
-    const mediaId: Schema.Types.ObjectId = req.params.mediaId
-    const deviceId: Schema.Types.ObjectId = req.params.mediaId
+  router.post('/display/store', async (req: Request, res: Response, next: NextFunction) => {
+    const mediaId: Schema.Types.ObjectId = req.body.mediaId
+    const deviceId: Schema.Types.ObjectId = req.body.deviceId
 
+    // Get the user
     let user: IUser
     try {
       user = await getUser(res.locals.user.id)
@@ -71,24 +72,28 @@ export const mediaRouter = () => {
       return next(error)
     }
 
+    // Search for device in user's devices
     let deviceIdx: number = -1
     for (let i: number = 0; i < user.devices.length; i++) {
-      if (user.devices[i] === deviceId) {
+      if (`${user.devices[i]}` === `${deviceId}`) {
         deviceIdx = i
       }
     }
 
+    // Search for media in user's media
     let mediaIdx: number = -1
     for (let i: number = 0; i < user.media.length; i++) {
-      if(user.media[i] === mediaId) {
+      if(`${user.media[i]}` === `${mediaId}`) {
         mediaIdx = i
       }
     }
 
+    // Check if user owns both media and device
     if (mediaIdx < 0 || deviceIdx < 0) {
       return next(new Error('404'))
     }
-    
+
+    // Create a new display state
     let state: IState
     try {
       state = await storeState(deviceId, mediaId)
@@ -97,6 +102,7 @@ export const mediaRouter = () => {
       return next(error)
     }
 
+    // Return state
     return res.json(new Reply(200, 'success', false, state))
 
   })

@@ -6,7 +6,6 @@ import {destroyUser, storeUser} from "../web/controllers/user";
 import {IUser} from "../web/schemas/user";
 import {expect} from "chai"
 import {destroyDevice, storeDevice} from "../web/controllers/device";
-import {Schema} from "mongoose";
 import {IDevice} from "../web/schemas/device";
 
 let user: IUser

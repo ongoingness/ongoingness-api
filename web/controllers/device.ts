@@ -22,7 +22,8 @@ export async function storeDevice(owner: Schema.Types.ObjectId, mac: string): Pr
 
   // Update user's devices.
   const user: IUser = await getUser(owner)
-  await user.devices.push(device._id)
+  user.devices.push(device._id)
+  await user.save()
 
   return device
 }

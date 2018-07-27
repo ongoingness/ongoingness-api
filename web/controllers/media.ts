@@ -8,6 +8,7 @@ import * as crypto from "crypto"
 import {Schema} from "mongoose";
 
 const rename = promisify(fs.rename)
+const unlink = promisify(fs.unlink)
 
 /**
  * Store a file
@@ -51,4 +52,18 @@ export async function storeMediaRecord(path: string, mimetype: string, user: IUs
  */
 export async function getMedia(id: Schema.Types.ObjectId): Promise<IMedia> {
   return await models.Media.findOne({_id: id})
+}
+
+/**
+ * Destroy a media record and associated media
+ * @param {Schema.Types.ObjectId} id
+ * @returns {Promise<void>}
+ */
+export async function destroyMedia(id: Schema.Types.ObjectId): Promise<void> {
+  const media: IMedia = await getMedia(id)
+  if (fs.existsSync(media.path)) {
+    await unlink(media.path)
+  }
+
+  await models.Media.deleteOne({_id: id})
 }

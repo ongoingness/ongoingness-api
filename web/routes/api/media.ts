@@ -72,24 +72,10 @@ export const mediaRouter = () => {
       return next(error)
     }
 
-    // Search for device in user's devices
-    let deviceIdx: number = -1
-    for (let i: number = 0; i < user.devices.length; i++) {
-      if (`${user.devices[i]}` === `${deviceId}`) {
-        deviceIdx = i
-      }
-    }
+    const media: IMedia = await user.getMedia(mediaId)
+    const device: IDevice = await user.getDevice(deviceId)
 
-    // Search for media in user's media
-    let mediaIdx: number = -1
-    for (let i: number = 0; i < user.media.length; i++) {
-      if(`${user.media[i]}` === `${mediaId}`) {
-        mediaIdx = i
-      }
-    }
-
-    // Check if user owns both media and device
-    if (mediaIdx < 0 || deviceIdx < 0) {
+    if(!media || !device) {
       return next(new Error('404'))
     }
 

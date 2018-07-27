@@ -1,4 +1,7 @@
-import { Schema, Document } from 'mongoose'
+import models from "../models";
+import {Document, Schema} from "mongoose";
+import {IMedia} from "./media";
+import {IDevice} from "./device";
 
 const schemaOptions = {
   timestamps: true
@@ -12,6 +15,10 @@ export interface IUser extends Document {
   media: Schema.Types.ObjectId[]
   createdAt: string
   updatedAt: string
+
+  // Functions
+  getMedia(id: Schema.Types.ObjectId): Promise<IMedia>
+  getDevice(id: Schema.Types.ObjectId): Promise<IDevice>
 }
 
 export const UserSchema = new Schema({
@@ -29,14 +36,43 @@ export const UserSchema = new Schema({
     type: String,
     required: true
   },
-  devices: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Device'
-    }
-  ],
+  devices: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Device'
+  }],
   media: [{
     type: Schema.Types.ObjectId,
     ref: 'Media'
   }]
 }, schemaOptions)
+
+/**
+ * Get media belonging to user
+ * @param {Schema.Types.ObjectId} id
+ * @returns {Promise<IMedia>}
+ */
+UserSchema.methods.getMedia = async function(id: Schema.Types.ObjectId): Promise<IMedia> {
+  let media: IMedia = await models.Media.findOne({_id: id})
+
+  // Check media belongs to the user
+  if (this.media.indexOf(media._id.toString()) > -1) {
+    return media
+  }
+
+  return null
+}
+
+/**
+ * Get a device belonging to the user
+ * @param {Schema.Types.ObjectId} id
+ * @returns {Promise<IDevice>}
+ */
+UserSchema.methods.getDevice = async function(id: Schema.Types.ObjectId): Promise<IDevice> {
+  let device: IDevice = await models.Device.findOne({_id: id})
+
+  if (this.devices.indexOf(device._id.toString()) > -1) {
+    return device
+  }
+
+  return null
+}

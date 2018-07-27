@@ -1,10 +1,11 @@
-import * as path from "path";
-import * as fs from "fs";
-import {IUser} from "../schemas/user";
-import {IMedia} from "../schemas/media";
-import models from "../models";
-import {promisify} from "util";
-import * as crypto from "crypto";
+import * as path from "path"
+import * as fs from "fs"
+import {IUser} from "../schemas/user"
+import {IMedia} from "../schemas/media"
+import models from "../models"
+import {promisify} from "util"
+import * as crypto from "crypto"
+import {Schema} from "mongoose";
 
 const rename = promisify(fs.rename)
 
@@ -35,5 +36,19 @@ export async function storeMedia(storedPath: string, fileName: string, ext: stri
  * @returns {Promise<IMedia>}
  */
 export async function storeMediaRecord(path: string, mimetype: string, user: IUser): Promise<IMedia> {
-  return await models.Media.create({path: path, mimetype: mimetype, user: user._id})
+  const media: IMedia = await models.Media.create({path: path, mimetype: mimetype, user: user._id})
+
+  user.media.push(media._id)
+  await user.save()
+
+  return media
+}
+
+/**
+ * Return a record of a media item
+ * @param {module:mongoose.Schema.Types.ObjectId} id
+ * @returns {Promise<IMedia>}
+ */
+export async function getMedia(id: Schema.Types.ObjectId): Promise<IMedia> {
+  return await models.Media.findOne({_id: id})
 }

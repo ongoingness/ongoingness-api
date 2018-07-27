@@ -2,7 +2,8 @@ import { model } from 'mongoose'
 import { IUser, UserSchema } from './schemas/user'
 import { IDevice, DeviceSchema } from './schemas/device'
 import { IPair, PairSchema } from './schemas/pair'
-import { IMedia, MediaSchema } from "./schemas/media";
+import { IMedia, MediaSchema } from "./schemas/media"
+import {IState, StateSchema} from "./schemas/state"
 
 // Export models
 export default {
@@ -17,5 +18,8 @@ export default {
   ),
   Media: model<IMedia>(
     'Media', MediaSchema
+  ),
+  State: model<IState>(
+    'State', StateSchema
   )
 }

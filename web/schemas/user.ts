@@ -8,6 +8,8 @@ export interface IUser extends Document {
   username: string
   password: string
   iv: string
+  devices: Schema.Types.ObjectId[]
+  media: Schema.Types.ObjectId[]
   createdAt: string
   updatedAt: string
 }
@@ -26,5 +28,15 @@ export const UserSchema = new Schema({
   iv: {
     type: String,
     required: true
-  }
+  },
+  devices: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Device'
+    }
+  ],
+  media: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Media'
+  }]
 }, schemaOptions)

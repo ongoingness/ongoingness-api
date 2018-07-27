@@ -1,6 +1,7 @@
 import {IUser} from "../schemas/user";
 import * as crypto from "crypto";
 import models from "../models";
+import {Schema} from "mongoose";
 
 /**
  * Store the user in a database
@@ -30,6 +31,8 @@ export async function storeUser(username: string, password: string): Promise<IUs
   let user: IUser = null;
   try {
     user = await models.User.create({username, password, iv})
+    user.devices = []
+    await user.save()
   } catch (error) {
     error.message = '500'
     throw error
@@ -43,7 +46,7 @@ export async function storeUser(username: string, password: string): Promise<IUs
  * @param {string} id
  * @returns {Promise<IUser>}
  */
-export async function getUser(id: string): Promise<IUser> {
+export async function getUser(id: Schema.Types.ObjectId): Promise<IUser> {
   return await models.User.findOne({ _id: id })
 }
 
@@ -52,6 +55,6 @@ export async function getUser(id: string): Promise<IUser> {
  * @param {string} id
  * @returns {Promise<void>}
  */
-export async function destroyUser(id: string): Promise<void> {
+export async function destroyUser(id: Schema.Types.ObjectId): Promise<void> {
   return await models.User.deleteOne({ _id: id })
 }

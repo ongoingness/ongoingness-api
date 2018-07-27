@@ -1,5 +1,4 @@
 import * as express from 'express'
-import models from '../../models'
 import {IUser} from '../../schemas/user'
 import { Reply } from '../../reply'
 
@@ -8,6 +7,7 @@ import {Request} from "express";
 import {Response} from "express";
 import {NextFunction} from "express";
 import {destroyUser, getUser} from "../../controllers/user";
+import {Schema} from "mongoose";
 
 let router : express.Router
 
@@ -20,7 +20,7 @@ export const userRouter = () => {
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`))
     }
-    const userId: string = res.locals.user.id
+    const userId: Schema.Types.ObjectId = res.locals.user.id
     let user: IUser
     try {
       user = await getUser(userId)
@@ -36,7 +36,7 @@ export const userRouter = () => {
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`))
     }
-    const userId: string = res.locals.user.id
+    const userId: Schema.Types.ObjectId = res.locals.user.id
     try {
       await destroyUser(userId)
     } catch (e) {

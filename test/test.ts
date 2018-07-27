@@ -5,7 +5,6 @@ import {Server} from 'http'
 let server: Server
 
 describe('api', function () {
-  // let server = null
   before(function () {
     const port: number = 8888
     process.env.TEST = 'true'
@@ -21,6 +20,9 @@ describe('api', function () {
     await server.close()
   })
 
+  /**
+   * Import tests from files
+   */
   require('./media')
   require('./home')
   require('./auth')

@@ -208,10 +208,14 @@ describe('Media', function () {
       })
     })
 
-    //describe('Get past media from API', function () {
-    //  it('Should return a media id of a linked image from the past', function (done) {
-    //
-    //  })
-    //})
+    describe('Get past media from API', function () {
+      it('Should return a media id of a linked image from the past', function (done) {
+        Axios.get(`${URL}/api/media/request/past`, { headers: { 'x-access-token': token } })
+          .then(( response: AxiosResponse ) => {
+            expect(response.status).to.equal(200)
+            done()
+        })
+      })
+    })
   })
 })

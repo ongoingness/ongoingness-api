@@ -1,6 +1,12 @@
 import {NextFunction, Request, Response, Router} from "express"
 import * as multer from 'multer'
-import {getMediaRecord, getRandomPresentMedia, storeMedia, storeMediaRecord} from "../../controllers/media"
+import {
+  getLinkedPastMedia,
+  getMediaRecord,
+  getRandomPresentMedia,
+  storeMedia,
+  storeMediaRecord
+} from "../../controllers/media"
 import checkToken from '../../middleware/authenticate'
 import {IUser} from "../../schemas/user"
 import {getUser} from "../../controllers/user"
@@ -10,9 +16,8 @@ import {Schema} from "mongoose";
 import {IDevice} from "../../schemas/device";
 import {IState} from "../../schemas/state";
 import storeState from "../../controllers/state";
-import {storeSession} from "../../controllers/session";
+import {getLastSession, storeSession} from "../../controllers/session";
 import {ISession} from "../../schemas/session";
-import {error} from "util";
 
 let upload = multer({ dest: 'uploads/' })
 let router: Router
@@ -176,6 +181,52 @@ export const mediaRouter = () => {
     }
 
     return res.json(new Reply(200, 'success', false, media._id))
+  })
+
+  router.get('/request/past', async (req: Request, res: Response, next: NextFunction) => {
+    if (res.locals.error) {
+      return next(new Error(`${res.locals.error}`))
+    }
+
+    let user: IUser
+    let media: IMedia
+    let session: ISession
+
+    try {
+      user = await getUser(res.locals.user.id)
+    } catch (e) {
+      e.message = '500'
+      return next(e)
+    }
+
+    try {
+      session = await getLastSession(user)
+    } catch (e) {
+      e.message = '500'
+      return next(e)
+    }
+
+    if (session) {
+      try {
+        media = await getLinkedPastMedia(session.media)
+        return res.json(new Reply(200, 'success', false, media._id))
+      } catch (e) {
+        e.message = '500'
+        return next(e)
+      }
+    } else {
+      try {
+        media = await getRandomPresentMedia(user._id)
+        await storeSession(user, media)
+
+        media = await getLinkedPastMedia(session.media)
+
+        return res.json(new Reply(200, 'success', false, media._id))
+      } catch (e) {
+        e.message = '500'
+        return next(e)
+      }
+    }
   })
 
   return router

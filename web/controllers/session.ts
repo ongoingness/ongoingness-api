@@ -16,3 +16,12 @@ export async function storeSession(user: IUser, media: IMedia): Promise<ISession
   }
   return await models.Session.create({user: user._id, media: media._id})
 }
+
+/**
+ * Return the last session the user created.
+ * @param {IUser} user
+ * @returns {Promise<ISession>}
+ */
+export async function getLastSession(user: IUser): Promise<ISession> {
+  return await models.Session.findOne({ user: user._id }).sort({ createdAt: -1 })
+}

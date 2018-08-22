@@ -1,6 +1,12 @@
 import {destroyUser, storeUser} from "../web/controllers/user";
 import {IUser} from "../web/schemas/user";
-import {destroyMedia, getRandomPresentMedia, storeMedia, storeMediaRecord} from "../web/controllers/media";
+import {
+  destroyMedia,
+  getLinkedPastMedia,
+  getRandomPresentMedia,
+  storeMedia,
+  storeMediaRecord
+} from "../web/controllers/media";
 import * as path from "path";
 import * as fs from "fs";
 import {expect} from 'chai'
@@ -144,6 +150,8 @@ describe('Media', function () {
       record1 = await storeMediaRecord('testpath', 'image/jpeg', user, 'past')
       record2 = await storeMediaRecord('testpath', 'image/jpeg', user, 'present')
       record3 = await storeMediaRecord('testpath', 'image/jpeg', user, 'present')
+
+      await record2.createLink(record1._id)
     })
 
     after(async () => {
@@ -190,5 +198,20 @@ describe('Media', function () {
         })
       })
     })
+    
+    describe('Get a past image from the session', function () {
+      it('Should return media linked to an image from the past', function (done) {
+        getLinkedPastMedia(record2._id).then((media: IMedia) => {
+          expect(record2.links).contain(`${media._id}`)
+          done()
+        })
+      })
+    })
+
+    //describe('Get past media from API', function () {
+    //  it('Should return a media id of a linked image from the past', function (done) {
+    //
+    //  })
+    //})
   })
 })

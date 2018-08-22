@@ -23,7 +23,6 @@ export async function storeMedia(storedPath: string, fileName: string, ext: stri
   fileName = hash.digest('hex')
 
   const filepath = path.join(__dirname, `/../../../uploads/${fileName}.${ext}`)
-
   await rename(storedPath, filepath)
 
   return filepath
@@ -63,6 +62,20 @@ export async function getMediaRecord(id: Schema.Types.ObjectId): Promise<IMedia>
 export async function getRandomPresentMedia(id: Schema.Types.ObjectId): Promise<IMedia> {
   const allMedia: IMedia[] = await models.Media.find({user: id, era: 'present'})
   return allMedia[Math.floor(Math.random() * allMedia.length)]
+}
+
+/**
+ * Get an item of linked media from media
+ * @param {Schema.Types.ObjectId} id
+ * @returns {Promise<IMedia>}
+ */
+export async function getLinkedPastMedia(id: Schema.Types.ObjectId): Promise<IMedia> {
+  const media = await getMedia(id)
+
+  if (!media) throw new Error('404')
+  if (media.links.length === 0) return null
+
+  return await getMedia(media.links[Math.floor(Math.random() * media.links.length)])
 }
 
 /**

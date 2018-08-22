@@ -57,7 +57,7 @@ MediaSchema.methods.createLink = async function (linkId: Schema.Types.ObjectId):
   // Check they are not the same era
   if (!(link.era === this.era)) {
     // Check link does not already exist
-    if (this.links.indexOf(link._id.toString()) !== -1) {
+    if (this.links.indexOf(link._id.toString()) === -1) {
       this.links.push(linkId)
       await this.save()
     }

@@ -140,7 +140,7 @@ export const mediaRouter = () => {
   })
 
   /**
-   * Return a present piece of media and return a new session
+   * Return a present piece of media and return a new sessionSava
    */
   router.get('/request/present', async (req: Request, res: Response, next: NextFunction) => {
     if (res.locals.error) {

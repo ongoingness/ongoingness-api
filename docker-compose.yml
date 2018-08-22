@@ -17,10 +17,12 @@ services:
       environment:
         MONGO_URI: mongodb://mongo/ongoingness
   mongo:
-    image: mongo
+    # image: mongo
+    build: mongo
     ports:
       - "27017:27017"
     volumes:
-      - './data:/data/db'
+      - 'data:/data/db'
+
 volumes:
-  mongo:
+  data:

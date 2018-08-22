@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response, Router} from "express"
 import * as multer from 'multer'
-import {getMediaRecord, storeMedia, storeMediaRecord} from "../../controllers/media"
+import {getMediaRecord, getRandomPresentMedia, storeMedia, storeMediaRecord} from "../../controllers/media"
 import checkToken from '../../middleware/authenticate'
 import {IUser} from "../../schemas/user"
 import {getUser} from "../../controllers/user"
@@ -10,6 +10,9 @@ import {Schema} from "mongoose";
 import {IDevice} from "../../schemas/device";
 import {IState} from "../../schemas/state";
 import storeState from "../../controllers/state";
+import {storeSession} from "../../controllers/session";
+import {ISession} from "../../schemas/session";
+import {error} from "util";
 
 let upload = multer({ dest: 'uploads/' })
 let router: Router
@@ -134,6 +137,45 @@ export const mediaRouter = () => {
     await media.createLink(link._id)
 
     return res.json(new Reply(200, 'success', false, null))
+  })
+
+  /**
+   * Return a present piece of media and return a new session
+   */
+  router.get('/request/present', async (req: Request, res: Response, next: NextFunction) => {
+    if (res.locals.error) {
+      return next(new Error(`${res.locals.error}`))
+    }
+
+    let user: IUser
+    let media: IMedia
+
+    try {
+      user = await getUser(res.locals.user.id)
+    } catch (e) {
+      e.message = '500'
+      return next(e)
+    }
+
+
+    try {
+      media = await getRandomPresentMedia(user._id)
+    } catch (e) {
+      e.message = '500'
+      return next(e)
+    }
+
+    if (!media) {
+      return next(new Error('404'))
+    }
+
+    try {
+      await storeSession(user, media)
+    } catch (e) {
+      return next(e)
+    }
+
+    return res.json(new Reply(200, 'success', false, media._id))
   })
 
   return router

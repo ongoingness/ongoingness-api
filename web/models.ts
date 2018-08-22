@@ -4,6 +4,7 @@ import { IDevice, DeviceSchema } from './schemas/device'
 import { IPair, PairSchema } from './schemas/pair'
 import { IMedia, MediaSchema } from "./schemas/media"
 import {IState, StateSchema} from "./schemas/state"
+import {ISession, SessionSchema} from "./schemas/session";
 
 // Export models
 export default {
@@ -21,5 +22,8 @@ export default {
   ),
   State: model<IState>(
     'State', StateSchema
+  ),
+  Session: model<ISession>(
+    'Session', SessionSchema
   )
 }

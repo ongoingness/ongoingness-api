@@ -56,6 +56,16 @@ export async function getMediaRecord(id: Schema.Types.ObjectId): Promise<IMedia>
 }
 
 /**
+ * Return a random item of media
+ * @param {Schema.Types.ObjectId} id
+ * @returns {Promise<IMedia>}
+ */
+export async function getRandomPresentMedia(id: Schema.Types.ObjectId): Promise<IMedia> {
+  const allMedia: IMedia[] = await models.Media.find({user: id, era: 'present'})
+  return allMedia[Math.floor(Math.random() * allMedia.length)]
+}
+
+/**
  * Return a record of a media item
  * @param {module:mongoose.Schema.Types.ObjectId} id
  * @returns {Promise<IMedia>}
@@ -72,6 +82,7 @@ export async function getMedia(id: Schema.Types.ObjectId): Promise<IMedia> {
 export async function destroyMedia(id: Schema.Types.ObjectId): Promise<void> {
   const media: IMedia = await getMedia(id)
   if (fs.existsSync(media.path)) {
+    console.log('removing media', media.path)
     await unlink(media.path)
   }
 

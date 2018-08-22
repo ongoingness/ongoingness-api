@@ -63,6 +63,14 @@ UserSchema.methods.getMedia = async function(id: Schema.Types.ObjectId): Promise
 }
 
 /**
+ * Return all media belonging to the user
+ * @returns {Promise<IMedia[]>}
+ */
+UserSchema.methods.getAllMedia = async function(): Promise<IMedia[]> {
+  return await models.Media.find({user: this._id})
+}
+
+/**
  * Get a device belonging to the user
  * @param {Schema.Types.ObjectId} id
  * @returns {Promise<IDevice>}

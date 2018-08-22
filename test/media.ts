@@ -1,6 +1,6 @@
 import {destroyUser, storeUser} from "../web/controllers/user";
 import {IUser} from "../web/schemas/user";
-import {destroyMedia, storeMedia, storeMediaRecord} from "../web/controllers/media";
+import {destroyMedia, getRandomPresentMedia, storeMedia, storeMediaRecord} from "../web/controllers/media";
 import * as path from "path";
 import * as fs from "fs";
 import {expect} from 'chai'
@@ -12,6 +12,8 @@ import {describe} from "mocha";
 import {destroyDevice, storeDevice} from "../web/controllers/device";
 import {IDevice} from "../web/schemas/device";
 import {IMedia} from "../web/schemas/media";
+import {ISession} from "../web/schemas/session";
+import {storeSession} from "../web/controllers/session";
 
 const rename = promisify(fs.rename)
 const URL: string = 'http://localhost:8888'
@@ -131,6 +133,62 @@ describe('Media', function () {
           expect(response.status).to.equal(200)
           done()
         })
+    })
+  })
+
+  describe('Request media', function() {
+    let record1: IMedia
+    let record2: IMedia
+    let record3: IMedia
+    before(async () => {
+      record1 = await storeMediaRecord('testpath', 'image/jpeg', user, 'past')
+      record2 = await storeMediaRecord('testpath', 'image/jpeg', user, 'present')
+      record3 = await storeMediaRecord('testpath', 'image/jpeg', user, 'present')
+    })
+
+    after(async () => {
+      await destroyMedia(record1._id)
+      await destroyMedia(record2._id)
+      await destroyMedia(record3._id)
+    })
+
+    describe('Get random present media', function () {
+      it('Should return a random media item of the present era', function (done) {
+        getRandomPresentMedia(user._id).then((media: IMedia) => {
+          expect(`${media.user}`).to.equal(`${user._id}`)
+          done()
+        })
+      })
+    })
+
+    describe('Create a media session', function () {
+      it('Should create a session storing current present media for user', function (done) {
+        storeSession(user, record2).then((session: ISession) => {
+          expect(`${session.user}`).to.equal(`${user._id}`)
+          done()
+        })
+      })
+    })
+
+    describe('Reject a past media session', function () {
+      it('Should reject a session storing current past media for user', function (done) {
+        storeSession(user, record1).then((session: ISession) => {
+          console.log(session)
+        }).catch((e) => {
+          expect(e.message).to.equal('Media must be of the present to start a session')
+          done()
+        })
+      })
+    })
+
+    describe ('Get present media from API', function () {
+      it('API should create a session and return a media id', function (done) {
+        Axios.get(`${URL}/api/media/request/present`, {headers: {'x-access-token': token}})
+          .then((response: AxiosResponse) => {
+            expect(response.status).to.equal(200)
+            done()
+        })
+      })
     })
   })
 })

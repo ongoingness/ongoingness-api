@@ -2,7 +2,7 @@ import { Router, Response, Request, NextFunction} from 'express'
 import { Reply } from '../../reply'
 import { IUser } from "../../schemas/user"
 import {storeUser} from "../../controllers/user"
-import {generateToken, authenticateUser} from "../../controllers/auth";
+import {generateToken, authenticateUser, authenticateWithMAC} from "../../controllers/auth";
 
 let routes: Router
 
@@ -53,5 +53,24 @@ export const authRouter = () => {
     let response = new Reply(200, 'success', false, { token })
     return res.json(response)
   })
+
+  /**
+   * Authenticate a user with a mac address.
+   */
+  routes.post('/mac', async (req: Request, res: Response, next: NextFunction) => {
+    const mac: string = req.body.mac
+    let user: IUser
+
+    try {
+      user = await authenticateWithMAC(mac)
+    } catch (e) {
+      return next(e)
+    }
+
+    const token = generateToken(user)
+
+    return res.json(new Reply(200, 'success', false, token))
+  })
+
   return routes
 }

@@ -2,6 +2,9 @@ import {IUser} from "../schemas/user";
 import * as crypto from "crypto";
 import * as jwt from "jsonwebtoken";
 import models from "../models";
+import {IDevice} from "../schemas/device";
+import {getDeviceMac} from "./device";
+import {getUser} from "./user";
 
 /**
  * Authenticate a user
@@ -49,4 +52,28 @@ export function generateToken(user: IUser): string {
   })
 
   return token
+}
+
+/**
+ * Retrieve user from a device address.
+ * @param {string} mac
+ * @returns {Promise<IUser>}
+ */
+export async function authenticateWithMAC(mac: string): Promise<IUser> {
+  let user: IUser
+  let device: IDevice
+
+  device = await getDeviceMac(mac)
+
+  if (!device) {
+    throw new Error('404')
+  }
+
+  user = await getUser(device.owner)
+
+  if (!user) {
+    throw new Error('404')
+  }
+
+  return user
 }

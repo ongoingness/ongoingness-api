@@ -4,6 +4,8 @@ import {URL} from "./commons";
 import {expect} from 'chai'
 import {IUser} from "../web/schemas/user";
 import {destroyUser} from "../web/controllers/user";
+import {IDevice} from "../web/schemas/device";
+import {destroyDevice, storeDevice} from "../web/controllers/device";
 
 let user: IUser
 
@@ -48,6 +50,30 @@ describe('Auth', function () {
       }
       Axios.post(`${URL}/api/auth/authenticate`, userData).then((response: AxiosResponse) => {
         expect(response.data.payload.token).to.have.length.above(10)
+        done()
+      })
+    })
+  })
+
+  describe('Authenticate with MAC address', function() {
+    let device: IDevice
+    const dummyMAC = "00:00:00:00:00:00"
+
+    before(async () => {
+      device = await storeDevice(user._id, dummyMAC)
+    })
+
+    after(async () => {
+      await destroyDevice(user._id, device._id)
+    })
+
+    it("Should return a JWT token for the user who owns a device with a matching MAC address", function (done) {
+      const userData = {
+        mac: dummyMAC
+      }
+      Axios.post(`${URL}/api/auth/mac`, userData).then((response: AxiosResponse) => {
+        expect(response.status).to.equal(200)
+        expect(response.data.payload).to.have.length.above(10)
         done()
       })
     })

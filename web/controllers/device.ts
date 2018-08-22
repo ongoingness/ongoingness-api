@@ -38,6 +38,15 @@ export async function getDevice(id: Schema.Types.ObjectId): Promise<IDevice> {
 }
 
 /**
+ * Get a device by its mac address
+ * @param {string} mac
+ * @returns {Promise<IDevice>}
+ */
+export async function getDeviceMac(mac: string): Promise<IDevice> {
+  return await models.Device.findOne({ mac: mac })
+}
+
+/**
  * Destroy a record of a device
  * @param owner
  * @param {string} id

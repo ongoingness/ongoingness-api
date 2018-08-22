@@ -14,12 +14,16 @@ export class App {
     constructor() {
       this.express = express()
 
-      mongoose.connect(process.env.MONGO_URI, {
-        user: process.env.MONGODB_USER,
-        pass: process.env.MONGODB_PASS,
-        dbName: process.env.MONGODB_DATABASE,
-        authdb: 'admin'
-      })
+      if (process.env.PRODUCTION === 'true') {
+        mongoose.connect(process.env.MONGO_URI, {
+          user: process.env.MONGODB_USER,
+          pass: process.env.MONGODB_PASS,
+          dbName: process.env.MONGODB_DATABASE,
+          authdb: 'admin'
+        })
+      } else {
+        mongoose.connect(process.env.MONGO_URI)
+      }
 
       this.prepareStatic()
       this.setViewEngine()

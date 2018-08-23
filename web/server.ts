@@ -19,7 +19,7 @@ export class App {
           user: process.env.MONGODB_USER,
           pass: process.env.MONGODB_PASS,
           dbName: process.env.MONGODB_DATABASE,
-          authdb: 'admin'
+          authdb: 'ongoingness'
         })
       } else {
         mongoose.connect(process.env.MONGO_URI)

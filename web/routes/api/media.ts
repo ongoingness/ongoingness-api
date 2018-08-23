@@ -229,5 +229,35 @@ export const mediaRouter = () => {
     }
   })
 
+  /**
+   * Get an item of media by id
+   */
+  router.get('/show/:id',async (req: Request, res: Response, next: NextFunction) => {
+    if (res.locals.error) {
+      return next(new Error(`${res.locals.error}`))
+    }
+
+    let user: IUser
+    let media: IMedia
+
+    try {
+      user = await getUser(res.locals.user.id)
+      media = await user.getMedia(req.params.id)
+    } catch (e) {
+      e.message = '500'
+      return next(e)
+    }
+
+    if (!media) {
+      return next(new Error('404'))
+    }
+
+    try {
+      return res.sendFile(media.path)
+    } catch (e) {
+      return next(new Error('404'))
+    }
+  })
+
   return router
 }

@@ -18,12 +18,54 @@ import {IState} from "../../schemas/state";
 import storeState from "../../controllers/state";
 import {getLastSession, storeSession} from "../../controllers/session";
 import {ISession} from "../../schemas/session";
+import * as jwt from "jsonwebtoken";
 
 let upload = multer({ dest: 'uploads/' })
 let router: Router
 
 export const mediaRouter = () => {
   router = Router()
+
+  /**
+   * Get an item of media by id
+   */
+  router.get('/show/:id/:token',async (req: Request, res: Response, next: NextFunction) => {
+    const token : string = req.params.token
+    const mediaId: Schema.Types.ObjectId = req.params.id
+    let rawUser: any = null
+    let user: IUser
+    let media: IMedia
+
+    if (token) {
+      jwt.verify(token, process.env.SECRET, (err: Error, user: IUser) => {
+        if (err) {
+          return next(new Error('401'))
+        } else {
+          rawUser = user
+        }
+      })
+    } else {
+      return next(new Error('401'))
+    }
+
+    try {
+      user = await getUser(rawUser.id)
+      media = await user.getMedia(mediaId)
+    } catch (e) {
+      e.message = '500'
+      return next(e)
+    }
+
+    if (!media) {
+      return next(new Error('404'))
+    }
+
+    try {
+      return res.sendFile(media.path)
+    } catch (e) {
+      return next(new Error('404'))
+    }
+  })
 
   router.use(checkToken)
 
@@ -226,36 +268,6 @@ export const mediaRouter = () => {
         e.message = '500'
         return next(e)
       }
-    }
-  })
-
-  /**
-   * Get an item of media by id
-   */
-  router.get('/show/:id',async (req: Request, res: Response, next: NextFunction) => {
-    if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`))
-    }
-
-    let user: IUser
-    let media: IMedia
-
-    try {
-      user = await getUser(res.locals.user.id)
-      media = await user.getMedia(req.params.id)
-    } catch (e) {
-      e.message = '500'
-      return next(e)
-    }
-
-    if (!media) {
-      return next(new Error('404'))
-    }
-
-    try {
-      return res.sendFile(media.path)
-    } catch (e) {
-      return next(new Error('404'))
     }
   })
 

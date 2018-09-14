@@ -71,7 +71,7 @@ http://46.101.47.18:3000/api/media/show/<id>/<token>
 ### Viewing Image from the Past
 This will show an image from the past, linked to the last seen image from the present. First you need to get the id of an image from the past. Run the command:
 ```bash
-curl --header "x-access-token: <TOKEN>" http://46.101.47.18:3000/api/media/request/present
+curl --header "x-access-token: <TOKEN>" http://46.101.47.18:3000/api/media/request/past
 ```
 
 It will return something similar to:

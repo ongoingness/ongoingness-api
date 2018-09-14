@@ -101,3 +101,24 @@ export async function destroyMedia(id: Schema.Types.ObjectId): Promise<void> {
 
   await models.Media.deleteOne({_id: id})
 }
+
+/**
+ * Add emotions to a story
+ * @param  id       Media id
+ * @param  emotions string of 3 tiered emotions, separated by commas
+ * @return {Promise<IMedia>}
+ */
+export async function addEmotionsToMedia(id: Schema.Types.ObjectId, emotions: string): Promise<IMedia> {
+  let media: IMedia = await getMedia(id)
+  if (!media) {
+    throw new Error('Media not found')
+  }
+
+  if (!/[a-z]+,[a-z]+,[a-z]+/.test(emotions)) {
+    throw new Error('Emotions must be three words separated by commas')
+  }
+
+  media.emotions.push(emotions)
+  media = await media.save()
+  return media
+}

@@ -5,7 +5,8 @@ import {
   getLinkedPastMedia,
   getRandomPresentMedia,
   storeMedia,
-  storeMediaRecord
+  storeMediaRecord,
+  addEmotionsToMedia
 } from "../web/controllers/media";
 import * as path from "path";
 import * as fs from "fs";
@@ -68,6 +69,30 @@ describe('Media', function () {
 
     after (async () => {
       await rename(testFilePath, path.join(__dirname, '../../test.jpg'))
+    })
+  })
+
+  describe('Attach emotions to media', function () {
+    describe('Store emotions', function() {
+      it('Should store emotion string on media', function (done) {
+        const emotions = 'happy,accepted,valued'
+        addEmotionsToMedia(media._id, emotions).then((media: IMedia) => {
+          expect(media.emotions).to.include(emotions)
+          done()
+        })
+      })
+    })
+
+    describe('Reject emotions in wrong format', function () {
+      it('Should throw an error for emotions being in wrong format', function (done) {
+        const emotions = 'happy,accepted-valued'
+        addEmotionsToMedia(media._id, emotions)
+        .then((media: IMedia) => {})
+        .catch((error) => {
+          expect(error.message).to.equal('Emotions must be three words separated by commas')
+          done()
+        })
+      })
     })
   })
 
@@ -198,7 +223,7 @@ describe('Media', function () {
         })
       })
     })
-    
+
     describe('Get a past image from the session', function () {
       it('Should return media linked to an image from the past', function (done) {
         getLinkedPastMedia(record2._id).then((media: IMedia) => {

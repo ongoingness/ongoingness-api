@@ -5,10 +5,8 @@ import * as cors from 'cors'
 import * as handler from './middleware/handler'
 import * as mongoose from 'mongoose'
 import addRoutes from './routes'
-
-require('dotenv').config({
-  path: path.join(__dirname, './../.env')
-})
+import * as dotenv from 'dotenv'
+dotenv.load()
 
 export class App {
     public express: express.Express

@@ -1,0 +1,16 @@
+[Unit]
+Description=Ongoingess API
+Requires=mongod.service
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/nodemon app.js
+WorkingDirectory=/root/ongoingness-api/dist
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+Group=root

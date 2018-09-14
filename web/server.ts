@@ -2,11 +2,13 @@ import * as express from "express"
 import * as path from "path"
 import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
-import * as dotenv from 'dotenv'
 import * as handler from './middleware/handler'
 import * as mongoose from 'mongoose'
 import addRoutes from './routes'
-dotenv.load()
+
+require('dotenv').config({
+  path: path.join(__dirname, './../.env')
+})
 
 export class App {
     public express: express.Express

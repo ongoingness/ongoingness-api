@@ -1,0 +1,12 @@
+[Unit]
+Description=Mongod service
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/mongod --dbpath=/root/data/db --auth
+ExecStop=/user/bin/mongod --shutdown
+Restart=always
+User=root

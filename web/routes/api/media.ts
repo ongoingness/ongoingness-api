@@ -251,8 +251,14 @@ export const mediaRouter = () => {
     if (session) {
       try {
         media = await getLinkedPastMedia(session.media)
-        return res.json(new Reply(200, 'success', false, media._id))
+        if (media) {
+          return res.json(new Reply(200, 'success', false, media._id))
+        } else {
+          return res.json(new Reply(200, 'success', false, null))
+        }
+
       } catch (e) {
+        console.log(e)
         e.message = '500'
         return next(e)
       }
@@ -265,6 +271,7 @@ export const mediaRouter = () => {
 
         return res.json(new Reply(200, 'success', false, media._id))
       } catch (e) {
+        // console.log(e)
         e.message = '500'
         return next(e)
       }

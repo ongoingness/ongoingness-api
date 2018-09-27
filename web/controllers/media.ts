@@ -101,3 +101,71 @@ export async function destroyMedia(id: Schema.Types.ObjectId): Promise<void> {
 
   await models.Media.deleteOne({_id: id})
 }
+
+/**
+ * Add emotions to a story
+ * @param  id       Media id
+ * @param  emotions string of 3 tiered emotions, separated by commas
+ * @return {Promise<IMedia>}
+ */
+export async function addEmotionsToMedia(id: Schema.Types.ObjectId, emotions: string): Promise<IMedia> {
+  let media: IMedia = await getMedia(id)
+  if (!media) {
+    throw new Error('Media not found')
+  }
+
+  if (!/[a-z]+,[a-z]+,[a-z]+/.test(emotions)) {
+    throw new Error('Emotions must be three words separated by commas')
+  }
+
+  media.emotions.push(emotions)
+  media = await media.save()
+  return media
+}
+
+/**
+ * Get emotional links from media
+ * @param  media media to get links from
+ * @return {Promise<Schema.Types.ObjectId[][]>} array of matching media ids.
+ */
+export async function getEmotionalLinks(media: IMedia): Promise<Schema.Types.ObjectId[][]> {
+  if (media.era === 'past') {
+    throw new Error('Links can only be generated for media from the present')
+  }
+
+  // Get all media
+  const allMedia: IMedia[] = await models.Media.find({user: media.user})
+  let matches: Schema.Types.ObjectId[][] = [[], [], []]
+
+
+  // Loop through all media
+  for (let item of allMedia) {
+    // continue if item has no attached emotions
+    if (!item.emotions || item.emotions.length === 0) {
+      continue
+    }
+
+    // Reject if media items are the same
+    if (`${item._id}` === `${media._id}`) {
+      continue
+    }
+
+    // for each emotions string in media
+    for (let emotions of item.emotions) {
+      // for each emotion string in parent
+      for (let parentEmotions of media.emotions) {
+        // Create an array of individual emotions in parent
+        const individualEmotions = parentEmotions.split(',')
+        // Check if tuple contains this emotion as a whole
+        for (let i = 0; i < individualEmotions.length; i++) {
+          // If a match, push to array of matching emotion tier
+          if (emotions.includes(individualEmotions[i])) {
+            matches[i].push(item._id)
+          }
+        }
+      }
+    }
+  }
+
+  return matches
+}

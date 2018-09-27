@@ -8,9 +8,10 @@ const schemaOptions = {
 export interface IMedia extends Document {
   user: Schema.Types.ObjectId
   links: Schema.Types.ObjectId[]
-  path: string,
-  mimetype: string,
+  path: string
+  mimetype: string
   era: string
+  emotions: string[]
   createdAt: string
   updatedAt: string
 
@@ -36,6 +37,9 @@ export const MediaSchema = new Schema({
     required: true,
     default: 'past'
   },
+  emotions: [{
+    type: String
+  }],
   path: {
     type: String,
     required: true

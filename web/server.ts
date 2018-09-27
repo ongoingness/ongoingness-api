@@ -2,10 +2,10 @@ import * as express from "express"
 import * as path from "path"
 import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
-import * as dotenv from 'dotenv'
 import * as handler from './middleware/handler'
 import * as mongoose from 'mongoose'
 import addRoutes from './routes'
+import * as dotenv from 'dotenv'
 dotenv.load()
 
 export class App {

@@ -5,7 +5,9 @@ import {
   getLinkedPastMedia,
   getRandomPresentMedia,
   storeMedia,
-  storeMediaRecord
+  storeMediaRecord,
+  addEmotionsToMedia,
+  getEmotionalLinks
 } from "../web/controllers/media";
 import * as path from "path";
 import * as fs from "fs";
@@ -20,6 +22,7 @@ import {IDevice} from "../web/schemas/device";
 import {IMedia} from "../web/schemas/media";
 import {ISession} from "../web/schemas/session";
 import {storeSession} from "../web/controllers/session";
+import {Schema} from "mongoose";
 
 const rename = promisify(fs.rename)
 const URL: string = 'http://localhost:8888'
@@ -68,6 +71,63 @@ describe('Media', function () {
 
     after (async () => {
       await rename(testFilePath, path.join(__dirname, '../../test.jpg'))
+    })
+  })
+
+  describe('Attach emotions to media', function () {
+    describe('Store emotions', function() {
+      it('Should store emotion string on media', function (done) {
+        const emotions = 'happy,accepted,valued'
+        addEmotionsToMedia(media._id, emotions).then((media: IMedia) => {
+          expect(media.emotions).to.include(emotions)
+          done()
+        })
+      })
+    })
+
+    describe('Reject emotions in wrong format', function () {
+      it('Should throw an error for emotions being in wrong format', function (done) {
+        const emotions = 'happy,accepted-valued'
+        addEmotionsToMedia(media._id, emotions)
+        .then()
+        .catch((error) => {
+          expect(error.message).to.equal('Emotions must be three words separated by commas')
+          done()
+        })
+      })
+    })
+  })
+
+  describe('Link media by emotional tags', function () {
+    let media1: IMedia
+    let media2: IMedia
+    let media3: IMedia
+    before(async function () {
+      media1 = await storeMediaRecord('test-path', 'image/jpeg', user)
+      media2 = await storeMediaRecord('test-path', 'image/jpeg', user)
+      media3 = await storeMediaRecord('test-path', 'image/jpeg', user)
+
+      media1 = await addEmotionsToMedia(media1._id, 'happy,accepted,valued')
+      media2 = await addEmotionsToMedia(media2._id, 'happy,content,joyful')
+      media3 = await addEmotionsToMedia(media3._id, 'happy,accepted,respected')
+
+      media1.era = "present"
+      await media1.save()
+    })
+
+    after(async function() {
+      await destroyMedia(media1._id)
+      await destroyMedia(media2._id)
+      await destroyMedia(media3._id)
+    })
+
+    it('Should return ids of matching media', function (done) {
+      getEmotionalLinks(media1).then((matches: Schema.Types.ObjectId[][]) => {
+        expect(matches[0].length).to.equal(3)
+        expect(matches[1].length).to.equal(2)
+        expect(matches[2].length).to.equal(1)
+        done()
+      })
     })
   })
 
@@ -198,7 +258,7 @@ describe('Media', function () {
         })
       })
     })
-    
+
     describe('Get a past image from the session', function () {
       it('Should return media linked to an image from the past', function (done) {
         getLinkedPastMedia(record2._id).then((media: IMedia) => {

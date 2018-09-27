@@ -65,3 +65,5 @@ reviews_data.txt.gz
 /story-analysis/vectors
 docvec.model
 stories.json
+data/
+uploads/

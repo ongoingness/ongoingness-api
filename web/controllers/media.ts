@@ -126,7 +126,7 @@ export async function addEmotionsToMedia(id: Schema.Types.ObjectId, emotions: st
 /**
  * Get emotional links from media
  * @param  media media to get links from
- * @return {Promise<Schema.Types.ObjectId[]>} array of matching media ids.
+ * @return {Promise<Schema.Types.ObjectId[][]>} array of matching media ids.
  */
 export async function getEmotionalLinks(media: IMedia): Promise<Schema.Types.ObjectId[][]> {
   if (media.era === 'past') {

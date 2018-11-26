@@ -1,10 +1,10 @@
-import {IUser} from "../schemas/user";
-import * as crypto from "crypto";
-import * as jwt from "jsonwebtoken";
-import models from "../models";
-import {IDevice} from "../schemas/device";
-import {getDeviceMac} from "./device";
-import {getUser} from "./user";
+import { IUser } from '../schemas/user';
+import * as crypto from 'crypto';
+import * as jwt from 'jsonwebtoken';
+import models from '../models';
+import { IDevice } from '../schemas/device';
+import { getDeviceMac } from './device';
+import { getUser } from './user';
 
 /**
  * Authenticate a user
@@ -13,27 +13,27 @@ import {getUser} from "./user";
  * @return {IUser} Matched user
  */
 export async function authenticateUser(username: string, password: string): Promise<IUser> {
-  let user: IUser
+  let user: IUser;
   try {
-    user = await models.User.findOne({username})
+    user = await models.User.findOne({ username });
   } catch (error) {
-    throw error
+    throw error;
   }
 
   if (!user) {
-    throw new Error('401')
+    throw new Error('401');
   }
 
   // Hash given password with matching user's stored iv
-  const hash: crypto.Hash = crypto.createHash('sha256')
-  hash.update(`${user.iv}${password}`)
-  password = hash.digest('hex')
+  const hash: crypto.Hash = crypto.createHash('sha256');
+  hash.update(`${user.iv}${password}`);
+  const hashedPassword = hash.digest('hex');
   // Compare passwords and abort if no match
-  if (user.password !== password) {
-    throw new Error('401')
+  if (user.password !== hashedPassword) {
+    throw new Error('401');
   }
 
-  return user
+  return user;
 }
 
 /**
@@ -44,14 +44,14 @@ export async function authenticateUser(username: string, password: string): Prom
 export function generateToken(user: IUser): string {
   const payload = {
     id: user._id,
-    username: user.username
-  }
+    username: user.username,
+  };
   // create and sign token against the app secret
-  let token: string = jwt.sign(payload, process.env.SECRET, {
-    expiresIn: '1 day' // expires in 24 hours
-  })
+  const token: string = jwt.sign(payload, process.env.SECRET, {
+    expiresIn: '1 day', // expires in 24 hours
+  });
 
-  return token
+  return token;
 }
 
 /**
@@ -60,20 +60,20 @@ export function generateToken(user: IUser): string {
  * @returns {Promise<IUser>}
  */
 export async function authenticateWithMAC(mac: string): Promise<IUser> {
-  let user: IUser
-  let device: IDevice
+  let user: IUser;
+  let device: IDevice;
 
-  device = await getDeviceMac(mac)
+  device = await getDeviceMac(mac);
 
   if (!device) {
-    throw new Error('404')
+    throw new Error('404');
   }
 
-  user = await getUser(device.owner)
+  user = await getUser(device.owner);
 
   if (!user) {
-    throw new Error('404')
+    throw new Error('404');
   }
 
-  return user
+  return user;
 }

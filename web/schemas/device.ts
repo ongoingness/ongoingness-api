@@ -1,26 +1,26 @@
-import { Schema, Document } from 'mongoose'
+import { Schema, Document } from 'mongoose';
 
 const schemaOptions = {
-  timestamps: true
-}
+  timestamps: true,
+};
 
 export interface IDevice extends Document {
-  mac: string
-  owner: Schema.Types.ObjectId
-  createdAt: string
-  updatedAt: string
+  mac: string;
+  owner: Schema.Types.ObjectId;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export const DeviceSchema = new Schema({
+export const deviceSchema = new Schema({
   mac: {
     type: String,
     required: true,
     index: true,
-    unique: true
+    unique: true,
   },
   owner: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
-  }
-}, schemaOptions)
+    required: true,
+  },
+},                                     schemaOptions);

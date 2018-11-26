@@ -1,29 +1,29 @@
-import { model } from 'mongoose'
-import { IUser, UserSchema } from './schemas/user'
-import { IDevice, DeviceSchema } from './schemas/device'
-import { IPair, PairSchema } from './schemas/pair'
-import { IMedia, MediaSchema } from "./schemas/media"
-import {IState, StateSchema} from "./schemas/state"
-import {ISession, SessionSchema} from "./schemas/session";
+import { model } from 'mongoose';
+import { IUser, userSchema } from './schemas/user';
+import { IDevice, deviceSchema } from './schemas/device';
+import { IPair, pairSchema } from './schemas/pair';
+import { IMedia, mediaSchema } from './schemas/media';
+import { IState, stateSchema } from './schemas/state';
+import { ISession, sessionSchema } from './schemas/session';
 
 // Export models
 export default {
   User: model<IUser>(
-    'User', UserSchema
+    'User', userSchema,
   ),
   Device: model<IDevice>(
-    'Device', DeviceSchema
+    'Device', deviceSchema,
   ),
   Pair: model<IPair>(
-    'Pair', PairSchema
+    'Pair', pairSchema,
   ),
   Media: model<IMedia>(
-    'Media', MediaSchema
+    'Media', mediaSchema,
   ),
   State: model<IState>(
-    'State', StateSchema
+    'State', stateSchema,
   ),
   Session: model<ISession>(
-    'Session', SessionSchema
-  )
-}
+    'Session', sessionSchema,
+  ),
+};

@@ -1,51 +1,48 @@
-import * as express from 'express'
-import {IUser} from '../../schemas/user'
-import { Reply } from '../../reply'
+import { IUser } from '../../schemas/user';
+import { Reply } from '../../reply';
 
-import checkToken from '../../middleware/authenticate'
-import {Request} from "express";
-import {Response} from "express";
-import {NextFunction} from "express";
-import {destroyUser, getUser} from "../../controllers/user";
-import {Schema} from "mongoose";
+import { checkToken } from '../../middleware/authenticate';
+import { Request, Response, NextFunction, Router } from 'express';
+import { destroyUser, getUser } from '../../controllers/user';
+import { Schema } from 'mongoose';
 
-let router : express.Router
+let router : Router;
 
 export const userRouter = () => {
-  router = express.Router()
+  router = Router();
 
-  router.use(checkToken)
+  router.use(checkToken);
 
   router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
     if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`))
+      return next(new Error(`${res.locals.error}`));
     }
-    const userId: Schema.Types.ObjectId = res.locals.user.id
-    let user: IUser
+    const userId: Schema.Types.ObjectId = res.locals.user.id;
+    let user: IUser;
     try {
-      user = await getUser(userId)
+      user = await getUser(userId);
     } catch (e) {
-      e.message = '500'
-      return next(e)
+      e.message = '500';
+      return next(e);
     }
 
-    return res.json(new Reply(200, 'success', false, { user }))
-  })
+    return res.json(new Reply(200, 'success', false, { user }));
+  });
 
-  router.delete('/destroy', async function (req, res, next) {
+  router.delete('/destroy', async (req, res, next) => {
     if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`))
+      return next(new Error(`${res.locals.error}`));
     }
-    const userId: Schema.Types.ObjectId = res.locals.user.id
+    const userId: Schema.Types.ObjectId = res.locals.user.id;
     try {
-      await destroyUser(userId)
+      await destroyUser(userId);
     } catch (e) {
-      e.message = '500'
-      return next(e)
+      e.message = '500';
+      return next(e);
     }
 
-    return res.json(new Reply(200, 'success', false, {}))
-  })
+    return res.json(new Reply(200, 'success', false, {}));
+  });
 
-  return router
-}
+  return router;
+};

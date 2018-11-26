@@ -1,19 +1,18 @@
-import * as express from 'express'
-import {NextFunction, Request, Response} from "express";
-let router
+import { NextFunction, Request, Response, Router } from 'express';
+let router;
 
 /**
  * Get routes
  * @param  app Express.express
  * @return     Router
  */
-function home(): express.Router {
-  router = express.Router()
+function home(): Router {
+  router = Router();
   router.get('/', (req: Request, res: Response, next: NextFunction) => {
-    return res.send('Hello World')
-  })
+    return res.send('Hello World');
+  });
 
-  return router
+  return router;
 }
 
-export default home
+export default home;

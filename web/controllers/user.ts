@@ -1,7 +1,7 @@
-import {IUser} from "../schemas/user";
-import * as crypto from "crypto";
-import models from "../models";
-import {Schema} from "mongoose";
+import { IUser } from '../schemas/user';
+import * as crypto from 'crypto';
+import models from '../models';
+import { Schema } from 'mongoose';
 
 /**
  * Store the user in a database
@@ -10,35 +10,36 @@ import {Schema} from "mongoose";
  * @return          IUser
  */
 export async function storeUser(username: string, password: string): Promise<IUser> {
-  let sUser: IUser
+  let sUser: IUser;
   try {
-    sUser = await models.User.findOne({username})
+    sUser = await models.User.findOne({ username });
   } catch (error) {
-    error.message = '500'
-    throw error
+    error.message = '500';
+    throw error;
   }
 
   if (sUser) {
-    throw new Error('403')
+    throw new Error('403');
   }
 
-  let iv: string
-  const hash: crypto.Hash = crypto.createHash('sha256')
-  iv = crypto.randomBytes(16).toString('hex')
-  hash.update(`${iv}${password}`)
-  password = hash.digest('hex')
+  let iv: string;
+  const hash: crypto.Hash = crypto.createHash('sha256');
+  iv = crypto.randomBytes(16).toString('hex');
+  hash.update(`${iv}${password}`);
+  const hashedPassword = hash.digest('hex');
 
   let user: IUser = null;
+
   try {
-    user = await models.User.create({username, password, iv})
-    user.devices = []
-    await user.save()
+    user = await models.User.create({ username, iv, password: hashedPassword });
+    user.devices = [];
+    await user.save();
   } catch (error) {
-    error.message = '500'
-    throw error
+    error.message = '500';
+    throw error;
   }
 
-  return user
+  return user;
 }
 
 /**
@@ -47,7 +48,7 @@ export async function storeUser(username: string, password: string): Promise<IUs
  * @returns {Promise<IUser>}
  */
 export async function getUser(id: Schema.Types.ObjectId): Promise<IUser> {
-  return await models.User.findOne({ _id: id })
+  return await models.User.findOne({ _id: id });
 }
 
 /**
@@ -56,5 +57,5 @@ export async function getUser(id: Schema.Types.ObjectId): Promise<IUser> {
  * @returns {Promise<void>}
  */
 export async function destroyUser(id: Schema.Types.ObjectId): Promise<void> {
-  return await models.User.deleteOne({ _id: id })
+  return await models.User.deleteOne({ _id: id });
 }

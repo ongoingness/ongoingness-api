@@ -1,15 +1,15 @@
 {
   "name": "ongoingness-api",
   "version": "0.1.0",
-  "description": "API for synchronising android watchfaces",
+  "description": "API for Ongoingness android watchface",
   "main": "dist/app.js",
   "scripts": {
     "test": "nyc mocha dist/test/test.js --exit",
-    "build": "tsc"
+    "build": "npx tsc"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danjwelsh/express-stub.git"
+    "url": "git+https://openlab.ncl.ac.uk/gitlab/ongoingness/api.git"
   },
   "keywords": [
     "api",
@@ -19,9 +19,9 @@
   "author": "Daniel Welsh",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/danjwelsh/express-stub/issues"
+    "url": "https://openlab.ncl.ac.uk/gitlab/ongoingness/api/issues"
   },
-  "homepage": "https://github.com/danjwelsh/express-stub#readme",
+  "homepage": "https://openlab.ncl.ac.uk/gitlab/ongoingness/api#readme",
   "dependencies": {
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",

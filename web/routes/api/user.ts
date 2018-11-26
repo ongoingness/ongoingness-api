@@ -3,8 +3,10 @@ import { Reply } from '../../reply';
 
 import { checkToken } from '../../middleware/authenticate';
 import { Request, Response, NextFunction, Router } from 'express';
-import { destroyUser, getUser } from '../../controllers/user';
+import { UserController } from '../../controllers/user';
 import { Schema } from 'mongoose';
+
+const userController: UserController = new UserController();
 
 let router : Router;
 
@@ -20,7 +22,7 @@ export const userRouter = () => {
     const userId: Schema.Types.ObjectId = res.locals.user.id;
     let user: IUser;
     try {
-      user = await getUser(userId);
+      user = await userController.get(userId);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -35,7 +37,7 @@ export const userRouter = () => {
     }
     const userId: Schema.Types.ObjectId = res.locals.user.id;
     try {
-      await destroyUser(userId);
+      await userController.destroy(userId);
     } catch (e) {
       e.message = '500';
       return next(e);

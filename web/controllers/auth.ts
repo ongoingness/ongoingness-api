@@ -3,8 +3,10 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import models from '../models';
 import { IDevice } from '../schemas/device';
-import { getDeviceMac } from './device';
-import { getUser } from './user';
+import { DeviceController } from './device';
+import { UserController } from './user';
+
+const userController: UserController = new UserController();
 
 /**
  * Authenticate a user
@@ -47,11 +49,9 @@ export function generateToken(user: IUser): string {
     username: user.username,
   };
   // create and sign token against the app secret
-  const token: string = jwt.sign(payload, process.env.SECRET, {
+  return jwt.sign(payload, process.env.SECRET, {
     expiresIn: '1 day', // expires in 24 hours
   });
-
-  return token;
 }
 
 /**
@@ -60,16 +60,17 @@ export function generateToken(user: IUser): string {
  * @returns {Promise<IUser>}
  */
 export async function authenticateWithMAC(mac: string): Promise<IUser> {
+  const deviceController: DeviceController = new DeviceController();
   let user: IUser;
   let device: IDevice;
 
-  device = await getDeviceMac(mac);
+  device = await deviceController.getDeviceMac(mac);
 
   if (!device) {
     throw new Error('404');
   }
 
-  user = await getUser(device.owner);
+  user = await userController.get(device.owner);
 
   if (!user) {
     throw new Error('404');

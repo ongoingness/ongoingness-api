@@ -2,31 +2,31 @@ import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
 import { URL } from '../commons';
 import { generateToken } from '../../web/controllers/auth';
-import { destroyUser, storeUser } from '../../web/controllers/user';
+import { UserController } from '../../web/controllers/user';
 import { IUser } from '../../web/schemas/user';
 import { expect } from 'chai';
-import { destroyDevice, storeDevice } from '../../web/controllers/device';
+import { DeviceController } from '../../web/controllers/device';
 import { IDevice } from '../../web/schemas/device';
 
 let user: IUser;
 let token: string;
+const deviceController: DeviceController = new DeviceController();
+const userController: UserController = new UserController();
 
 describe('Devices', () => {
   let device1: IDevice;
-  let device2: IDevice;
   const dummyMAC: string = '02:00:00:00:00:00';
 
   before(async () => {
     const username: string = 'tester-middleware';
     const password: string  = 'secret';
 
-    user = await storeUser(username, password);
+    user = await userController.store({ username, password });
     token = await generateToken(user);
   });
 
   after(async () => {
-    await destroyDevice(user._id, device2._id);
-    await destroyUser(user._id);
+    await userController.destroy(user._id);
   });
 
   describe('Add a device', () => {
@@ -44,9 +44,16 @@ describe('Devices', () => {
   });
 
   describe('Pair devices',  () => {
+    let device2: IDevice;
+
     before(async () => {
-      device2 = await storeDevice(user._id, '03:00:00:00:00:00');
+      device2 = await deviceController.store({ owner: user._id, mac: '03:00:00:00:00:00' });
     });
+
+    after(async () => {
+      await deviceController.destroy(device2._id);
+    });
+
     it('Should pair two devices', (done) => {
       const deviceData = {
         device1: device1._id,
@@ -63,7 +70,8 @@ describe('Devices', () => {
 
   describe('Destroy device', () => {
     it('Should destroy a device', (done) => {
-      axios.delete(`${URL}/api/devices/destroy/${device1._id}`,
+      const url = `${URL}/api/devices/destroy/${device1._id}`;
+      axios.delete(url,
                    { headers: { 'x-access-token': token } })
         .then((response: AxiosResponse) => {
           expect(response.status).to.equal(200);

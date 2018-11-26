@@ -1,9 +1,10 @@
 import { Router, Response, Request, NextFunction } from 'express';
 import { Reply } from '../../reply';
 import { IUser } from '../../schemas/user';
-import { storeUser } from '../../controllers/user';
+import { UserController } from '../../controllers/user';
 import { generateToken, authenticateUser, authenticateWithMAC } from '../../controllers/auth';
 
+const userController: UserController = new UserController();
 let routes: Router;
 
 export const authRouter = () => {
@@ -21,7 +22,7 @@ export const authRouter = () => {
 
     let user: IUser;
     try {
-      user = await storeUser(username, password);
+      user = await userController.store({ username, password });
     } catch (error) {
       console.log(error);
       return next(error);

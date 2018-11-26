@@ -1,26 +1,21 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import * as multer from 'multer';
-import {
-  getLinkedPastMedia,
-  getMediaRecord,
-  getRandomPresentMedia,
-  storeMedia,
-  storeMediaRecord,
-} from '../../controllers/media';
+import { MediaController } from '../../controllers/media';
 import { checkToken } from '../../middleware/authenticate';
 import { IUser } from '../../schemas/user';
-import { getUser } from '../../controllers/user';
+import { UserController } from '../../controllers/user';
 import { Reply } from '../../reply';
 import { IMedia } from '../../schemas/media';
 import { Schema } from 'mongoose';
-import { IDevice } from '../../schemas/device';
-import { IState } from '../../schemas/state';
-import { storeState } from '../../controllers/state';
-import { getLastSession, storeSession } from '../../controllers/session';
+import { SessionController } from '../../controllers/session';
 import { ISession } from '../../schemas/session';
 import * as jwt from 'jsonwebtoken';
 
 const upload = multer({ dest: 'uploads/' });
+const mediaController: MediaController = new MediaController();
+const sessionController: SessionController = new SessionController();
+const userController: UserController = new UserController();
+
 let router: Router;
 
 export const mediaRouter = () => {
@@ -41,7 +36,6 @@ export const mediaRouter = () => {
         if (err) {
           return next(new Error('401'));
         }
-
         rawUser = user;
       });
     } else {
@@ -49,7 +43,7 @@ export const mediaRouter = () => {
     }
 
     try {
-      user = await getUser(rawUser.id);
+      user = await userController.get(rawUser.id);
       media = await user.getMedia(mediaId);
     } catch (e) {
       e.message = '500';
@@ -81,7 +75,7 @@ export const mediaRouter = () => {
 
     let user: IUser;
     try {
-      user = await getUser(res.locals.user.id);
+      user = await userController.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -91,17 +85,19 @@ export const mediaRouter = () => {
       return next(new Error('400'));
     }
 
-    const mimeType = req.file.mimetype;
+    const mimetype = req.file.mimetype;
     const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
 
     let imagePath: string;
     let media: IMedia;
     try {
-      imagePath = await storeMedia(req.file.path, req.file.originalname, ext);
-      media = await storeMediaRecord(imagePath,
-                                     mimeType,
-                                     user,
-                                     <string>req.headers['era'] || 'past');
+      imagePath = await mediaController.storeMedia(req.file.path, req.file.originalname, ext);
+      media = await mediaController.store({
+        mimetype,
+        user,
+        path: imagePath,
+        era: <string>req.headers['era'] || 'past',
+      });
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -111,49 +107,13 @@ export const mediaRouter = () => {
   });
 
   /**
-   * Store the current image a display is presenting
-   */
-  router.post('/display/store', async (req: Request, res: Response, next: NextFunction) => {
-    const mediaId: Schema.Types.ObjectId = req.body.mediaId;
-    const deviceId: Schema.Types.ObjectId = req.body.deviceId;
-
-    // Get the user
-    let user: IUser;
-    try {
-      user = await getUser(res.locals.user.id);
-    } catch (error) {
-      error.message('500');
-      return next(error);
-    }
-
-    const media: IMedia = await user.getMedia(mediaId);
-    const device: IDevice = await user.getDevice(deviceId);
-
-    if (!media || !device) {
-      return next(new Error('404'));
-    }
-
-    // Create a new display state
-    let state: IState;
-    try {
-      state = await storeState(deviceId, mediaId);
-    } catch (error) {
-      error.message = '500';
-      return next(error);
-    }
-
-    // Return state
-    return res.json(new Reply(200, 'success', false, state));
-  });
-
-  /**
    * Get paired media
    */
   router.get('/links/:id', async (req: Request, res: Response, next: NextFunction) => {
     const mediaId: Schema.Types.ObjectId = req.params.id;
     let media: IMedia;
     try {
-      media = await getMediaRecord(mediaId);
+      media = await mediaController.get(mediaId);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -174,7 +134,7 @@ export const mediaRouter = () => {
 
     let user: IUser;
     try {
-      user = await getUser(res.locals.user.id);
+      user = await userController.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
@@ -203,14 +163,14 @@ export const mediaRouter = () => {
     let media: IMedia;
 
     try {
-      user = await getUser(res.locals.user.id);
+      user = await userController.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
       return next(e);
     }
 
     try {
-      media = await getRandomPresentMedia(user._id);
+      media = await mediaController.getRandomPresentMedia(user._id);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -221,7 +181,7 @@ export const mediaRouter = () => {
     }
 
     try {
-      await storeSession(user, media);
+      await sessionController.store({ media, user: user._id });
     } catch (e) {
       return next(e);
     }
@@ -239,14 +199,14 @@ export const mediaRouter = () => {
     let session: ISession;
 
     try {
-      user = await getUser(res.locals.user.id);
+      user = await userController.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
       return next(e);
     }
 
     try {
-      session = await getLastSession(user);
+      session = await sessionController.getLastSession(user);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -254,7 +214,7 @@ export const mediaRouter = () => {
 
     if (session) {
       try {
-        media = await getLinkedPastMedia(session.media);
+        media = await mediaController.getLinkedPastMedia(session.media);
         if (media) {
           return res.json(new Reply(200, 'success', false, media._id));
         }
@@ -269,10 +229,10 @@ export const mediaRouter = () => {
     }
 
     try {
-      media = await getRandomPresentMedia(user._id);
-      await storeSession(user, media);
+      media = await mediaController.getRandomPresentMedia(user._id);
+      await sessionController.store({ media, user: user._id });
 
-      media = await getLinkedPastMedia(session.media);
+      media = await mediaController.getLinkedPastMedia(session.media);
 
       return res.json(new Reply(200, 'success', false, media._id));
     } catch (e) {

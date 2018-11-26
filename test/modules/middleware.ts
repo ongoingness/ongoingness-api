@@ -3,8 +3,10 @@ import axios, { AxiosError } from 'axios';
 import { URL } from '../commons';
 import { expect } from 'chai';
 import { IUser } from '../../web/schemas/user';
-import { destroyUser, storeUser } from '../../web/controllers/user';
+import { UserController } from '../../web/controllers/user';
 import { generateToken } from '../../web/controllers/auth';
+
+const userController: UserController = new UserController();
 
 let user: IUser;
 let token: string;
@@ -14,12 +16,12 @@ describe('Middleware', () => {
     const username: string = 'tester-middleware';
     const password: string  = 'secret';
 
-    user = await storeUser(username, password);
+    user = await userController.store({ username, password });
     token = await generateToken(user);
   });
 
   after(async () => {
-    await destroyUser(user._id);
+    await userController.destroy(user._id);
   });
 
   describe('Authentication', () => {

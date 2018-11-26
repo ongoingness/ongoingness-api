@@ -1,12 +1,15 @@
 import { Router, Response, Request, NextFunction } from 'express';
-import {checkToken} from '../../middleware/authenticate';
+import { checkToken } from '../../middleware/authenticate';
 import { IDevice } from '../../schemas/device';
 import { IPair } from '../../schemas/pair';
 import { Reply } from '../../reply';
 import { Schema } from 'mongoose';
-import { createPair, destroyDevice, getDevice, storeDevice } from '../../controllers/device';
+import { DeviceController } from '../../controllers/device';
 import { IUser } from '../../schemas/user';
-import { getUser } from '../../controllers/user';
+import { UserController } from '../../controllers/user';
+
+const userController: UserController = new UserController();
+const deviceController: DeviceController = new DeviceController();
 
 let router: Router;
 
@@ -26,28 +29,24 @@ export const devicesRouter = () => {
     }
 
     let user: IUser;
+    const mac: string = req.body.mac;
+    let device: IDevice;
+
     try {
-      user = await getUser(res.locals.user.id);
+      user = await userController.get(res.locals.user.id);
     } catch (error) {
       error.message = '500';
       return next(error);
     }
 
-    const mac: string = req.body.mac;
-
-    let device: IDevice;
-
     try {
       // Try and store the device
-      device = await storeDevice(user._id, mac);
+      device = await deviceController.store({ mac, owner: user._id });
     } catch (error) {
       // Error is probably a unique mac violation
-      error.message = '400';
+      error.message = '401';
       return next(error);
     }
-
-    user.devices.push(device._id);
-    await user.save();
 
     return res.json(new Reply(200, 'success', false, device));
   });
@@ -63,7 +62,7 @@ export const devicesRouter = () => {
 
     let pair: IPair;
     try {
-      pair = await createPair(owner, device1Id, device2Id);
+      pair = await deviceController.createPair(owner, device1Id, device2Id);
     } catch (error) {
       return next(error);
     }
@@ -80,45 +79,31 @@ export const devicesRouter = () => {
     }
 
     let user: IUser;
-    try {
-      user = await getUser(res.locals.user.id);
-    } catch (error) {
-      error.message = '500';
-      return next(error);
-    }
-
     let device: IDevice;
+    const id: Schema.Types.ObjectId = req.params.id;
     try {
-      device = await getDevice(req.params.id);
+      user = await userController.get(res.locals.user.id);
+      device = await deviceController.get(id);
     } catch (error) {
       error.message = '500';
       return next(error);
     }
 
     // throw 404 if device not found
-    if (!device) {
+    if (!device || !user) {
       return next(new Error('404'));
     }
 
-    let deviceIdx: number = -1;
-    for (let i = 0; i < user.devices.length; i++) {
-      if (user.devices[i] === device._id) {
-        deviceIdx = i;
-      }
-    }
+    const deviceIdx = user.devices.findIndex((userDevice: Schema.Types.ObjectId) => {
+      return userDevice.toString() === device._id.toString();
+    });
 
-    if (deviceIdx > 0) {
-      user.devices.splice(deviceIdx, 1);
-    }
-    await user.save();
-
-    // throw 401 if user is not the device owner
-    if (!(user._id !== device.owner)) {
+    if (deviceIdx === -1) {
       return next(new Error('401'));
     }
 
     try {
-      await destroyDevice(user._id, device._id);
+      await deviceController.destroy(device._id);
     } catch (error) {
       error.message = '500';
       return next(error);

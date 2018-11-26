@@ -1,10 +1,10 @@
 import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
-import { URL } from './commons';
+import { URL } from '../commons';
 import { expect } from 'chai';
-import { generateToken } from '../web/controllers/auth';
-import { storeUser } from '../web/controllers/user';
-import { IUser } from '../web/schemas/user';
+import { generateToken } from '../../web/controllers/auth';
+import { storeUser } from '../../web/controllers/user';
+import { IUser } from '../../web/schemas/user';
 
 let user: IUser;
 let token: string;

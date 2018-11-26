@@ -1,12 +1,12 @@
 import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
-import { URL } from './commons';
-import { generateToken } from '../web/controllers/auth';
-import { destroyUser, storeUser } from '../web/controllers/user';
-import { IUser } from '../web/schemas/user';
+import { URL } from '../commons';
+import { generateToken } from '../../web/controllers/auth';
+import { destroyUser, storeUser } from '../../web/controllers/user';
+import { IUser } from '../../web/schemas/user';
 import { expect } from 'chai';
-import { destroyDevice, storeDevice } from '../web/controllers/device';
-import { IDevice } from '../web/schemas/device';
+import { destroyDevice, storeDevice } from '../../web/controllers/device';
+import { IDevice } from '../../web/schemas/device';
 
 let user: IUser;
 let token: string;

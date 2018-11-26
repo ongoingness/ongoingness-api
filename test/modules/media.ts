@@ -1,5 +1,5 @@
-import { destroyUser, storeUser } from '../web/controllers/user';
-import { IUser } from '../web/schemas/user';
+import { destroyUser, storeUser } from '../../web/controllers/user';
+import { IUser } from '../../web/schemas/user';
 import {
   destroyMedia,
   getLinkedPastMedia,
@@ -8,20 +8,20 @@ import {
   storeMediaRecord,
   addEmotionsToMedia,
   getEmotionalLinks,
-} from '../web/controllers/media';
+} from '../../web/controllers/media';
 import * as path from 'path';
 import * as fs from 'fs';
 import { expect } from 'chai';
 import { promisify } from 'util';
 import * as FormData from 'form-data';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { generateToken } from '../web/controllers/auth';
+import { generateToken } from '../../web/controllers/auth';
 import { describe } from 'mocha';
-import { destroyDevice, storeDevice } from '../web/controllers/device';
-import { IDevice } from '../web/schemas/device';
-import { IMedia } from '../web/schemas/media';
-import { ISession } from '../web/schemas/session';
-import { storeSession } from '../web/controllers/session';
+import { destroyDevice, storeDevice } from '../../web/controllers/device';
+import { IDevice } from '../../web/schemas/device';
+import { IMedia } from '../../web/schemas/media';
+import { ISession } from '../../web/schemas/session';
+import { storeSession } from '../../web/controllers/session';
 import { Schema } from 'mongoose';
 
 const rename = promisify(fs.rename);
@@ -34,6 +34,9 @@ let device2: IDevice;
 let media: IMedia;
 
 describe('Media', () => {
+  const imagePath: string = path.join(__dirname, '../../../test.jpg');
+  console.log(imagePath);
+
   before(async () => {
     const username: string = 'tester-media';
     const password: string  = 'secret';
@@ -44,20 +47,20 @@ describe('Media', () => {
     device1 = await storeDevice(user._id, '1');
     device2 = await storeDevice(user._id, '2');
 
-    const filepath: string = await storeMedia(path.join(__dirname, '../../test.jpg'),
+    const filepath: string = await storeMedia(imagePath,
                                               'test.jpg',
                                               'jpg');
     media = await storeMediaRecord(filepath, 'image/jpeg', user);
 
     fs.createReadStream(media.path)
-      .pipe(fs.createWriteStream(path.join(__dirname, '../../test.jpg')));
+      .pipe(fs.createWriteStream(imagePath));
   });
 
   after(async () => {
     await destroyDevice(user._id, device1._id);
     await destroyDevice(user._id, device2._id);
 
-    await rename(media.path, path.join(__dirname, '../../test.jpg'));
+    await rename(media.path, imagePath);
     await destroyMedia(media._id);
 
     await destroyUser(user._id);
@@ -65,7 +68,7 @@ describe('Media', () => {
 
   describe('Store media',  () => {
     it('Should store a file in the uploads folder', (done) => {
-      storeMedia(path.join(__dirname, '../../test.jpg'), 'test.jpg', 'jpg').then((filepath) => {
+      storeMedia(imagePath, 'test.jpg', 'jpg').then((filepath) => {
         testFilePath = filepath;
         expect(fs.existsSync(filepath)).to.be.true;
         done();
@@ -73,7 +76,7 @@ describe('Media', () => {
     });
 
     after(async () => {
-      await rename(testFilePath, path.join(__dirname, '../../test.jpg'));
+      await rename(testFilePath, imagePath);
     });
   });
 
@@ -138,7 +141,7 @@ describe('Media', () => {
   describe('Upload media', () => {
     it('Should post and store data', (done) => {
       const formData = new FormData();
-      const file = fs.createReadStream(path.join(__dirname, '../../test.jpg'));
+      const file = fs.createReadStream(imagePath);
       formData.append('file', file);
 
       axios.post(`${URL}/api/media/upload`, formData, {

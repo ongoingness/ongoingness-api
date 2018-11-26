@@ -1,11 +1,11 @@
 import { describe } from 'mocha';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { URL } from './commons';
+import { URL } from '../commons';
 import { expect } from 'chai';
-import { IUser } from '../web/schemas/user';
-import { destroyUser } from '../web/controllers/user';
-import { IDevice } from '../web/schemas/device';
-import { destroyDevice, storeDevice } from '../web/controllers/device';
+import { IUser } from '../../web/schemas/user';
+import { destroyUser } from '../../web/controllers/user';
+import { IDevice } from '../../web/schemas/device';
+import { destroyDevice, storeDevice } from '../../web/controllers/device';
 
 let user: IUser;
 

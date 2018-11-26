@@ -1,7 +1,7 @@
 // For the home routes.
 import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
-import { URL } from './commons';
+import { URL } from '../commons';
 import { expect } from 'chai';
 
 describe('Home', () => {

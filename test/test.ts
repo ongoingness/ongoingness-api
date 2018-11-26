@@ -23,10 +23,10 @@ describe('api', () => {
   /**
    * Import tests from files
    */
-  require('./media');
-  require('./home');
-  require('./auth');
-  require('./middleware');
-  require('./user');
-  require('./devices');
+  require('./modules/media');
+  require('./modules/home');
+  require('./modules/auth');
+  require('./modules/middleware');
+  require('./modules/user');
+  require('./modules/devices');
 });

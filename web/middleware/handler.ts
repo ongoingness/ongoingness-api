@@ -36,6 +36,7 @@ function getError(code: number): Reply {
   switch (code) {
     case 400:
       message = 'bad request';
+      break;
     case 401:
       message = 'unauthorised';
       break;

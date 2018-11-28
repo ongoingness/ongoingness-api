@@ -5,7 +5,7 @@ import { checkToken } from '../../middleware/authenticate';
 import { Request, Response, NextFunction, Router } from 'express';
 import { UserController } from '../../controllers/user';
 import { Schema } from 'mongoose';
-import { ResourceRouter } from './resource-router';
+import { ResourceRouter } from './base';
 
 const userController: UserController = new UserController();
 

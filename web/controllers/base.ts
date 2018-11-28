@@ -1,6 +1,6 @@
 import { Schema, Document } from 'mongoose';
 
-export interface ResourceController<Document> {
+export interface IResourceController<Document> {
   get(id: Schema.Types.ObjectId): Promise<Document>;
   getAll(): Promise<Document[]>;
   edit(id: Schema.Types.ObjectId, data: any): Promise<Document>;

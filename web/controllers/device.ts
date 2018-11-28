@@ -4,9 +4,9 @@ import { IPair } from '../schemas/pair';
 import { Schema } from 'mongoose';
 import { UserController } from './user';
 import { IUser } from '../schemas/user';
-import { ResourceController } from './resource-controller';
+import { IResourceController } from './base';
 
-export class DeviceController implements ResourceController<IDevice> {
+export class DeviceController implements IResourceController<IDevice> {
   userController: UserController = new UserController();
 
   /**

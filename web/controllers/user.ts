@@ -2,9 +2,9 @@ import { IUser } from '../schemas/user';
 import * as crypto from 'crypto';
 import models from '../models';
 import { Schema } from 'mongoose';
-import { ResourceController } from './resource-controller';
+import { IResourceController } from './base';
 
-export class UserController implements ResourceController<IUser> {
+export class UserController implements IResourceController<IUser> {
   /**
    * Delete a user
    * @param {Schema.Types.ObjectId} id

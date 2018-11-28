@@ -8,7 +8,7 @@ import { Reply } from '../../reply';
 import { IMedia } from '../../schemas/media';
 import { Schema } from 'mongoose';
 import { SessionController } from '../../controllers/session';
-import { ResourceRouter } from './resource-router';
+import { ResourceRouter } from './base';
 import { Methods } from '../../methods';
 
 const upload = multer({ dest: 'uploads/' });

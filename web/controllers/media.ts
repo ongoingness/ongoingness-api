@@ -6,12 +6,12 @@ import models from '../models';
 import { promisify } from 'util';
 import * as crypto from 'crypto';
 import { Schema } from 'mongoose';
-import { ResourceController } from './resource-controller';
+import { IResourceController } from './base';
 
 const rename = promisify(fs.rename);
 const unlink = promisify(fs.unlink);
 
-export class MediaController implements ResourceController<IMedia> {
+export class MediaController implements IResourceController<IMedia> {
   /**
    * Destroy a media record
    * @param {Schema.Types.ObjectId} id

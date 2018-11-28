@@ -7,7 +7,7 @@ import { Schema } from 'mongoose';
 import { DeviceController } from '../../controllers/device';
 import { IUser } from '../../schemas/user';
 import { UserController } from '../../controllers/user';
-import { ResourceRouter } from './resource-router';
+import { ResourceRouter } from './base';
 import { Methods } from '../../methods';
 
 const userController: UserController = new UserController();

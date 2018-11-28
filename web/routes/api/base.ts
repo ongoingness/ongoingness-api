@@ -1,14 +1,71 @@
-import { Router, Response, Request, NextFunction, Handler, RequestHandler } from 'express';
+import { Router, Response, Request, NextFunction, Handler } from 'express';
 import { Methods } from '../../methods';
 
-export abstract class ResourceRouter {
-
+export abstract class BaseRouter {
   router: Router;
   fileUploadHandler: Handler;
 
   protected constructor() {
     this.router = Router();
   }
+
+  /**
+   * Add a route to the router.
+   * @param {string} path
+   * @param {Methods} method
+   * @param handler
+   */
+  addRoute(
+    path: string,
+    method: Methods,
+    handler: Handler) {
+    switch (method) {
+      case Methods.GET:
+        this.router.get(path, handler);
+        break;
+      case Methods.POST:
+        this.router.post(path, handler);
+        break;
+      case Methods.PUT:
+        this.router.put(path, handler);
+        break;
+      case Methods.DELETE:
+        this.router.delete(path, handler);
+    }
+  }
+
+  /**
+   * Return the router.
+   * @returns {e.Router}
+   */
+  getRouter(): Router {
+    return this.router;
+  }
+
+  /**
+   * Add middleware to the router.
+   * @param middleware
+   */
+  addMiddleware(middleware: Handler): void {
+    this.router.use(middleware);
+  }
+
+  setFileUploadHandler(handler: Handler): void {
+    this.fileUploadHandler = handler;
+  }
+}
+
+/**
+ * A router that handles a resource.
+ * Should implement methods to:
+ *  - Fetch
+ *  - Fetch all
+ *  - Update
+ *  - Store
+ *  - Destroy
+ *  the resource it handles.
+ */
+export abstract class ResourceRouter extends BaseRouter {
 
   /**
    * Get the resource by id.
@@ -58,14 +115,6 @@ export abstract class ResourceRouter {
   abstract show(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void;
 
   /**
-   * Return the router.
-   * @returns {e.Router}
-   */
-  getRouter(): Router {
-    return this.router;
-  }
-
-  /**
    * Setup router
    * Add all default routes to router.
    */
@@ -80,42 +129,5 @@ export abstract class ResourceRouter {
     } else {
       this.router.post('/', this.store);
     }
-  }
-
-  /**
-   * Add a route to the router.
-   * @param {string} path
-   * @param {Methods} method
-   * @param handler
-   */
-  addRoute(
-    path: string,
-    method: Methods,
-    handler: Handler) {
-    switch (method) {
-      case Methods.GET:
-        this.router.get(path, handler);
-        break;
-      case Methods.POST:
-        this.router.post(path, handler);
-        break;
-      case Methods.PUT:
-        this.router.put(path, handler);
-        break;
-      case Methods.DELETE:
-        this.router.delete(path, handler);
-    }
-  }
-
-  /**
-   * Add middleware to the router.
-   * @param middleware
-   */
-  addMiddleware(middleware: Handler): void {
-    this.router.use(middleware);
-  }
-
-  setFileUploadHandler(handler: Handler): void {
-    this.fileUploadHandler = handler;
   }
 }

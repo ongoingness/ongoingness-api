@@ -2,10 +2,10 @@ import { ISession } from '../schemas/session';
 import models from '../models';
 import { IMedia } from '../schemas/media';
 import { IUser } from '../schemas/user';
-import { ResourceController } from './resource-controller';
+import { IResourceController } from './base';
 import { Schema } from 'mongoose';
 
-export class SessionController implements ResourceController<ISession> {
+export class SessionController implements IResourceController<ISession> {
   /**
    * Destroy a session
    * TODO: Implement

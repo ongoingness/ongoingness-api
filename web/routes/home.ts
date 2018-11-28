@@ -1,18 +1,24 @@
-import { NextFunction, Request, Response, Router } from 'express';
-let router;
+import { NextFunction, Request, Response } from 'express';
+import { BaseRouter } from './api/base';
+import { Methods } from '../methods';
 
 /**
- * Get routes
- * @param  app Express.express
- * @return     Router
+ * Provide home routes.
  */
-function home(): Router {
-  router = Router();
-  router.get('/', (req: Request, res: Response, next: NextFunction) => {
+export class HomeRouter extends BaseRouter {
+  constructor() {
+    super();
+    this.addRoute('/', Methods.GET, this.index);
+  }
+
+  /**
+   * Display hello world.
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {e.Response}
+   */
+  index(req: Request, res: Response, next: NextFunction): Response {
     return res.send('Hello World');
-  });
-
-  return router;
+  }
 }
-
-export default home;

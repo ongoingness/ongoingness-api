@@ -34,7 +34,7 @@ describe('Devices', () => {
       const deviceData = {
         mac: dummyMAC,
       };
-      axios.post(`${URL}/api/devices/add`, deviceData, { headers: { 'x-access-token': token } })
+      axios.post(`${URL}/api/devices/`, deviceData, { headers: { 'x-access-token': token } })
         .then((response: AxiosResponse) => {
           expect(response.status).to.equal(200);
           device1 = response.data.payload;
@@ -70,7 +70,7 @@ describe('Devices', () => {
 
   describe('Destroy device', () => {
     it('Should destroy a device', (done) => {
-      const url = `${URL}/api/devices/destroy/${device1._id}`;
+      const url = `${URL}/api/devices/${device1._id}`;
       axios.delete(url,
                    { headers: { 'x-access-token': token } })
         .then((response: AxiosResponse) => {

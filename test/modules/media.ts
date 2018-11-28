@@ -33,7 +33,7 @@ describe('Media', () => {
   const imagePath: string = path.join(__dirname, '../../../test.jpg');
 
   before(async () => {
-    const username: string = 'tester-media';
+    const username: string = 'random';
     const password: string  = 'secret';
 
     user = await userController.store({ username, password });
@@ -160,7 +160,7 @@ describe('Media', () => {
       const file = fs.createReadStream(imagePath);
       formData.append('file', file);
 
-      axios.post(`${URL}/api/media/upload`, formData, {
+      axios.post(`${URL}/api/media`, formData, {
         headers: {
           'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}`,
           'x-access-token': token,
@@ -205,7 +205,7 @@ describe('Media', () => {
         linkId: newMedia._id,
       };
 
-      axios.post(`${URL}/api/media/link/store`, linkData, { headers: { 'x-access-token': token } })
+      axios.post(`${URL}/api/media/links`, linkData, { headers: { 'x-access-token': token } })
         .then((response: AxiosResponse) => {
           expect(response.status).to.equal(200);
           done();
@@ -278,7 +278,7 @@ describe('Media', () => {
 
     describe('Get present media from API', () => {
       it('API should create a session and return a media id', (done) => {
-        axios.get(`${URL}/api/media/request/present`, { headers: { 'x-access-token': token } })
+        axios.get(`${URL}/api/media/request`, { headers: { 'x-access-token': token } })
           .then((response: AxiosResponse) => {
             expect(response.status).to.equal(200);
             done();
@@ -292,16 +292,6 @@ describe('Media', () => {
           expect(record2.links).contain(`${media._id}`);
           done();
         });
-      });
-    });
-
-    describe('Get past media from API', () => {
-      it('Should return a media id of a linked image from the past', (done) => {
-        axios.get(`${URL}/api/media/request/past`, { headers: { 'x-access-token': token } })
-          .then((response: AxiosResponse) => {
-            expect(response.status).to.equal(200);
-            done();
-          });
       });
     });
   });

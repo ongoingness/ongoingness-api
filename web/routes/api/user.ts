@@ -5,17 +5,12 @@ import { checkToken } from '../../middleware/authenticate';
 import { Request, Response, NextFunction, Router } from 'express';
 import { UserController } from '../../controllers/user';
 import { Schema } from 'mongoose';
+import { ResourceRouter } from './resource-router';
 
 const userController: UserController = new UserController();
 
-let router : Router;
-
-export const userRouter = () => {
-  router = Router();
-
-  router.use(checkToken);
-
-  router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
+export class UserRouter extends ResourceRouter {
+  async index(req: Request, res: Response, next: NextFunction) {
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
@@ -29,9 +24,9 @@ export const userRouter = () => {
     }
 
     return res.json(new Reply(200, 'success', false, { user }));
-  });
+  }
 
-  router.delete('/destroy', async (req, res, next) => {
+  async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
@@ -44,7 +39,23 @@ export const userRouter = () => {
     }
 
     return res.json(new Reply(200, 'success', false, {}));
-  });
+  }
 
-  return router;
-};
+  show(req: Request, res: Response, next: NextFunction): void {
+    return next(new Error('501'));
+  }
+
+  update(req: Request, res: Response, next: NextFunction): void {
+    return next(new Error('501'));
+  }
+
+  store(req: Request, res: Response, next: NextFunction): void {
+    return next(new Error('501'));
+  }
+
+  constructor() {
+    super();
+    this.addMiddleware(checkToken);
+    this.addDefaultRoutes();
+  }
+}

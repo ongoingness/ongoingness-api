@@ -1,7 +1,6 @@
 import { ISession } from '../schemas/session';
 import models from '../models';
 import { IMedia } from '../schemas/media';
-import { IUser } from '../schemas/user';
 import { IResourceController } from './base';
 import { Schema } from 'mongoose';
 
@@ -35,15 +34,6 @@ export class SessionController implements IResourceController<ISession> {
    */
   get(id: Schema.Types.ObjectId): Promise<ISession> {
     return undefined;
-  }
-
-  /**
-   * Get the last session
-   * @param {IUser} user
-   * @returns {Promise<ISession>}
-   */
-  async getLastSession(user: IUser): Promise<ISession> {
-    return await models.Session.findOne({ user: user._id }).sort({ createdAt: -1 });
   }
 
   /**

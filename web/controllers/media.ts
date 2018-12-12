@@ -1,16 +1,12 @@
-import * as path from 'path';
 import * as fs from 'fs';
 import { IUser } from '../schemas/user';
 import { IMedia } from '../schemas/media';
 import models from '../models';
 import { promisify } from 'util';
-import * as crypto from 'crypto';
 import { Schema } from 'mongoose';
 import { IResourceController } from './base';
 import { config, S3 } from 'aws-sdk';
-import { ManagedUpload } from 'aws-sdk/lib/s3/managed_upload';
 
-const rename = promisify(fs.rename);
 const unlink = promisify(fs.unlink);
 
 export class MediaController implements IResourceController<IMedia> {

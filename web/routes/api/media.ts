@@ -57,11 +57,16 @@ export class MediaRouter extends ResourceRouter {
       return next(new Error('404'));
     }
 
+    let data: any;
     try {
-      return res.sendFile(media.path);
+      data = await mediaController.getMediaFromS3(media.path);
     } catch (e) {
-      return next(new Error('404'));
+      return next(new Error('500'));
     }
+
+    res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+    res.write(data, 'binary');
+    res.end(null, 'binary');
   }
 
   /**
@@ -169,9 +174,12 @@ export class MediaRouter extends ResourceRouter {
    * @returns {Promise<void | e.Response>}
    */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    console.log('storing media');
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
+
+    console.log(res.locals.user.id);
 
     let user: IUser;
     try {
@@ -191,7 +199,12 @@ export class MediaRouter extends ResourceRouter {
     let imagePath: string;
     let media: IMedia;
     try {
-      imagePath = await mediaController.storeMedia(req.file.path, req.file.originalname, ext);
+      imagePath = await mediaController.storeMedia(
+        req.file.path,
+        req.file.originalname,
+        ext,
+        user._id,
+      );
       media = await mediaController.store({
         mimetype,
         user,

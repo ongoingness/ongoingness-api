@@ -7,6 +7,8 @@ import { promisify } from 'util';
 import * as crypto from 'crypto';
 import { Schema } from 'mongoose';
 import { IResourceController } from './base';
+import { config, S3 } from 'aws-sdk';
+import { ManagedUpload } from 'aws-sdk/lib/s3/managed_upload';
 
 const rename = promisify(fs.rename);
 const unlink = promisify(fs.unlink);
@@ -172,21 +174,71 @@ export class MediaController implements IResourceController<IMedia> {
   }
 
   /**
-   * Store an item of media.
+   * Store media in an S3 bucket.
    * @param {string} storedPath
    * @param {string} fileName
    * @param {string} ext
-   * @returns {Promise<string>}
+   * @param userId user id.
+   * @returns {Promise<string>} the name of the file in the S3 Bucket.
    */
-  async storeMedia(storedPath: string,
-                   fileName: string,
-                   ext: string): Promise<string> {
-    const hash: crypto.Hash = crypto.createHash('sha1');
-    hash.update(fileName);
-    const fileNameHash = hash.digest('hex');
-    const filepath = path.join(__dirname, `../../../uploads/${fileNameHash}.${ext}`);
-    await rename(storedPath, filepath);
+  storeMedia(storedPath: string,
+             fileName: string,
+             ext: string,
+             userId: string,
+  ): Promise<string> {
+    // get a date string in the format YYYYMMDDHHMMSS
+    const now: string = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
+    const newFileName: string = `${userId}_${now}.${ext}`;
 
-    return filepath;
+    // Update S3 credentials.
+    config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+
+    const s3: S3 = new S3();
+    const params = {
+      Bucket: process.env.AWS_BUCKET,
+      Body: fs.createReadStream(storedPath),
+      Key: newFileName,
+    };
+
+    return new Promise<string>(((resolve, reject) => {
+      s3.upload(params).promise()
+        .then((data: any) => {
+          resolve(data.key);
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    }));
+  }
+
+  /**
+   * Fetch a file from S3 storage
+   * @param {string} key file key.
+   * @returns {Promise<any>}
+   */
+  getMediaFromS3(key: string): Promise<any> {
+    // Update S3 credentials.
+    config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+
+    const s3: S3 = new S3();
+    const params = {
+      Bucket: process.env.AWS_BUCKET,
+      Key: key,
+    };
+
+    return new Promise<any>(((resolve, reject) => {
+      s3.getObject(params).promise()
+        .then((data: any) => {
+          resolve(data.Body);
+        }).catch((e) => {
+          reject(e);
+        });
+    }));
   }
 }

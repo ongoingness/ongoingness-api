@@ -4,7 +4,6 @@ import { MediaController } from '../../web/controllers/media';
 import * as path from 'path';
 import * as fs from 'fs';
 import { expect } from 'chai';
-import { promisify } from 'util';
 import * as FormData from 'form-data';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { generateToken } from '../../web/controllers/auth';
@@ -16,7 +15,6 @@ import { ISession } from '../../web/schemas/session';
 import { SessionController } from '../../web/controllers/session';
 import { Schema } from 'mongoose';
 
-const rename = promisify(fs.rename);
 const URL: string = 'http://localhost:8888';
 let user: IUser;
 let testFilePath: string;
@@ -42,42 +40,42 @@ describe('Media', () => {
     device1 = await deviceController.store({ owner: user._id, mac: '1' });
     device2 = await deviceController.store({ owner: user._id, mac: '2' });
 
-    const filepath: string = await mediaController.storeMedia(imagePath,
-                                                              'test.jpg',
-                                                              'jpg');
+    let filepath: string;
+    try {
+      filepath = await mediaController.storeMedia(imagePath,
+                                                  'test.jpg',
+                                                  'jpg',
+                                                  user._id,
+      );
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
 
-    media = await mediaController.store({
-      user,
-      path: filepath,
-      mimetype: 'image/jpeg',
-      era: 'past',
-    });
-
-    fs.createReadStream(media.path)
-      .pipe(fs.createWriteStream(imagePath));
+    if (filepath) {
+      media = await mediaController.store({
+        user,
+        path: filepath,
+        mimetype: 'image/jpeg',
+        era: 'past',
+      });
+    }
   });
 
   after(async () => {
     await deviceController.destroy(device1._id);
     await deviceController.destroy(device2._id);
-
-    await rename(media.path, imagePath);
     await mediaController.destroy(media._id);
-
     await userController.destroy(user._id);
   });
 
   describe('Store media',  () => {
     it('Should store a file in the uploads folder', (done) => {
-      mediaController.storeMedia(imagePath, 'test.jpg', 'jpg').then((filepath) => {
-        testFilePath = filepath;
-        expect(fs.existsSync(filepath)).to.be.true;
+      mediaController.storeMedia(imagePath, 'test.jpg', 'jpg', user._id).then((filepath) => {
+        console.log(filepath);
+        expect(filepath.length).to.be.greaterThan(1);
         done();
       });
-    });
-
-    after(async () => {
-      await rename(testFilePath, imagePath);
     });
   });
 
@@ -167,7 +165,6 @@ describe('Media', () => {
         },
       }).then((response: AxiosResponse) => {
         expect(response.status).to.equal(200);
-        expect(fs.existsSync(response.data.payload.path)).to.be.true;
         done();
       }).catch((error: AxiosError) => {
         console.log(error);

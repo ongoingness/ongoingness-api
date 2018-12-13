@@ -18,7 +18,7 @@ RUN npm install
 
 
 # Install nodemon
-RUN npm install -g nodemon typescript
+RUN npm install -g nodemon typescript apidoc
 
 COPY .env /app/.env
 COPY app.ts /app/app.ts
@@ -27,6 +27,10 @@ COPY web /app/web
 COPY test /app/test
 COPY test.jpg /app/test.jpg
 RUN mkdir uploads
+RUN mkdir -p /app/static/apidoc
+
+# Create docs
+RUN apidoc -i /app/web -o /app/static
 
 RUN npm run build
 

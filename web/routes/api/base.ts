@@ -1,6 +1,14 @@
 import { Router, Response, Request, NextFunction, Handler } from 'express';
 import { Methods } from '../../methods';
 
+/**
+ * @apiDefine isAuthenticated
+ * @apiHeader {String} x-access-token Users authentication token
+ */
+
+/**
+ * Base router class. All routers extend this class.
+ */
 export abstract class BaseRouter {
   router: Router;
   fileUploadHandler: Handler;
@@ -119,10 +127,10 @@ export abstract class ResourceRouter extends BaseRouter {
    * Add all default routes to router.
    */
   addDefaultRoutes(): void {
-    this.router.get('/:id', this.index);
-    this.router.post('/update', this.update);
+    this.router.get('/:id', this.show);
     this.router.delete('/:id', this.destroy);
-    this.router.get('/', this.show);
+    this.router.post('/update', this.update);
+    this.router.get('/', this.index);
 
     if (this.fileUploadHandler) {
       this.router.post('/', this.fileUploadHandler, this.store);

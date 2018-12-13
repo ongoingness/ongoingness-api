@@ -18,7 +18,7 @@ export class HomeRouter extends BaseRouter {
    * @param {e.NextFunction} next
    * @returns {e.Response}
    */
-  index(req: Request, res: Response, next: NextFunction): Response {
-    return res.send('Hello World');
+  index(req: Request, res: Response, next: NextFunction): void {
+    return res.redirect('/static/apidoc');
   }
 }

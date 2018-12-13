@@ -17,7 +17,6 @@ import { Schema } from 'mongoose';
 
 const URL: string = 'http://localhost:8888';
 let user: IUser;
-let testFilePath: string;
 let token: string;
 let device1: IDevice;
 let device2: IDevice;

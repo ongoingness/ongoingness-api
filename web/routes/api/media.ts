@@ -30,13 +30,26 @@ export class MediaRouter extends ResourceRouter {
   }
 
   /**
+   * @api {get} /api/media/:id Get media by id.
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiParam {String} id  Media id
+   *
+   * @apiDescription Returns the media as an image.
+   *
    * Display media
    * @param {e.Request} req
    * @param {e.Response} res
    * @param {e.NextFunction} next
    * @returns {Promise<void | e.Response>}
    */
-  async index(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+  async show(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: Schema.Types.ObjectId = req.params.id;
     let user: IUser;
     let media: IMedia;
@@ -70,6 +83,33 @@ export class MediaRouter extends ResourceRouter {
   }
 
   /**
+   * @api {get} /api/media/links/:id Get all media links
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiParam {String} id  Media id.
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {
+        [
+          'link_id',
+          'link_id2'
+        ]
+      }
+    }
+   *
+   * @apiDescription Get all media that an item has semantic links with.
+   *
    * Get links attached to media.
    * @param {e.Request} req
    * @param {e.Response} res
@@ -93,6 +133,26 @@ export class MediaRouter extends ResourceRouter {
   }
 
   /**
+   * @api {get} /api/media/request Request media from the present.
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": 'media_id'
+    }
+   *
+   * @apiDescription Get an item of media from the present archive.
+   *
    * Get media from the present
    * @param {e.Request} req
    * @param {e.Response} res
@@ -126,6 +186,29 @@ export class MediaRouter extends ResourceRouter {
   }
 
   /**
+   * @api {post} /api/media/link Store a link between media.
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {}
+    }
+   *
+   * @apiParam {String} mediaId  Media from the past to add the link to.
+   * @apiParam {String} linkId  Media from the past to link to.
+   *
+   * @apiDescription Link two devices together
+   *
    * Store links in the database.
    * @param {e.Request} req
    * @param {e.Response} res
@@ -162,24 +245,54 @@ export class MediaRouter extends ResourceRouter {
    * @param {e.NextFunction} next
    * @returns {Promise<void | e.Response> | void}
    */
-  show(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+  index(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
     return next(new Error('501'));
   }
 
   /**
-   * Store media
+   * @api {post} /api/media/ Store media
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   * @apiUse errorBadRequest
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {
+        "links": [],
+        "era": "past",
+        "emotions": [],
+        "_id": "media_id",
+        "path": "path_to_file",
+        "mimetype": "image/jpeg",
+        "user": "user_id",
+        "createdAt": "2018-12-13T13:23:34.081Z",
+        "updatedAt": "2018-12-13T13:23:34.081Z",
+        "__v": 0
+      }
+    }
+   *
+   * @apiParam {File} file  Image to upload.
+   * @apiParam {String} [era]  Era the image is from, must be 'past' or 'present'. Default is past.
+   *
+   * @apiDescription Upload media.
    * @param {e.Request} req
    * @param {e.Response} res
    * @param {e.NextFunction} next
    * @returns {Promise<void | e.Response>}
    */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    console.log('storing media');
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
-
-    console.log(res.locals.user.id);
 
     let user: IUser;
     try {

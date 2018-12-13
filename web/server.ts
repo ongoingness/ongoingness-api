@@ -36,7 +36,8 @@ export class App {
 
     // This serves everything in `static` as static files
   private prepareStatic(): void {
-    this.express.use(express.static(path.join(__dirname, '/../static/')));
+    console.log('set static folder to:', `${__dirname}/../../static`);
+    this.express.use('/static', express.static(`${__dirname}/../../static`));
   }
 
     // Sets up handlebars as a view engine

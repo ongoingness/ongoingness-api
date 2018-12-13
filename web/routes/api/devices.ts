@@ -13,7 +13,39 @@ import { Methods } from '../../methods';
 const userController: UserController = new UserController();
 const deviceController: DeviceController = new DeviceController();
 
+/**
+ * Device router.
+ * Holds routes for manipulating devices.
+ */
 export class DeviceRouter extends ResourceRouter {
+  /**
+   * @api {delete} /api/devices/:id Destroy a device.
+   * @apiGroup Devices
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorResourceNotFound
+   * @apiUse errorServerError
+   *
+   * @apiParam {String} id  Device id.
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {}
+    }
+   *
+   * @apiDescription Destroy a device registered to a user.
+   *
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
+   */
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
@@ -21,10 +53,9 @@ export class DeviceRouter extends ResourceRouter {
 
     let user: IUser;
     let device: IDevice;
-    const id: Schema.Types.ObjectId = req.params.id;
     try {
       user = await userController.get(res.locals.user.id);
-      device = await deviceController.get(id);
+      device = await deviceController.get(req.params.id);
     } catch (error) {
       error.message = '500';
       return next(error);
@@ -53,11 +84,11 @@ export class DeviceRouter extends ResourceRouter {
     return res.json(new Reply(200, 'success', false, ''));
   }
 
-  index(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+  show(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
     return next(new Error('501'));
   }
 
-  show(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+  index(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
     return next(new Error('501'));
   }
 
@@ -65,6 +96,41 @@ export class DeviceRouter extends ResourceRouter {
     return next(new Error('501'));
   }
 
+  /**
+   * @api {post} /api/devices/ Store a device.
+   * @apiGroup Devices
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceExists
+   *
+   * @apiParam {String} mac  Device MAC address
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {
+          "_id": "resource_id",
+          "owner": "user_id",
+          "mac": "mac_address",
+          "createdAt": "2018-12-12T17:22:33.847Z",
+          "updatedAt": "2018-12-12T17:22:33.847Z",
+          "__v": 0
+      }
+    }
+   *
+   * @apiDescription Register a device to the user.
+   *
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
+   */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
@@ -93,11 +159,39 @@ export class DeviceRouter extends ResourceRouter {
     return res.json(new Reply(200, 'success', false, device));
   }
 
+  /**
+   * @api {post} /api/devices/pair Pair two devices
+   * @apiGroup Devices
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   *
+   * @apiParam {String} id  Device id.
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {}
+    }
+   *
+   * @apiDescription Link two devices together
+   *
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
+   */
   async pair(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
 
+    // TODO: check devices exist before pairing.
     const owner: Schema.Types.ObjectId = res.locals.user.id;
     const device1Id: Schema.Types.ObjectId = req.body.device1;
     const device2Id: Schema.Types.ObjectId = req.body.device2;

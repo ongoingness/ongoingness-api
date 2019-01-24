@@ -13,16 +13,19 @@ export class App {
   constructor() {
     this.express = express();
 
-    console.log(process.env.MONGO_URI, process.env.MONGODB_PASS);
-    /**
-     * Skip auth if in development.
-     */
-    mongoose.connect(process.env.MONGO_URI, {
-      user: process.env.MONGODB_USER,
-      pass: process.env.MONGODB_PASS,
-      dbName: process.env.MONGODB_DATABASE,
-      authdb: 'admin',
-    });
+    if (process.env.TEST === 'true') {
+      mongoose.connect(process.env.MONGO_URI);
+    } else {
+      /**
+       * Skip auth if in development.
+       */
+      mongoose.connect(process.env.MONGO_URI, {
+        user: process.env.MONGODB_USER,
+        pass: process.env.MONGODB_PASS,
+        dbName: process.env.MONGODB_DATABASE,
+        authdb: 'admin',
+      });
+    }
 
     this.prepareStatic();
     this.setViewEngine();

@@ -7,18 +7,23 @@ import { addRoutes } from './routes';
 import * as dotenv from 'dotenv';
 dotenv.load();
 
+/**
+ * Class that models the server application.
+ * Initialises a new instance of an express application in the constructor.
+ * Can be started with App.express.listen(PORT: number).
+ */
 export class App {
   public express: express.Express;
 
   constructor() {
     this.express = express();
 
-    if (process.env.TEST === 'true') {
+    /**
+     * Skip auth if in development.
+     */
+    if (process.env.DEBUG === 'true') {
       mongoose.connect(process.env.MONGO_URI);
     } else {
-      /**
-       * Skip auth if in development.
-       */
       mongoose.connect(process.env.MONGO_URI, {
         user: process.env.MONGODB_USER,
         pass: process.env.MONGODB_PASS,
@@ -27,6 +32,7 @@ export class App {
       });
     }
 
+    // Descriptions of each in method declaration.
     this.prepareStatic();
     this.setViewEngine();
     this.setBodyParser();

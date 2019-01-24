@@ -18,8 +18,6 @@ export class App {
   constructor() {
     this.express = express();
 
-    console.log(process.env);
-
     /**
      * Skip auth if in development.
      */

@@ -3,15 +3,17 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import { URL } from '../commons';
 import { expect } from 'chai';
 import { IUser } from '../../web/schemas/user';
-import { destroyUser } from '../../web/controllers/user';
+import { UserController } from '../../web/controllers/user';
 import { IDevice } from '../../web/schemas/device';
-import { destroyDevice, storeDevice } from '../../web/controllers/device';
+import { DeviceController } from '../../web/controllers/device';
 
 let user: IUser;
+const deviceController: DeviceController = new DeviceController();
+const userController: UserController = new UserController();
 
 describe('Auth', () => {
   after(async () => {
-    await destroyUser(user._id);
+    await userController.destroy(user._id);
   });
 
   describe('Register', () => {
@@ -60,11 +62,11 @@ describe('Auth', () => {
     const dummyMAC = '00:00:00:00:00:00';
 
     before(async () => {
-      device = await storeDevice(user._id, dummyMAC);
+      device = await deviceController.store({ owner: user._id, mac: dummyMAC });
     });
 
     after(async () => {
-      await destroyDevice(user._id, device._id);
+      await deviceController.destroy(device._id);
     });
 
     it('Should return a JWT token for the user who owns a device with a matching MAC address',

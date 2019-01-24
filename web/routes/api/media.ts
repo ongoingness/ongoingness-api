@@ -1,55 +1,65 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import * as multer from 'multer';
-import {
-  getLinkedPastMedia,
-  getMediaRecord,
-  getRandomPresentMedia,
-  storeMedia,
-  storeMediaRecord,
-} from '../../controllers/media';
+import { MediaController } from '../../controllers/media';
 import { checkToken } from '../../middleware/authenticate';
 import { IUser } from '../../schemas/user';
-import { getUser } from '../../controllers/user';
+import { UserController } from '../../controllers/user';
 import { Reply } from '../../reply';
 import { IMedia } from '../../schemas/media';
 import { Schema } from 'mongoose';
-import { IDevice } from '../../schemas/device';
-import { IState } from '../../schemas/state';
-import { storeState } from '../../controllers/state';
-import { getLastSession, storeSession } from '../../controllers/session';
-import { ISession } from '../../schemas/session';
-import * as jwt from 'jsonwebtoken';
+import { SessionController } from '../../controllers/session';
+import { ResourceRouter } from './base';
+import { Methods } from '../../methods';
 
 const upload = multer({ dest: 'uploads/' });
-let router: Router;
+const mediaController: MediaController = new MediaController();
+const sessionController: SessionController = new SessionController();
+const userController: UserController = new UserController();
 
-export const mediaRouter = () => {
-  router = Router();
+export class MediaRouter extends ResourceRouter {
+  /**
+   * Destroy media
+   * TODO: Implement
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response> | void}
+   */
+  destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+    return undefined;
+  }
 
   /**
-   * Get an item of media by id
+   * @api {get} /api/media/:id Get media by id.
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiParam {String} id  Media id
+   *
+   * @apiDescription Returns the media as an image.
+   *
+   * Display media
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
    */
-  router.get('/show/:id/:token', async (req: Request, res: Response, next: NextFunction) => {
-    const token : string = req.params.token;
+  async show(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: Schema.Types.ObjectId = req.params.id;
-    let rawUser: any = null;
     let user: IUser;
     let media: IMedia;
 
-    if (token) {
-      jwt.verify(token, process.env.SECRET, (err: Error, user: IUser) => {
-        if (err) {
-          return next(new Error('401'));
-        }
-
-        rawUser = user;
-      });
-    } else {
-      return next(new Error('401'));
+    if (res.locals.error) {
+      return next(new Error(`${res.locals.error}`));
     }
 
     try {
-      user = await getUser(rawUser.id);
+      user = await userController.get(res.locals.user.id);
       media = await user.getMedia(mediaId);
     } catch (e) {
       e.message = '500';
@@ -60,100 +70,57 @@ export const mediaRouter = () => {
       return next(new Error('404'));
     }
 
+    let data: any;
     try {
-      return res.sendFile(media.path);
+      data = await mediaController.getMediaFromS3(media.path);
     } catch (e) {
-      return next(new Error('404'));
+      return next(new Error('500'));
     }
-  });
 
-  router.use(checkToken);
+    res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+    res.write(data, 'binary');
+    res.end(null, 'binary');
+  }
 
   /**
-   * Upload media
+   * @api {get} /api/media/links/:id Get all media links
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiParam {String} id  Media id.
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {
+        [
+          'link_id',
+          'link_id2'
+        ]
+      }
+    }
+   *
+   * @apiDescription Get all media that an item has semantic links with.
+   *
+   * Get links attached to media.
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
    */
-  router.post('/upload', upload.single('file'), async (req: Request,
-                                                       res: Response,
-                                                       next: NextFunction) => {
-    if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`));
-    }
-
-    let user: IUser;
-    try {
-      user = await getUser(res.locals.user.id);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    if (req.file === undefined) {
-      return next(new Error('400'));
-    }
-
-    const mimeType = req.file.mimetype;
-    const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
-
-    let imagePath: string;
-    let media: IMedia;
-    try {
-      imagePath = await storeMedia(req.file.path, req.file.originalname, ext);
-      media = await storeMediaRecord(imagePath,
-                                     mimeType,
-                                     user,
-                                     <string>req.headers['era'] || 'past');
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    return res.json(new Reply(200, 'success', false, media));
-  });
-
-  /**
-   * Store the current image a display is presenting
-   */
-  router.post('/display/store', async (req: Request, res: Response, next: NextFunction) => {
-    const mediaId: Schema.Types.ObjectId = req.body.mediaId;
-    const deviceId: Schema.Types.ObjectId = req.body.deviceId;
-
-    // Get the user
-    let user: IUser;
-    try {
-      user = await getUser(res.locals.user.id);
-    } catch (error) {
-      error.message('500');
-      return next(error);
-    }
-
-    const media: IMedia = await user.getMedia(mediaId);
-    const device: IDevice = await user.getDevice(deviceId);
-
-    if (!media || !device) {
-      return next(new Error('404'));
-    }
-
-    // Create a new display state
-    let state: IState;
-    try {
-      state = await storeState(deviceId, mediaId);
-    } catch (error) {
-      error.message = '500';
-      return next(error);
-    }
-
-    // Return state
-    return res.json(new Reply(200, 'success', false, state));
-  });
-
-  /**
-   * Get paired media
-   */
-  router.get('/links/:id', async (req: Request, res: Response, next: NextFunction) => {
+  async getLinks(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: Schema.Types.ObjectId = req.params.id;
     let media: IMedia;
     try {
-      media = await getMediaRecord(mediaId);
+      media = await mediaController.get(mediaId);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -163,18 +130,98 @@ export const mediaRouter = () => {
     }
 
     return res.json(new Reply(200, 'success', false, media.links));
-  });
+  }
 
   /**
-   * Store a link between two media items
+   * @api {get} /api/media/request Request media from the present.
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": 'media_id'
+    }
+   *
+   * @apiDescription Get an item of media from the present archive.
+   *
+   * Get media from the present
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
    */
-  router.post('/link/store', async (req: Request, res: Response, next: NextFunction) => {
+  async getPresent(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    let user: IUser;
+    let media: IMedia;
+
+    if (res.locals.error) {
+      return next(new Error(`${res.locals.error}`));
+    }
+
+    try {
+      const userId: Schema.Types.ObjectId = res.locals.user.id;
+      user = await userController.get(userId);
+      media = await mediaController.getRandomPresentMedia(user._id);
+
+      if (!media) {
+        return next(new Error('404'));
+      }
+
+      await sessionController.store({ media, user: user._id });
+    } catch (e) {
+      e.message = '500';
+      return next(e);
+    }
+
+    return res.json(new Reply(200, 'success', false, media._id));
+  }
+
+  /**
+   * @api {post} /api/media/link Store a link between media.
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {}
+    }
+   *
+   * @apiParam {String} mediaId  Media from the past to add the link to.
+   * @apiParam {String} linkId  Media from the past to link to.
+   *
+   * @apiDescription Link two devices together
+   *
+   * Store links in the database.
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
+   */
+  async storeLink(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: Schema.Types.ObjectId = req.body.mediaId;
     const linkId: Schema.Types.ObjectId = req.body.linkId;
 
     let user: IUser;
     try {
-      user = await getUser(res.locals.user.id);
+      user = await userController.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
@@ -189,98 +236,120 @@ export const mediaRouter = () => {
     await media.createLink(link._id);
 
     return res.json(new Reply(200, 'success', false, null));
-  });
+  }
 
   /**
-   * Return a present piece of media and return a new sessionSava
+   * Show all media.
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response> | void}
    */
-  router.get('/request/present', async (req: Request, res: Response, next: NextFunction) => {
-    if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`));
-    }
+  index(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+    return next(new Error('501'));
+  }
 
-    let user: IUser;
-    let media: IMedia;
-
-    try {
-      user = await getUser(res.locals.user.id);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    try {
-      media = await getRandomPresentMedia(user._id);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    if (!media) {
-      return next(new Error('404'));
-    }
-
-    try {
-      await storeSession(user, media);
-    } catch (e) {
-      return next(e);
-    }
-
-    return res.json(new Reply(200, 'success', false, media._id));
-  });
-
-  router.get('/request/past', async (req: Request, res: Response, next: NextFunction) => {
-    if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`));
-    }
-
-    let user: IUser;
-    let media: IMedia;
-    let session: ISession;
-
-    try {
-      user = await getUser(res.locals.user.id);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    try {
-      session = await getLastSession(user);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    if (session) {
-      try {
-        media = await getLinkedPastMedia(session.media);
-        if (media) {
-          return res.json(new Reply(200, 'success', false, media._id));
-        }
-
-        return res.json(new Reply(200, 'success', false, null));
-
-      } catch (e) {
-        console.log(e);
-        e.message = '500';
-        return next(e);
+  /**
+   * @api {post} /api/media/ Store media
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   * @apiUse errorBadRequest
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {
+        "links": [],
+        "era": "past",
+        "emotions": [],
+        "_id": "media_id",
+        "path": "path_to_file",
+        "mimetype": "image/jpeg",
+        "user": "user_id",
+        "createdAt": "2018-12-13T13:23:34.081Z",
+        "updatedAt": "2018-12-13T13:23:34.081Z",
+        "__v": 0
       }
     }
+   *
+   * @apiParam {File} file  Image to upload.
+   * @apiParam {String} [era]  Era the image is from, must be 'past' or 'present'. Default is past.
+   *
+   * @apiDescription Upload media.
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response>}
+   */
+  async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    if (res.locals.error) {
+      return next(new Error(`${res.locals.error}`));
+    }
 
+    let user: IUser;
     try {
-      media = await getRandomPresentMedia(user._id);
-      await storeSession(user, media);
-
-      media = await getLinkedPastMedia(session.media);
-
-      return res.json(new Reply(200, 'success', false, media._id));
+      user = await userController.get(res.locals.user.id);
     } catch (e) {
-      // console.log(e)
       e.message = '500';
       return next(e);
     }
-  });
 
-  return router;
-};
+    if (req.file === undefined) {
+      return next(new Error('400'));
+    }
+
+    const mimetype = req.file.mimetype;
+    const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
+
+    let imagePath: string;
+    let media: IMedia;
+    try {
+      imagePath = await mediaController.storeMedia(
+        req.file.path,
+        req.file.originalname,
+        ext,
+        user._id,
+      );
+      media = await mediaController.store({
+        mimetype,
+        user,
+        path: imagePath,
+        era: <string>req.headers['era'] || 'past',
+      });
+    } catch (e) {
+      e.message = '500';
+      return next(e);
+    }
+
+    return res.json(new Reply(200, 'success', false, media));
+  }
+
+  /**
+   * Update media
+   * @param {e.Request} req
+   * @param {e.Response} res
+   * @param {e.NextFunction} next
+   * @returns {Promise<void | e.Response> | void}
+   */
+  update(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+    return next(new Error('501'));
+  }
+
+  constructor() {
+    super();
+    this.setFileUploadHandler(upload.single('file'));
+    this.addMiddleware(checkToken);
+    this.addRoute('/links/:id', Methods.GET, this.getLinks);
+    this.addRoute('/links', Methods.POST, this.storeLink);
+    this.addRoute('/request', Methods.GET, this.getPresent);
+    this.addDefaultRoutes();
+  }
+}

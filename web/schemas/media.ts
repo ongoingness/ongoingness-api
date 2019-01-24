@@ -1,9 +1,10 @@
 import { Schema, Document } from 'mongoose';
-import { getMediaRecord } from '../controllers/media';
+import { MediaController } from '../controllers/media';
 
 const schemaOptions = {
   timestamps: true,
 };
+const mediaController: MediaController = new MediaController();
 
 export interface IMedia extends Document {
   user: Schema.Types.ObjectId;
@@ -51,7 +52,7 @@ export const mediaSchema = new Schema({
 },                                    schemaOptions);
 
 mediaSchema.methods.createLink = async function (linkId: Schema.Types.ObjectId): Promise<void> {
-  const link: IMedia = await getMediaRecord(linkId);
+  const link: IMedia = await mediaController.get(linkId);
 
   // Cancel if link does not exist
   if (!link) {

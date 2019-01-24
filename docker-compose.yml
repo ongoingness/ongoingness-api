@@ -1,7 +1,9 @@
 version: '2'
 services:
   web:
-      build: .
+      build:
+        context: .
+        dockerfile: local.Dockerfile
       ports:
       - 3000:3000
       volumes:
@@ -10,6 +12,7 @@ services:
       - "./.env:/app/.env"
       - "./dist:/app/dist"
       - "./test:/app/test"
+      - "./static:/app/static"
       depends_on:
         - mongo
       links:

@@ -1,6 +1,6 @@
 {
   "name": "ongoingness-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "API for Ongoingness android watchface",
   "main": "dist/app.js",
   "scripts": {
@@ -21,8 +21,18 @@
   "bugs": {
     "url": "https://openlab.ncl.ac.uk/gitlab/ongoingness/api/issues"
   },
+  "apidoc": {
+    "name": "Ongoingness API",
+    "version": "0.2.0",
+    "description": "Documentation for the Ongoingness Locket API",
+    "apidoc": {
+      "title": "Ongoingness API",
+      "url" : "https://openlab.ncl.ac.uk/gitlab/ongoingness/api.git"
+    }
+  },
   "homepage": "https://openlab.ncl.ac.uk/gitlab/ongoingness/api#readme",
   "dependencies": {
+    "aws-sdk": "^2.373.0",
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
     "cors": "^2.8.4",

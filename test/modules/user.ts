@@ -3,9 +3,10 @@ import axios, { AxiosResponse } from 'axios';
 import { URL } from '../commons';
 import { expect } from 'chai';
 import { generateToken } from '../../web/controllers/auth';
-import { storeUser } from '../../web/controllers/user';
+import { UserController } from '../../web/controllers/user';
 import { IUser } from '../../web/schemas/user';
 
+const userController: UserController = new UserController();
 let user: IUser;
 let token: string;
 
@@ -14,7 +15,7 @@ describe('User', () => {
     const username: string = 'tester-user';
     const password: string  = 'secret';
 
-    user = await storeUser(username, password);
+    user = await userController.store({ username, password });
     token = await generateToken(user);
   });
 

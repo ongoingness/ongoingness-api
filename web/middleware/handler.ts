@@ -49,6 +49,9 @@ function getError(code: number): Reply {
     case 500:
       message = 'server error';
       break;
+    case 501:
+      message = 'not implemented';
+      break;
     default:
       message = 'server error';
       break;

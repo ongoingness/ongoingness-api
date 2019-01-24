@@ -20,8 +20,9 @@ project when reviewed before approval. On a successful merge the changelog
 should be updated with a description of the change (see below).
 
 After the `rc-x.x.x` branch has been merged, the master branch should be
-tagged with the new version number in the format `v-x.x.x` and the
-`rc-x.x.x` branch should be deleted.
+tagged with the new version number in the format `v-x.x.x`. The `rc-x.x.x`
+should then be merged into `dev` and then the `rc-x.x.x` branch should 
+be deleted.
 
 ## Hotfixing
 Hot fixes should be made by branching `master`, and creating a new branch

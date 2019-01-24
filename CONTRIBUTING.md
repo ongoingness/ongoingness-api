@@ -10,7 +10,8 @@ Before merging from dev into master, you should create a new branch called
 `rc-x.x.x`, where `x.x.x` is the new version number. This branch should be
 properly tested, and all instances of the version number should be updated
 and documentation should be updated. A pull request can be made to merge
-this branch into master.
+this branch into master. All tests on the `rc` branch should pass before
+a request is made.
 
 Merges into master should be made via a pull request. This should make it 
 easier to identify when and who introduced and approved new features or 

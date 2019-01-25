@@ -29,7 +29,7 @@ RUN mkdir uploads
 RUN mkdir -p /app/static/apidoc
 
 # Create docs
-RUN apidoc -i /app/web -o /app/static
+RUN apidoc -i /app/web -o /app/static/apidoc
 
 RUN npm run build
 

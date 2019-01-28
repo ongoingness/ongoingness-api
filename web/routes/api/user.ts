@@ -6,6 +6,7 @@ import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../../controllers/user';
 import { Schema } from 'mongoose';
 import { ResourceRouter } from './base';
+import { Methods } from '../../methods';
 
 const userController: UserController = new UserController();
 
@@ -137,6 +138,7 @@ export class UserRouter extends ResourceRouter {
   constructor() {
     super();
     this.addMiddleware(checkToken);
+    this.addRoute('/me', Methods.GET, this.show);
     this.addDefaultRoutes();
   }
 }

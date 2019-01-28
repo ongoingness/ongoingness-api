@@ -172,6 +172,16 @@ describe('Media', () => {
     });
   });
 
+  describe('Get all media', () => {
+    it('Should return all media belonging to the user', (done) => {
+      axios.get(`${URL}/api/media`, { headers: { 'x-access-token': token } })
+      .then((response: AxiosResponse) => {
+        expect(response.status).to.equal(200);
+        done();
+      })
+    });
+  });
+
   describe('Get linked media', () => {
     it('Should get the media id to display on device', (done) => {
       axios.get(`${URL}/api/media/links/${media._id}`, { headers: { 'x-access-token': token } })

@@ -239,14 +239,66 @@ export class MediaRouter extends ResourceRouter {
   }
 
   /**
+   * @api {get} /api/media/ Get all media
+   * @apiGroup Media
+   * @apiPermission authenticated
+   *
+   * @apiUse isAuthenticated
+   * @apiUse errorTokenNotProvided
+   * @apiUse errorServerError
+   * @apiUse errorResourceNotFound
+   * @apiUse errorBadRequest
+   *
+   * @apiSuccessExample {json} Success-Response:
+   *  HTTP/1.1 200 OK
+   {
+      "code": 200,
+      "message": "success",
+      "errors": false,
+      "payload": {
+        [
+          {
+            "links": [],
+            "era": "past",
+            "emotions": [],
+            "_id": "media_id",
+            "path": "path_to_file",
+            "mimetype": "image/jpeg",
+            "user": "user_id",
+            "createdAt": "2018-12-13T13:23:34.081Z",
+            "updatedAt": "2018-12-13T13:23:34.081Z",
+            "__v": 0
+          }
+        ]
+      }
+    }
+   *
+   * @apiDescription Get all user's media
+   *
    * Show all media.
    * @param {e.Request} req
    * @param {e.Response} res
    * @param {e.NextFunction} next
    * @returns {Promise<void | e.Response> | void}
    */
-  index(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
-    return next(new Error('501'));
+  async index(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    // return next(new Error('501'));
+
+    let user: IUser;
+    try {
+      user = await userController.get(res.locals.user.id);
+    } catch (e) {
+      e.message = '500';
+    }
+
+    let media: IMedia[];
+    try {
+      media = await user.getAllMedia();
+    } catch (e) {
+      e.message = '500';
+    }
+
+    return res.json(new Reply(200, 'success', false, media));
   }
 
   /**

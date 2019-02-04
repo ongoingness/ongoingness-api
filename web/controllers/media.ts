@@ -14,6 +14,8 @@ export class MediaController implements IResourceController<IMedia> {
    * Destroy a media record
    * @param {Schema.Types.ObjectId} id
    * @returns {Promise<void>}
+   *
+   * TODO: Update for AWS
    */
   async destroy(id: Schema.Types.ObjectId): Promise<void> {
     const media: IMedia = await this.get(id);

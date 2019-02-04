@@ -13,6 +13,7 @@ export interface IMedia extends Document {
   mimetype: string;
   era: string;
   emotions: string[];
+  locket: string;
   createdAt: string;
   updatedAt: string;
 
@@ -48,6 +49,10 @@ export const mediaSchema = new Schema({
   mimetype: {
     type: String,
     required: true,
+  },
+  locket: {
+    type: String,
+    enum: ['temp', 'perm', 'none'],
   },
 },                                    schemaOptions);
 

@@ -375,6 +375,7 @@ export class MediaRouter extends ResourceRouter {
         user,
         path: imagePath,
         era: <string>req.headers['era'] || 'past',
+        locket: <string>req.headers['locket'] || 'none',
       });
     } catch (e) {
       e.message = '500';

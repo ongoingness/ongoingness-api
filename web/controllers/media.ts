@@ -155,12 +155,14 @@ export class MediaController implements IResourceController<IMedia> {
     mimetype: string,
     user: IUser,
     era?: string,
+    locket?: string
   }): Promise<IMedia> {
     const media: IMedia = await models.Media.create({
       era: data.era || '',
       path: data.path,
       mimetype: data.mimetype,
       user: data.user._id,
+      locket: data.locket || 'none'
     });
 
     data.user.media.push(media._id);

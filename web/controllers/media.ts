@@ -5,7 +5,7 @@ import models from '../models';
 import { Schema } from 'mongoose';
 import { IResourceController } from './base';
 import { config, S3 } from 'aws-sdk';
-
+import * as Sharp from 'sharp';
 export class MediaController implements IResourceController<IMedia> {
   /**
    * Destroy a media record
@@ -172,14 +172,15 @@ export class MediaController implements IResourceController<IMedia> {
    * @param userId user id.
    * @returns {Promise<string>} the name of the file in the S3 Bucket.
    */
-  storeMedia(storedPath: string,
-             fileName: string,
-             ext: string,
-             userId: string,
+  async storeMedia(storedPath: string,
+                   fileName: string,
+                   ext: string,
+                   userId: string,
   ): Promise<string> {
     // get a date string in the format YYYYMMDDHHMMSS
     const now: string = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
     const newFileName: string = `${userId}_${now}.${ext}`;
+    const imageSize: number = 600;
 
     // Update S3 credentials.
     config.update({
@@ -187,10 +188,13 @@ export class MediaController implements IResourceController<IMedia> {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     });
 
+    const transformer = Sharp().resize(imageSize, imageSize);
+    const stream = fs.createReadStream(storedPath).pipe(transformer);
+
     const s3: S3 = new S3();
     const params = {
       Bucket: process.env.AWS_BUCKET,
-      Body: fs.createReadStream(storedPath),
+      Body: stream,
       Key: newFileName,
     };
 

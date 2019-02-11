@@ -2,12 +2,9 @@ import * as fs from 'fs';
 import { IUser } from '../schemas/user';
 import { IMedia } from '../schemas/media';
 import models from '../models';
-import { promisify } from 'util';
 import { Schema } from 'mongoose';
 import { IResourceController } from './base';
 import { config, S3 } from 'aws-sdk';
-
-const unlink = promisify(fs.unlink);
 
 export class MediaController implements IResourceController<IMedia> {
   /**
@@ -18,12 +15,6 @@ export class MediaController implements IResourceController<IMedia> {
    * TODO: Update for AWS
    */
   async destroy(id: Schema.Types.ObjectId): Promise<void> {
-    const media: IMedia = await this.get(id);
-    if (fs.existsSync(media.path)) {
-      console.log('removing media', media.path);
-      await unlink(media.path);
-    }
-
     await models.Media.deleteOne({ _id: id });
   }
 
@@ -157,14 +148,14 @@ export class MediaController implements IResourceController<IMedia> {
     mimetype: string,
     user: IUser,
     era?: string,
-    locket?: string
+    locket?: string,
   }): Promise<IMedia> {
     const media: IMedia = await models.Media.create({
       era: data.era || '',
       path: data.path,
       mimetype: data.mimetype,
       user: data.user._id,
-      locket: data.locket || 'none'
+      locket: data.locket || 'none',
     });
 
     data.user.media.push(media._id);
@@ -210,6 +201,29 @@ export class MediaController implements IResourceController<IMedia> {
         })
         .catch((e) => {
           reject(e);
+        });
+    }));
+  }
+
+  deleteMedia(media: IMedia): Promise<void> {
+    config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+
+    const s3: S3 = new S3();
+    const params = {
+      Bucket: process.env.AWS_BUCKET,
+      Key: media.path,
+    };
+
+    return new Promise<void>(((resolve, reject) => {
+      s3.deleteObject(params).promise()
+        .then(() => {
+          resolve();
+        })
+        .catch((err: Error) => {
+          reject(err);
         });
     }));
   }

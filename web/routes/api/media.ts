@@ -25,8 +25,36 @@ export class MediaRouter extends ResourceRouter {
    * @param {e.NextFunction} next
    * @returns {Promise<void | e.Response> | void}
    */
-  destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
-    return undefined;
+  async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    const mediaId: Schema.Types.ObjectId = req.params.id;
+    let user: IUser;
+    let media: IMedia;
+
+    if (res.locals.error) {
+      return next(new Error(`${res.locals.error}`));
+    }
+
+    try {
+      user = await userController.get(res.locals.user.id);
+      media = await user.getMedia(mediaId);
+    } catch (e) {
+      e.message = '500';
+      return next(e);
+    }
+
+    if (!media) {
+      return next(new Error('404'));
+    }
+
+    try {
+      await mediaController.deleteMedia(media);
+      await mediaController.destroy(media._id);
+    } catch (e) {
+      e.message = '500';
+      return next(e);
+    }
+
+    return res.json(new Reply(200, 'success', false, null));
   }
 
   /**

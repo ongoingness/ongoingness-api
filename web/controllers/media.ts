@@ -11,8 +11,6 @@ export class MediaController implements IResourceController<IMedia> {
    * Destroy a media record
    * @param {Schema.Types.ObjectId} id
    * @returns {Promise<void>}
-   *
-   * TODO: Update for AWS
    */
   async destroy(id: Schema.Types.ObjectId): Promise<void> {
     await models.Media.deleteOne({ _id: id });
@@ -20,7 +18,6 @@ export class MediaController implements IResourceController<IMedia> {
 
   /**
    * Edit a media record
-   * TODO: Implement
    * @param {Schema.Types.ObjectId} id
    * @param data
    * @returns {Promise<IMedia>}
@@ -131,7 +128,6 @@ export class MediaController implements IResourceController<IMedia> {
 
   /**
    * Get all media records.
-   * TODO: Implement.
    * @returns {Promise<IMedia[]>}
    */
   async getAll(): Promise<IMedia[]> {
@@ -181,6 +177,14 @@ export class MediaController implements IResourceController<IMedia> {
     const now: string = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
     const newFileName: string = `${userId}_${now}.${ext}`;
     const imageSize: number = 600;
+
+    const supportedFileTypes: string[] = [
+      'jpeg',
+      'jpg',
+      'png',
+    ];
+
+    if (supportedFileTypes.indexOf(ext) < 0) throw new Error('400');
 
     // Update S3 credentials.
     config.update({

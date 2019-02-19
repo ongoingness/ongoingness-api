@@ -18,6 +18,7 @@ export interface IUser extends Document {
 
   // Functions
   getMedia(id: Schema.Types.ObjectId): Promise<IMedia>;
+  getAllMedia(): Promise<IMedia[]>;
   getDevice(id: Schema.Types.ObjectId): Promise<IDevice>;
 }
 

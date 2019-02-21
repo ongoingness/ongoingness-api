@@ -2,13 +2,10 @@ import * as fs from 'fs';
 import { IUser } from '../schemas/user';
 import { IMedia } from '../schemas/media';
 import models from '../models';
-import { promisify } from 'util';
 import { Schema } from 'mongoose';
 import { IResourceController } from './base';
 import { config, S3 } from 'aws-sdk';
-
-const unlink = promisify(fs.unlink);
-
+import * as Sharp from 'sharp';
 export class MediaController implements IResourceController<IMedia> {
   /**
    * Destroy a media record
@@ -16,18 +13,11 @@ export class MediaController implements IResourceController<IMedia> {
    * @returns {Promise<void>}
    */
   async destroy(id: Schema.Types.ObjectId): Promise<void> {
-    const media: IMedia = await this.get(id);
-    if (fs.existsSync(media.path)) {
-      console.log('removing media', media.path);
-      await unlink(media.path);
-    }
-
     await models.Media.deleteOne({ _id: id });
   }
 
   /**
    * Edit a media record
-   * TODO: Implement
    * @param {Schema.Types.ObjectId} id
    * @param data
    * @returns {Promise<IMedia>}
@@ -138,7 +128,6 @@ export class MediaController implements IResourceController<IMedia> {
 
   /**
    * Get all media records.
-   * TODO: Implement.
    * @returns {Promise<IMedia[]>}
    */
   async getAll(): Promise<IMedia[]> {
@@ -155,14 +144,14 @@ export class MediaController implements IResourceController<IMedia> {
     mimetype: string,
     user: IUser,
     era?: string,
-    locket?: string
+    locket?: string,
   }): Promise<IMedia> {
     const media: IMedia = await models.Media.create({
       era: data.era || '',
       path: data.path,
       mimetype: data.mimetype,
       user: data.user._id,
-      locket: data.locket || 'none'
+      locket: data.locket || 'none',
     });
 
     data.user.media.push(media._id);
@@ -179,14 +168,23 @@ export class MediaController implements IResourceController<IMedia> {
    * @param userId user id.
    * @returns {Promise<string>} the name of the file in the S3 Bucket.
    */
-  storeMedia(storedPath: string,
-             fileName: string,
-             ext: string,
-             userId: string,
+  async storeMedia(storedPath: string,
+                   fileName: string,
+                   ext: string,
+                   userId: string,
   ): Promise<string> {
     // get a date string in the format YYYYMMDDHHMMSS
     const now: string = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
     const newFileName: string = `${userId}_${now}.${ext}`;
+    const imageSize: number = 600;
+
+    const supportedFileTypes: string[] = [
+      'jpeg',
+      'jpg',
+      'png',
+    ];
+
+    if (supportedFileTypes.indexOf(ext) < 0) throw new Error('400');
 
     // Update S3 credentials.
     config.update({
@@ -194,10 +192,13 @@ export class MediaController implements IResourceController<IMedia> {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     });
 
+    const transformer = Sharp().resize(imageSize, imageSize);
+    const stream = fs.createReadStream(storedPath).pipe(transformer);
+
     const s3: S3 = new S3();
     const params = {
       Bucket: process.env.AWS_BUCKET,
-      Body: fs.createReadStream(storedPath),
+      Body: stream,
       Key: newFileName,
     };
 
@@ -208,6 +209,29 @@ export class MediaController implements IResourceController<IMedia> {
         })
         .catch((e) => {
           reject(e);
+        });
+    }));
+  }
+
+  deleteMedia(media: IMedia): Promise<void> {
+    config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+
+    const s3: S3 = new S3();
+    const params = {
+      Bucket: process.env.AWS_BUCKET,
+      Key: media.path,
+    };
+
+    return new Promise<void>(((resolve, reject) => {
+      s3.deleteObject(params).promise()
+        .then(() => {
+          resolve();
+        })
+        .catch((err: Error) => {
+          reject(err);
         });
     }));
   }

@@ -11,7 +11,7 @@ export class UserController implements IResourceController<IUser> {
    * @returns {Promise<void>}
    */
   async destroy(id: Schema.Types.ObjectId): Promise<void> {
-    return await models.User.deleteOne({ _id: id });
+    await models.User.deleteOne({ _id: id });
   }
 
   edit(id: Schema.Types.ObjectId, data: any): Promise<IUser> {

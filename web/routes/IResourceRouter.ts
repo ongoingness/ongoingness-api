@@ -1,6 +1,4 @@
-import { Handler, NextFunction, Request, Response, Router } from 'express';
-import { IResourceController } from '../controllers/IResourceRepository';
-import { HttpMethods } from '../HttpMethods';
+import { NextFunction, Request, Response, Router } from 'express';
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
 
 export default interface IResourceRouter<T extends IBaseMongoResource> {
@@ -13,13 +11,5 @@ export default interface IResourceRouter<T extends IBaseMongoResource> {
   destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void;
 
   addDefaultRoutes(): void;
-  addRoute(path: string, method: HttpMethods, handler: Handler): void;
-  getRouter(): Router;
   setRouter(router: Router): void;
-
-  setResourceController(cont: IResourceController<T>): void;
-
-  checkForErrors(err: Response): Error;
-  getUserId(res: Response): string;
-  userHasPermission(userId: string, resourceId: string): Promise<boolean>;
 }

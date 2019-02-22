@@ -10,19 +10,20 @@ import { HttpMethods } from '../HttpMethods';
  * Base router class. All routers extend this class.
  */
 export abstract class BaseRouter {
-  private router: Router;
+  router: Router;
+  fileUploadHandler: Handler;
 
   protected constructor() {
-    this.setRouter(Router());
+    this.router = Router();
   }
 
   /**
    * Add a route to the router.
    * @param {string} path
-   * @param {HTTPMethods} method
+   * @param {Methods} method
    * @param handler
    */
-  public addRoute(
+  addRoute(
     path: string,
     method: HttpMethods,
     handler: Handler) {
@@ -45,12 +46,12 @@ export abstract class BaseRouter {
    * Return the router.
    * @returns {e.Router}
    */
-  public getRouter(): Router {
+  getRouter(): Router {
     return this.router;
   }
 
-  public setRouter(router: Router) {
-    this.router = router;
+  setFileUploadHandler(handler: Handler): void {
+    this.fileUploadHandler = handler;
   }
 
   /**

@@ -1,23 +1,26 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import * as multer from 'multer';
 import { MediaRepository } from '../../repositories/MediaRepository';
-import { checkToken } from '../../middleware/authenticate';
+import { checkToken } from '../../middleware/Authenticate';
 import { IUser } from '../../schemas/User';
 import { Reply } from '../../Reply';
 import { IMedia } from '../../schemas/Media';
 import { Schema } from 'mongoose';
 import { SessionRepository } from '../../repositories/SessionRepository';
-import { ResourceRouter } from './base';
-import { HttpMethods as Methods } from '../../HttpMethods';
+import { HttpMethods } from '../../HttpMethods';
 import { IResourceRepository } from '../../repositories/IResourceRepository';
 import RepositoryFactory from '../../repositories/RepositoryFactory';
+import IResourceRouter from '../IResourceRouter';
+import { BaseRouter } from '../BaseRouter';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaController: MediaRepository = new MediaRepository();
 const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
-export class MediaRouter extends ResourceRouter {
+export class MediaRouter
+  extends BaseRouter
+  implements IResourceRouter<IMedia> {
   /**
    * Destroy media
    * TODO: Implement
@@ -429,9 +432,38 @@ export class MediaRouter extends ResourceRouter {
     super();
     this.setFileUploadHandler(upload.single('file'));
     this.addMiddleware(checkToken);
-    this.addRoute('/links/:id', Methods.GET, this.getLinks);
-    this.addRoute('/links', Methods.POST, this.storeLink);
-    this.addRoute('/request', Methods.GET, this.getPresent);
+    this.addRoute('/links/:id', HttpMethods.GET, this.getLinks);
+    this.addRoute('/links', HttpMethods.POST, this.storeLink);
+    this.addRoute('/request', HttpMethods.GET, this.getPresent);
     this.addDefaultRoutes();
+  }
+
+  /**
+   * Setup router
+   * Add all default routes to router.
+   */
+  addDefaultRoutes(): void {
+    this.router.get('/:id', this.show);
+    this.router.delete('/:id', this.destroy);
+    this.router.post('/update', this.update);
+    this.router.get('/', this.index);
+
+    if (this.fileUploadHandler) {
+      this.router.post('/', this.fileUploadHandler, this.store);
+    } else {
+      this.router.post('/', this.store);
+    }
+  }
+
+  paged(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+    return undefined;
+  }
+
+  search(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+    return undefined;
+  }
+
+  setRouter(router: Router): void {
+    this.router = router;
   }
 }

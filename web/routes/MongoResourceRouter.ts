@@ -2,10 +2,9 @@ import * as e from 'express';
 import RepositoryFactory from '../repositories/RepositoryFactory';
 import { IResourceRepository } from '../repositories/IResourceRepository';
 import { HttpMethods } from '../HttpMethods';
-import { checkToken } from '../middleware/authenticate';
+import { checkToken } from '../middleware/Authenticate';
 import { Reply } from '../Reply';
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
-import { IUser } from '../schemas/User';
 import { BaseRouter } from './BaseRouter';
 import { getSchema } from './index';
 import IResourceRouter from './IResourceRouter';
@@ -16,31 +15,16 @@ import { checkAdmin } from '../middleware/Admin';
 export default class MongoResourceRouter<T extends IBaseMongoResource>
   extends BaseRouter
   implements IResourceRouter<IBaseMongoResource> {
-  private readonly table: string;
-  private readonly isProtected: boolean;
-  private readonly isOwned: boolean;
-  private resourceController: IResourceRepository<T>;
-  private userController: IResourceRepository<IUser>;
 
   constructor(table: string, options: {isProtected: boolean, isOwned: boolean}) {
     super();
-    this.table = table;
-    this.isProtected = options.isProtected;
-    this.isOwned = options.isOwned;
-
-    if (this.isProtected) {
+    if (options != null && options.isProtected) {
       this.addMiddleware(checkToken);
       this.addMiddleware(userPermission);
     }
 
     this.addMiddleware(checkAdmin);
-
     this.addDefaultRoutes();
-    this.setResourceController(RepositoryFactory.getRepository(this.table));
-
-    if (this.isOwned) {
-      this.userController = RepositoryFactory.getRepository('user');
-    }
   }
 
   public addDefaultRoutes(): void {
@@ -53,7 +37,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     this.addRoute('/', HttpMethods.GET, this.index);
   }
 
-  public async store(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
+  public async store(req: e.Request, res: e.Response, next: e.NextFunction):
+    Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const userId = res.locals.user.id;
@@ -83,7 +68,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, resource));
   }
 
-  public async destroy(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
+  public async destroy(req: e.Request, res: e.Response, next: e.NextFunction):
+    Promise<void | e.Response> {
     const id: string = req.params.id;
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
@@ -103,7 +89,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, {}));
   }
 
-  public async index(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
+  public async index(req: e.Request, res: e.Response, next: e.NextFunction):
+    Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
@@ -133,7 +120,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, resources));
   }
 
-  public async paged(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
+  public async paged(req: e.Request, res: e.Response, next: e.NextFunction):
+    Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
@@ -173,7 +161,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, { count, resources }));
   }
 
-  public async show(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
+  public async show(req: e.Request, res: e.Response, next: e.NextFunction):
+    Promise<void | e.Response> {
     let resource: T;
     const id: string = req.params.id;
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
@@ -206,7 +195,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, resource));
   }
 
-  public async search(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
+  public async search(req: e.Request, res: e.Response, next: e.NextFunction):
+    Promise<void | e.Response> {
     let resources: T[];
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
@@ -239,7 +229,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, resources));
   }
 
-  public async update(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
+  public async update(req: e.Request, res: e.Response, next: e.NextFunction):
+    Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     let resource: T;
@@ -271,35 +262,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, resource));
   }
 
-  public setResourceController(cont: IResourceRepository<T>): void {
-    this.resourceController = cont;
-  }
-
-  public checkForErrors(res: e.Response): Error {
-    console.log('CHECKING FOR ERRORS');
-    if (!this.isProtected) { return null; }
-
-    if (res.locals.error) {
-      return new Error(`${res.locals.error}`);
-    }
-    return null;
-  }
-
-  public getUserId(res: e.Response): string {
-    if (!this.isOwned) { return null; }
-    return res.locals.user.id;
-  }
-
-  public async userHasPermission(userId: string, id: string): Promise<boolean> {
-    if (!this.isOwned) {
-      return true;
-    }
-
-    const res: T = await this.resourceController.get(id);
-    if (res.getUserId()) {
-      return res.getUserId().toString() === userId;
-    }
-
-    return res._id.toString() === id;
+  setRouter(router: e.Router): void {
+    this.router = router;
   }
 }

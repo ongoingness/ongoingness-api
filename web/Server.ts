@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
-import * as handler from './middleware/handler';
+import * as handler from './middleware/Handler';
 import * as mongoose from 'mongoose';
 import { addRoutes } from './routes';
 import * as dotenv from 'dotenv';

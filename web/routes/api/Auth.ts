@@ -1,12 +1,15 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { Reply } from '../../reply';
 import { IUser } from '../../schemas/user';
-import { UserController } from '../../repositories/user';
-import { authenticateUser, authenticateWithMAC, generateToken } from '../../controllers/Auth';
+import AuthController from '../../controllers/AuthController';
 import { BaseRouter } from '../BaseRouter';
 import { HttpMethods as Methods } from '../../HttpMethods';
+import CryptoHelper from '../../CryptoHelper';
+import { IResourceRepository } from '../../repositories/IResourceRepository';
+import RepositoryFactory from '../../repositories/RepositoryFactory';
 
-const userController: UserController = new UserController();
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
+const authController: AuthController = new AuthController();
 
 export class AuthRouter extends BaseRouter {
   /**
@@ -53,12 +56,12 @@ export class AuthRouter extends BaseRouter {
 
     let user: IUser;
     try {
-      user = await authenticateUser(username, password);
+      user = await authController.authenticateUser(username, password);
     } catch (error) {
       return next(error);
     }
 
-    const token = generateToken(user);
+    const token = authController.generateToken(user);
 
     const response = new Reply(200, 'success', false, { token });
     return res.json(response);
@@ -95,12 +98,12 @@ export class AuthRouter extends BaseRouter {
     let user: IUser;
 
     try {
-      user = await authenticateWithMAC(mac);
+      user = await authController.authenticateWithMAC(mac);
     } catch (e) {
       return next(e);
     }
 
-    const token = generateToken(user);
+    const token = authController.generateToken(user);
 
     return res.json(new Reply(200, 'success', false, token));
   }
@@ -146,6 +149,7 @@ export class AuthRouter extends BaseRouter {
     // Get username and password
     const username: string = req.body.username;
     const password: string = req.body.password;
+    let user: IUser;
 
     // abort if either username or password are null
     if (!username || !password) {
@@ -153,15 +157,19 @@ export class AuthRouter extends BaseRouter {
       return next(e);
     }
 
-    let user: IUser;
+    const iv: string = CryptoHelper.getRandomString(16);
+    const hash: string = CryptoHelper.hashString(password, iv);
+
     try {
-      user = await userController.store({ username, password });
+      user = await userRepository.store({ username, password: hash, iv });
     } catch (error) {
-      console.log(error);
+      if (error.message.indexOf('duplicate key error') > -1) {
+        return next(new Error('403'));
+      }
       return next(error);
     }
 
-    const token = generateToken(user);
+    const token = authController.generateToken(user);
 
     const response = new Reply(200, 'success', false, { user, token });
     return res.json(response);

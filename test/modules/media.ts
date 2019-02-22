@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { expect } from 'chai';
 import * as FormData from 'form-data';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { generateToken } from '../../web/controllers/Auth';
+import AuthController from '../../web/controllers/AuthController';
 import { describe } from 'mocha';
 import { IDevice } from '../../web/schemas/device';
 import { IMedia } from '../../web/schemas/media';
@@ -14,7 +14,7 @@ import { SessionRepository } from '../../web/repositories/SessionRepository';
 import { Schema } from 'mongoose';
 import { IResourceRepository } from '../../web/repositories/IResourceRepository';
 import RepositoryFactory from '../../web/repositories/RepositoryFactory';
-import CryptoHelper from "../../web/CryptoHelper";
+import CryptoHelper from '../../web/CryptoHelper';
 
 const URL: string = 'http://localhost:8888';
 let user: IUser;
@@ -26,6 +26,7 @@ const deviceRepository: IResourceRepository<IDevice> = RepositoryFactory.getRepo
 const mediaRepository: MediaRepository = new MediaRepository();
 const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
+const authController: AuthController = new AuthController();
 
 describe('Media', () => {
   const imagePath: string = path.join(__dirname, '../../../test.jpg');
@@ -36,7 +37,7 @@ describe('Media', () => {
     let filepath: string;
 
     user = await userRepository.store({ username, password, iv: CryptoHelper.getRandomString(16) });
-    token = await generateToken(user);
+    token = await authController.generateToken(user);
 
     device1 = await deviceRepository.store({ userId: user._id, mac: '1' });
     device2 = await deviceRepository.store({ userId: user._id, mac: '2' });

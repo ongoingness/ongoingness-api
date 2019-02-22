@@ -1,7 +1,7 @@
 import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
 import { URL } from '../commons';
-import { generateToken } from '../../web/controllers/Auth';
+import AuthController from '../../web/controllers/AuthController';
 import { IUser } from '../../web/schemas/user';
 import { expect } from 'chai';
 import { IDevice } from '../../web/schemas/device';
@@ -12,6 +12,7 @@ import CryptoHelper from '../../web/CryptoHelper';
 let user: IUser;
 let token: string;
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
+const authController: AuthController = new AuthController();
 
 describe('Devices', () => {
   let device1: IDevice;
@@ -22,7 +23,7 @@ describe('Devices', () => {
     const password: string  = 'secret';
 
     user = await userRepository.store({ username, password, iv: CryptoHelper.getRandomString(16) });
-    token = await generateToken(user);
+    token = await authController.generateToken(user);
   });
 
   after(async () => {

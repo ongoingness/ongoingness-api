@@ -11,6 +11,8 @@ import IResourceRouter from './IResourceRouter';
 import RouterSchema from './RouterSchema';
 import { userPermission } from '../middleware/UserPermission';
 import { checkAdmin } from '../middleware/Admin';
+import {IUser} from "../schemas/User";
+import {Schema} from "mongoose";
 
 export default class MongoResourceRouter<T extends IBaseMongoResource>
   extends BaseRouter
@@ -73,7 +75,9 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     const id: string = req.params.id;
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
+    const userRepo: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
     const err: Error = BaseRouter.errorCheck(res);
+    let user: IUser;
 
     if (err) { return next(err); }
 
@@ -81,6 +85,12 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
       await cont.destroy(id);
       if (routeSchema.options.isOwned) {
         // remove from user.
+        user = await userRepo.get(res.locals.user.id);
+        const resourceList: Schema.Types.ObjectId[] = user.getLinkedCollection(routeSchema.table);
+        const idx: number = resourceList.findIndex(resource => resource.toString() === id);
+        resourceList.splice(idx, 1);
+        await user.setLinkedCollection(resourceList, routeSchema.table);
+        await user.save();
       }
     } catch (e) {
       return next(e);

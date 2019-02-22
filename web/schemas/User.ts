@@ -1,4 +1,4 @@
-import models from '../Models';
+import Models from '../Models';
 import { Schema } from 'mongoose';
 import { IMedia } from './Media';
 import { IDevice } from './Device';
@@ -23,6 +23,8 @@ export interface IUser extends IBaseMongoResource {
   getMedia(id: Schema.Types.ObjectId): Promise<IMedia>;
   getAllMedia(): Promise<IMedia[]>;
   getDevice(id: Schema.Types.ObjectId): Promise<IDevice>;
+  getLinkedCollection(collectionName: string): Schema.Types.ObjectId[];
+  setLinkedCollection(collection: Schema.Types.ObjectId[], collectionName: string): Promise<void>;
 
   getId(): Schema.Types.ObjectId;
   getTable(): string;
@@ -67,7 +69,7 @@ export const userSchema = new Schema({
  * @returns {Promise<IMedia>}
  */
 userSchema.methods.getMedia = async function (id: Schema.Types.ObjectId): Promise<IMedia> {
-  const media: IMedia = await models.Media.findOne({ _id: id });
+  const media: IMedia = await Models.Media.findOne({ _id: id });
 
   // Check media belongs to the user
   if (this.media.indexOf(media._id.toString()) > -1) {
@@ -82,7 +84,7 @@ userSchema.methods.getMedia = async function (id: Schema.Types.ObjectId): Promis
  * @returns {Promise<IMedia[]>}
  */
 userSchema.methods.getAllMedia = async function (): Promise<IMedia[]> {
-  return await models.Media.find({ user: this._id });
+  return await Models.Media.find({ user: this._id });
 };
 
 /**
@@ -91,7 +93,7 @@ userSchema.methods.getAllMedia = async function (): Promise<IMedia[]> {
  * @returns {Promise<IDevice>}
  */
 userSchema.methods.getDevice = async function (id: Schema.Types.ObjectId): Promise<IDevice> {
-  const device: IDevice = await models.Device.findOne({ _id: id });
+  const device: IDevice = await Models.Device.findOne({ _id: id });
 
   if (this.devices.indexOf(device._id.toString()) > -1) {
     return device;
@@ -99,6 +101,34 @@ userSchema.methods.getDevice = async function (id: Schema.Types.ObjectId): Promi
 
   return null;
 };
+
+userSchema.methods.getLinkedCollection =
+  function (collectionName: string): Schema.Types.ObjectId[] {
+    switch (collectionName) {
+      case 'devices':
+        return this.devices;
+      case 'media':
+        return this.media;
+      default:
+        return [];
+    }
+  };
+
+userSchema.methods.setLinkedCollection =
+  async function (collection: Schema.Types.ObjectId, collectionName: string): Promise<void> {
+    switch (collectionName) {
+      case 'devices':
+        this.devices = collection;
+        break;
+      case 'media':
+        this.media = collection;
+        break;
+      default:
+        break;
+    }
+
+    await this.save();
+  };
 
 userSchema.methods.getId = function (): Schema.Types.ObjectId {
   return this._id;

@@ -3,7 +3,7 @@ import { IUser } from '../schemas/user';
 import { IMedia } from '../schemas/media';
 import models from '../models';
 import { Schema } from 'mongoose';
-import { IResourceController } from './base';
+import { IResourceController } from './IResourceController';
 import { config, S3 } from 'aws-sdk';
 import * as Sharp from 'sharp';
 export class MediaController implements IResourceController<IMedia> {
@@ -262,5 +262,24 @@ export class MediaController implements IResourceController<IMedia> {
           reject(e);
         });
     }));
+  }
+
+  findManyWithFilter(filter: {}, options?: { limit: number; skip: number }): Promise<IMedia[]> {
+    return undefined;
+  }
+
+  findOneWithFilter(filter: {}): Promise<IMedia> {
+    return undefined;
+  }
+
+  getCount(filter: {}): Promise<number> {
+    return undefined;
+  }
+
+  getTableName(): string {
+    return '';
+  }
+
+  setTableName(table: string): void {
   }
 }

@@ -9,7 +9,7 @@ import { IMedia } from '../../schemas/media';
 import { Schema } from 'mongoose';
 import { SessionController } from '../../controllers/session';
 import { ResourceRouter } from './base';
-import { Methods } from '../../methods';
+import { HttpMethods as Methods } from '../../HttpMethods';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaController: MediaController = new MediaController();

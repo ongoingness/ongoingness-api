@@ -1,18 +1,21 @@
 import models from '../models';
-import { Document, Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import { IMedia } from './media';
 import { IDevice } from './device';
+import IBaseMongoResource from './IBaseMongoResource';
+import { UserRole } from '../UserRole';
 
 const schemaOptions = {
   timestamps: true,
 };
 
-export interface IUser extends Document {
+export interface IUser extends IBaseMongoResource {
   username: string;
   password: string;
   iv: string;
   devices: Schema.Types.ObjectId[];
   media: Schema.Types.ObjectId[];
+  role: UserRole;
   createdAt: string;
   updatedAt: string;
 
@@ -20,6 +23,9 @@ export interface IUser extends Document {
   getMedia(id: Schema.Types.ObjectId): Promise<IMedia>;
   getAllMedia(): Promise<IMedia[]>;
   getDevice(id: Schema.Types.ObjectId): Promise<IDevice>;
+
+  getId(): Schema.Types.ObjectId;
+  getTable(): string;
 }
 
 export const userSchema = new Schema({
@@ -45,6 +51,14 @@ export const userSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Media',
   }],
+  role: {
+    default: UserRole.USER,
+    enum: [
+      UserRole.ADMIN,
+      UserRole.USER,
+    ],
+    type: String,
+  },
 },                                   schemaOptions);
 
 /**
@@ -84,4 +98,12 @@ userSchema.methods.getDevice = async function (id: Schema.Types.ObjectId): Promi
   }
 
   return null;
+};
+
+userSchema.methods.getId = function (): Schema.Types.ObjectId {
+  return this._id;
+};
+
+userSchema.methods.getTable = function (): string {
+  return 'user';
 };

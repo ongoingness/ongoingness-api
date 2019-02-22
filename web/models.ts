@@ -1,9 +1,10 @@
-import { model } from 'mongoose';
+import { Model, model } from 'mongoose';
 import { IUser, userSchema } from './schemas/user';
 import { IDevice, deviceSchema } from './schemas/device';
 import { IPair, pairSchema } from './schemas/pair';
 import { IMedia, mediaSchema } from './schemas/media';
 import { ISession, sessionSchema } from './schemas/session';
+import IBaseMongoResource from './schemas/IBaseMongoResource';
 
 // Export models
 export default {
@@ -23,3 +24,18 @@ export default {
     'Session', sessionSchema,
   ),
 };
+
+export function getModel(t: string): Model<IBaseMongoResource> {
+  switch (t) {
+    case 'device':
+      return model<IDevice>(
+        'Device', deviceSchema,
+      );
+    case 'user':
+      return model<IUser>(
+        'User', userSchema,
+      );
+    default:
+      return null;
+  }
+}

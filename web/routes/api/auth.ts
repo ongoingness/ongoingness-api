@@ -4,7 +4,7 @@ import { IUser } from '../../schemas/user';
 import { UserController } from '../../controllers/user';
 import { authenticateUser, authenticateWithMAC, generateToken } from '../../controllers/auth';
 import { BaseRouter } from './base';
-import { Methods } from '../../methods';
+import { HttpMethods as Methods } from '../../HttpMethods';
 
 const userController: UserController = new UserController();
 

@@ -4,7 +4,7 @@ import { IPair } from '../schemas/pair';
 import { Schema } from 'mongoose';
 import { UserController } from './user';
 import { IUser } from '../schemas/user';
-import { IResourceController } from './base';
+import { IResourceController } from './IResourceController';
 
 export class DeviceController implements IResourceController<IDevice> {
   userController: UserController = new UserController();
@@ -138,5 +138,24 @@ export class DeviceController implements IResourceController<IDevice> {
     }
 
     await models.Device.deleteOne({ _id: device._id });
+  }
+
+  findManyWithFilter(filter: {}, options?: { limit: number; skip: number }): Promise<IDevice[]> {
+    return undefined;
+  }
+
+  findOneWithFilter(filter: {}): Promise<IDevice> {
+    return undefined;
+  }
+
+  getCount(filter: {}): Promise<number> {
+    return undefined;
+  }
+
+  getTableName(): string {
+    return '';
+  }
+
+  setTableName(table: string): void {
   }
 }

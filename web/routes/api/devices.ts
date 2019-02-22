@@ -8,7 +8,7 @@ import { DeviceController } from '../../controllers/device';
 import { IUser } from '../../schemas/user';
 import { UserController } from '../../controllers/user';
 import { ResourceRouter } from './base';
-import { Methods } from '../../methods';
+import { HttpMethods } from '../../HttpMethods';
 
 const userController: UserController = new UserController();
 const deviceController: DeviceController = new DeviceController();
@@ -210,6 +210,6 @@ export class DeviceRouter extends ResourceRouter {
     super();
     this.addMiddleware(checkToken);
     this.addDefaultRoutes();
-    this.addRoute('/pair', Methods.POST, this.pair);
+    this.addRoute('/pair', HttpMethods.POST, this.pair);
   }
 }

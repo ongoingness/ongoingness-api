@@ -32,6 +32,7 @@ describe('Media', () => {
   before(async () => {
     const username: string = 'random';
     const password: string  = 'secret';
+    let filepath: string;
 
     user = await userController.store({ username, password });
     token = await generateToken(user);
@@ -39,17 +40,11 @@ describe('Media', () => {
     device1 = await deviceController.store({ owner: user._id, mac: '1' });
     device2 = await deviceController.store({ owner: user._id, mac: '2' });
 
-    let filepath: string;
-    try {
-      filepath = await mediaController.storeMedia(imagePath,
-                                                  'test.jpg',
-                                                  'jpg',
-                                                  user._id,
-      );
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    filepath = await mediaController.storeMedia(imagePath,
+                                                'test.jpg',
+                                                'jpg',
+                                                user._id,
+    );
 
     if (filepath) {
       media = await mediaController.store({

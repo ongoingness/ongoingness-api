@@ -2,7 +2,7 @@ import { IUser } from '../schemas/user';
 import * as crypto from 'crypto';
 import models from '../models';
 import { Schema } from 'mongoose';
-import { IResourceController } from './base';
+import { IResourceController } from './IResourceController';
 
 export class UserController implements IResourceController<IUser> {
   /**
@@ -67,5 +67,24 @@ export class UserController implements IResourceController<IUser> {
     }
 
     return user;
+  }
+
+  findManyWithFilter(filter: {}, options?: { limit: number; skip: number }): Promise<IUser[]> {
+    return undefined;
+  }
+
+  findOneWithFilter(filter: {}): Promise<IUser> {
+    return undefined;
+  }
+
+  getCount(filter: {}): Promise<number> {
+    return undefined;
+  }
+
+  getTableName(): string {
+    return '';
+  }
+
+  setTableName(table: string): void {
   }
 }

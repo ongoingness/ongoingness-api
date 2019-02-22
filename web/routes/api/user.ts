@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../../controllers/user';
 import { Schema } from 'mongoose';
 import { ResourceRouter } from './base';
-import { Methods } from '../../methods';
+import { HttpMethods as Methods } from '../../HttpMethods';
 
 const userController: UserController = new UserController();
 

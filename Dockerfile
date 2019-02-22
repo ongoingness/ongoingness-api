@@ -20,7 +20,7 @@ RUN npm install
 # Install nodemon
 RUN npm install -g nodemon typescript apidoc
 
-COPY app.ts /app/app.ts
+COPY App.ts /app/App.ts
 COPY tsconfig.json /app/tsconfig.json
 COPY web /app/web
 COPY test /app/test
@@ -38,4 +38,4 @@ EXPOSE 80
 
 
 # Start the server.
-CMD nodemon dist/app.js
+CMD nodemon dist/App.js

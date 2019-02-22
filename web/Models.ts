@@ -1,8 +1,8 @@
 import { Model, model } from 'mongoose';
-import { IUser, userSchema } from './schemas/user';
-import { IDevice, deviceSchema } from './schemas/device';
+import { IUser, userSchema } from './schemas/User';
+import { IDevice, deviceSchema } from './schemas/Device';
 import { IPair, pairSchema } from './schemas/pair';
-import { IMedia, mediaSchema } from './schemas/media';
+import { IMedia, mediaSchema } from './schemas/Media';
 import { ISession, sessionSchema } from './schemas/session';
 import IBaseMongoResource from './schemas/IBaseMongoResource';
 

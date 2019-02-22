@@ -1,8 +1,8 @@
 import { describe } from 'mocha';
 import axios, { AxiosError } from 'axios';
-import { URL } from '../commons';
+import { URL } from '../Commons';
 import { expect } from 'chai';
-import { IUser } from '../../web/schemas/user';
+import { IUser } from '../../web/schemas/User';
 import AuthController from '../../web/controllers/AuthController';
 import { IResourceRepository } from '../../web/repositories/IResourceRepository';
 import RepositoryFactory from '../../web/repositories/RepositoryFactory';
@@ -44,9 +44,9 @@ describe('Middleware', () => {
         axios.get(`${URL}/api/users/${user._id}`, { headers: { 'x-access-token': invToken } })
           .then()
           .catch((error: AxiosError) => {
-          expect(error.response.status).to.equal(401);
-          done();
-        });
+            expect(error.response.status).to.equal(401);
+            done();
+          });
       });
     });
   });

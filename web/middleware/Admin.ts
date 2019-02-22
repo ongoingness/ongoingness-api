@@ -1,6 +1,6 @@
 import ControllerFactory from '../repositories/RepositoryFactory';
 import { IResourceRepository } from '../repositories/IResourceRepository';
-import { IUser } from '../schemas/user';
+import { IUser } from '../schemas/User';
 import { UserRole } from '../UserRole';
 import { NextFunction, Request, Response } from 'express';
 

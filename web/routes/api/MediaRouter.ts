@@ -2,19 +2,20 @@ import { NextFunction, Request, Response } from 'express';
 import * as multer from 'multer';
 import { MediaRepository } from '../../repositories/MediaRepository';
 import { checkToken } from '../../middleware/authenticate';
-import { IUser } from '../../schemas/user';
-import { UserController } from '../../repositories/user';
-import { Reply } from '../../reply';
-import { IMedia } from '../../schemas/media';
+import { IUser } from '../../schemas/User';
+import { Reply } from '../../Reply';
+import { IMedia } from '../../schemas/Media';
 import { Schema } from 'mongoose';
 import { SessionRepository } from '../../repositories/SessionRepository';
 import { ResourceRouter } from './base';
 import { HttpMethods as Methods } from '../../HttpMethods';
+import { IResourceRepository } from '../../repositories/IResourceRepository';
+import RepositoryFactory from '../../repositories/RepositoryFactory';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaController: MediaRepository = new MediaRepository();
 const sessionController: SessionRepository = new SessionRepository();
-const userController: UserController = new UserController();
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
 export class MediaRouter extends ResourceRouter {
   /**
@@ -35,7 +36,7 @@ export class MediaRouter extends ResourceRouter {
     }
 
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
       media = await user.getMedia(mediaId);
     } catch (e) {
       e.message = '500';
@@ -87,7 +88,7 @@ export class MediaRouter extends ResourceRouter {
     }
 
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
       media = await user.getMedia(mediaId);
     } catch (e) {
       e.message = '500';
@@ -197,7 +198,7 @@ export class MediaRouter extends ResourceRouter {
 
     try {
       const userId: Schema.Types.ObjectId = res.locals.user.id;
-      user = await userController.get(userId);
+      user = await userRepository.get(userId);
       media = await mediaController.getRandomPresentMedia(user._id);
 
       if (!media) {
@@ -249,7 +250,7 @@ export class MediaRouter extends ResourceRouter {
 
     let user: IUser;
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
@@ -314,7 +315,7 @@ export class MediaRouter extends ResourceRouter {
 
     let user: IUser;
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
@@ -376,7 +377,7 @@ export class MediaRouter extends ResourceRouter {
 
     let user: IUser;
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
       return next(e);

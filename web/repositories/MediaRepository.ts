@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import { IUser } from '../schemas/user';
-import { IMedia } from '../schemas/media';
-import models from '../models';
+import { IUser } from '../schemas/User';
+import { IMedia } from '../schemas/Media';
+import models from '../Models';
 import { Schema } from 'mongoose';
 import { IResourceRepository } from './IResourceRepository';
 import { config, S3 } from 'aws-sdk';

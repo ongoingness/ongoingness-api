@@ -1,7 +1,7 @@
 import { Express } from 'express';
 
 import { AuthRouter } from './api/Auth';
-import { MediaRouter } from './api/media';
+import { MediaRouter } from './api/MediaRouter';
 import RouterSchema from './RouterSchema';
 import ResourceRouterFactory from './ResourceRouterFactory';
 
@@ -12,12 +12,12 @@ import ResourceRouterFactory from './ResourceRouterFactory';
  */
 export function addRoutes(app: Express): Express {
   app.use('/api/auth', new AuthRouter().getRouter());
-  // app.use('/api/user', new UserRouter().getRouter());
-  // app.use('/api/devices', new DeviceRouter().getRouter());
   app.use('/api/media', new MediaRouter().getRouter());
 
   routes.forEach((schema: RouterSchema) => {
-    app.use(schema.route, ResourceRouterFactory.getResourceRouter(schema.table, schema.options).getRouter());
+    app.use(
+      schema.route,
+      ResourceRouterFactory.getResourceRouter(schema.table, schema.options).getRouter());
   });
 
   return app;

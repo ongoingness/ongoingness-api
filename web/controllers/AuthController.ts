@@ -1,7 +1,7 @@
-import { IUser } from '../schemas/user';
+import { IUser } from '../schemas/User';
 import * as jwt from 'jsonwebtoken';
-import models from '../models';
-import { IDevice } from '../schemas/device';
+import models from '../Models';
+import { IDevice } from '../schemas/Device';
 import { IResourceRepository } from '../repositories/IResourceRepository';
 import RepositoryFactory from '../repositories/RepositoryFactory';
 import CryptoHelper from '../CryptoHelper';

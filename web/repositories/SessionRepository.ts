@@ -1,6 +1,6 @@
 import { ISession } from '../schemas/session';
-import models from '../models';
-import { IMedia } from '../schemas/media';
+import models from '../Models';
+import { IMedia } from '../schemas/Media';
 import { IResourceRepository } from './IResourceRepository';
 import { Schema } from 'mongoose';
 

@@ -1,6 +1,6 @@
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
-import { IDevice } from '../schemas/device';
-import { IUser } from '../schemas/user';
+import { IDevice } from '../schemas/Device';
+import { IUser } from '../schemas/User';
 import { IResourceRepository } from './IResourceRepository';
 import { MongoResourceRepository } from './MongoResourceRepository';
 

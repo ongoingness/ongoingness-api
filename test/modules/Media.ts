@@ -1,4 +1,4 @@
-import { IUser } from '../../web/schemas/user';
+import { IUser } from '../../web/schemas/User';
 import { MediaRepository } from '../../web/repositories/MediaRepository';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -7,8 +7,8 @@ import * as FormData from 'form-data';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import AuthController from '../../web/controllers/AuthController';
 import { describe } from 'mocha';
-import { IDevice } from '../../web/schemas/device';
-import { IMedia } from '../../web/schemas/media';
+import { IDevice } from '../../web/schemas/Device';
+import { IMedia } from '../../web/schemas/Media';
 import { ISession } from '../../web/schemas/session';
 import { SessionRepository } from '../../web/repositories/SessionRepository';
 import { Schema } from 'mongoose';

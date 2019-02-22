@@ -1,9 +1,9 @@
 import { describe } from 'mocha';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { URL } from '../commons';
+import { URL } from '../Commons';
 import { expect } from 'chai';
-import { IUser } from '../../web/schemas/user';
-import { IDevice } from '../../web/schemas/device';
+import { IUser } from '../../web/schemas/User';
+import { IDevice } from '../../web/schemas/Device';
 import { IResourceRepository } from '../../web/repositories/IResourceRepository';
 import RepositoryFactory from '../../web/repositories/RepositoryFactory';
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { Reply } from '../../reply';
-import { IUser } from '../../schemas/user';
+import { Reply } from '../../Reply';
+import { IUser } from '../../schemas/User';
 import AuthController from '../../controllers/AuthController';
 import { BaseRouter } from '../BaseRouter';
 import { HttpMethods as Methods } from '../../HttpMethods';

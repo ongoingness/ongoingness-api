@@ -1,7 +1,7 @@
-import models from '../models';
+import models from '../Models';
 import { Schema } from 'mongoose';
-import { IMedia } from './media';
-import { IDevice } from './device';
+import { IMedia } from './Media';
+import { IDevice } from './Device';
 import IBaseMongoResource from './IBaseMongoResource';
 import { UserRole } from '../UserRole';
 

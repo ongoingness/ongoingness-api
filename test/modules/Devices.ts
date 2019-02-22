@@ -1,10 +1,10 @@
 import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
-import { URL } from '../commons';
+import { URL } from '../Commons';
 import AuthController from '../../web/controllers/AuthController';
-import { IUser } from '../../web/schemas/user';
+import { IUser } from '../../web/schemas/User';
 import { expect } from 'chai';
-import { IDevice } from '../../web/schemas/device';
+import { IDevice } from '../../web/schemas/Device';
 import { IResourceRepository } from '../../web/repositories/IResourceRepository';
 import RepositoryFactory from '../../web/repositories/RepositoryFactory';
 import CryptoHelper from '../../web/CryptoHelper';

@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { getModel } from '../models';
+import { getModel } from '../Models';
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
 import { IResourceRepository } from './IResourceRepository';
 

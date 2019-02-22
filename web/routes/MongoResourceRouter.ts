@@ -11,8 +11,8 @@ import IResourceRouter from './IResourceRouter';
 import RouterSchema from './RouterSchema';
 import { userPermission } from '../middleware/UserPermission';
 import { checkAdmin } from '../middleware/Admin';
-import {IUser} from "../schemas/User";
-import {Schema} from "mongoose";
+import { IUser } from '../schemas/User';
+import { Schema } from 'mongoose';
 
 export default class MongoResourceRouter<T extends IBaseMongoResource>
   extends BaseRouter

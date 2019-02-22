@@ -2,16 +2,16 @@ import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
 import { URL } from '../commons';
 import { generateToken } from '../../web/controllers/auth';
-import { UserController } from '../../web/controllers/user';
 import { IUser } from '../../web/schemas/user';
 import { expect } from 'chai';
-import { DeviceController } from '../../web/controllers/device';
 import { IDevice } from '../../web/schemas/device';
+import { IResourceController } from '../../web/controllers/IResourceController';
+import ControllerFactory from '../../web/controllers/ControllerFactory';
+import CryptoHelper from '../../web/CryptoHelper';
 
 let user: IUser;
 let token: string;
-const deviceController: DeviceController = new DeviceController();
-const userController: UserController = new UserController();
+const userRepository: IResourceController<IUser> = ControllerFactory.getController('user');
 
 describe('Devices', () => {
   let device1: IDevice;
@@ -21,12 +21,12 @@ describe('Devices', () => {
     const username: string = 'tester-middleware';
     const password: string  = 'secret';
 
-    user = await userController.store({ username, password });
+    user = await userRepository.store({ username, password, iv: CryptoHelper.getRandomString(16) });
     token = await generateToken(user);
   });
 
   after(async () => {
-    await userController.destroy(user._id);
+    await userRepository.destroy(user._id);
   });
 
   describe('Add a device', () => {
@@ -38,31 +38,6 @@ describe('Devices', () => {
         .then((response: AxiosResponse) => {
           expect(response.status).to.equal(200);
           device1 = response.data.payload;
-          done();
-        });
-    });
-  });
-
-  describe('Pair devices',  () => {
-    let device2: IDevice;
-
-    before(async () => {
-      device2 = await deviceController.store({ owner: user._id, mac: '03:00:00:00:00:00' });
-    });
-
-    after(async () => {
-      await deviceController.destroy(device2._id);
-    });
-
-    it('Should pair two devices', (done) => {
-      const deviceData = {
-        device1: device1._id,
-        device2: device2._id,
-      };
-
-      axios.post(`${URL}/api/devices/pair`, deviceData, { headers: { 'x-access-token': token } })
-        .then((response: AxiosResponse) => {
-          expect(response.status).to.equal(200);
           done();
         });
     });

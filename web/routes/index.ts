@@ -1,8 +1,6 @@
 import { Express } from 'express';
 
-import { AuthRouter } from './api/auth';
-import { UserRouter } from './api/user';
-import { DeviceRouter } from './api/devices';
+import { AuthRouter } from './api/Auth';
 import { MediaRouter } from './api/media';
 import RouterSchema from './RouterSchema';
 import ResourceRouterFactory from './ResourceRouterFactory';
@@ -14,8 +12,8 @@ import ResourceRouterFactory from './ResourceRouterFactory';
  */
 export function addRoutes(app: Express): Express {
   app.use('/api/auth', new AuthRouter().getRouter());
-  //app.use('/api/user', new UserRouter().getRouter());
-  app.use('/api/devices', new DeviceRouter().getRouter());
+  // app.use('/api/user', new UserRouter().getRouter());
+  // app.use('/api/devices', new DeviceRouter().getRouter());
   app.use('/api/media', new MediaRouter().getRouter());
 
   routes.forEach((schema: RouterSchema) => {
@@ -32,13 +30,13 @@ export const routes: RouterSchema[] = [
     isOwned: true,
     isProtected: true,
   },
-                   '/api/device',
+                   '/api/devices',
                    'device'),
   new RouterSchema({
     isOwned: false,
     isProtected: true,
   },
-                   '/api/user',
+                   '/api/users',
                    'user'),
 ];
 

@@ -93,6 +93,9 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
 
     try {
       await cont.destroy(id);
+      if (routeSchema.options.isOwned) {
+        // remove from user.
+      }
     } catch (e) {
       return next(e);
     }
@@ -176,6 +179,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
     const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
+
+    console.log(`In SHOW for: ${routeSchema.table}, getting resource: ${id}`);
 
     if (err) {
       if (err.message === '403') {

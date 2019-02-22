@@ -13,15 +13,16 @@ services:
       - "./dist:/app/dist"
       - "./test:/app/test"
       - "./static:/app/static"
+      - "./uploads:/app/uploads"
       depends_on:
         - mongo
       links:
         - mongo
       environment:
         MONGO_URI: mongodb://mongo/ongoingness
+        TEST: TEST
   mongo:
     image: mongo
-#    build: mongo
     ports:
       - "27017:27017"
     volumes:

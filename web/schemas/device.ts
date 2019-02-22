@@ -1,13 +1,13 @@
 import { Schema } from 'mongoose';
-import IBaseResource from './IBaseMongoResource';
+import IBaseMongoResource from './IBaseMongoResource';
 
 const schemaOptions = {
   timestamps: true,
 };
 
-export interface IDevice extends IBaseResource {
+export interface IDevice extends IBaseMongoResource {
   mac: string;
-  owner: Schema.Types.ObjectId;
+  userId: Schema.Types.ObjectId;
   createdAt: string;
   updatedAt: string;
 
@@ -23,7 +23,7 @@ export const deviceSchema = new Schema({
     index: true,
     unique: true,
   },
-  owner: {
+  userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,

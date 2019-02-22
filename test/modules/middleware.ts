@@ -27,7 +27,7 @@ describe('Middleware', () => {
   describe('Authentication', () => {
     describe('Require token', () => {
       it('Should reject request if no token is given', (done) => {
-        axios.get(`${URL}/api/user/me`).then(() => {
+        axios.get(`${URL}/api/users/${user._id}`).then(() => {
         }).catch((error: AxiosError) => {
           expect(error.response.status).to.equal(401);
           done();
@@ -38,7 +38,7 @@ describe('Middleware', () => {
     describe('Check token is valid', () => {
       it('Should reject request if the token is invalid', (done) => {
         const invToken = `${token}0`;
-        axios.get(`${URL}/api/user/me`, { headers: { 'x-access-token': invToken } }).then(() => {
+        axios.get(`${URL}/api/users/${user._id}`, { headers: { 'x-access-token': invToken } }).then(() => {
         }).catch((error: AxiosError) => {
           expect(error.response.status).to.equal(401);
           done();

@@ -8,12 +8,13 @@ import * as FormData from 'form-data';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { generateToken } from '../../web/controllers/auth';
 import { describe } from 'mocha';
-import { DeviceController } from '../../web/controllers/device';
 import { IDevice } from '../../web/schemas/device';
 import { IMedia } from '../../web/schemas/media';
 import { ISession } from '../../web/schemas/session';
 import { SessionController } from '../../web/controllers/session';
 import { Schema } from 'mongoose';
+import { IResourceController } from '../../web/controllers/IResourceController';
+import ControllerFactory from '../../web/controllers/ControllerFactory';
 
 const URL: string = 'http://localhost:8888';
 let user: IUser;
@@ -21,7 +22,7 @@ let token: string;
 let device1: IDevice;
 let device2: IDevice;
 let media: IMedia;
-const deviceController: DeviceController = new DeviceController();
+const deviceRepository: IResourceController<IDevice> = ControllerFactory.getController('device');
 const mediaController: MediaController = new MediaController();
 const sessionController: SessionController = new SessionController();
 const userController: UserController = new UserController();
@@ -37,8 +38,8 @@ describe('Media', () => {
     user = await userController.store({ username, password });
     token = await generateToken(user);
 
-    device1 = await deviceController.store({ owner: user._id, mac: '1' });
-    device2 = await deviceController.store({ owner: user._id, mac: '2' });
+    device1 = await deviceRepository.store({ userId: user._id, mac: '1' });
+    device2 = await deviceRepository.store({ userId: user._id, mac: '2' });
 
     filepath = await mediaController.storeMedia(imagePath,
                                                 'test.jpg',
@@ -57,8 +58,8 @@ describe('Media', () => {
   });
 
   after(async () => {
-    await deviceController.destroy(device1._id);
-    await deviceController.destroy(device2._id);
+    await deviceRepository.destroy(device1._id);
+    await deviceRepository.destroy(device2._id);
     await mediaController.destroy(media._id);
     await userController.destroy(user._id);
   });
@@ -173,7 +174,7 @@ describe('Media', () => {
       .then((response: AxiosResponse) => {
         expect(response.status).to.equal(200);
         done();
-      })
+      });
     });
   });
 

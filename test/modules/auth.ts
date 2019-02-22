@@ -5,10 +5,11 @@ import { expect } from 'chai';
 import { IUser } from '../../web/schemas/user';
 import { UserController } from '../../web/controllers/user';
 import { IDevice } from '../../web/schemas/device';
-import { DeviceController } from '../../web/controllers/device';
+import { IResourceController } from '../../web/controllers/IResourceController';
+import ControllerFactory from '../../web/controllers/ControllerFactory';
 
 let user: IUser;
-const deviceController: DeviceController = new DeviceController();
+const deviceRepository: IResourceController<IDevice> = ControllerFactory.getController('device');
 const userController: UserController = new UserController();
 
 describe('Auth', () => {
@@ -62,11 +63,11 @@ describe('Auth', () => {
     const dummyMAC = '00:00:00:00:00:00';
 
     before(async () => {
-      device = await deviceController.store({ owner: user._id, mac: dummyMAC });
+      device = await deviceRepository.store({ userId: user._id, mac: dummyMAC });
     });
 
     after(async () => {
-      await deviceController.destroy(device._id);
+      await deviceRepository.destroy(device._id);
     });
 
     it('Should return a JWT token for the user who owns a device with a matching MAC address',

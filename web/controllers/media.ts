@@ -6,6 +6,7 @@ import { Schema } from 'mongoose';
 import { IResourceController } from './IResourceController';
 import { config, S3 } from 'aws-sdk';
 import * as Sharp from 'sharp';
+import * as path from 'path';
 export class MediaController implements IResourceController<IMedia> {
   /**
    * Destroy a media record
@@ -186,14 +187,31 @@ export class MediaController implements IResourceController<IMedia> {
 
     if (supportedFileTypes.indexOf(ext) < 0) throw new Error('400');
 
+    const transformer = Sharp().resize(imageSize, imageSize);
+    const stream = fs.createReadStream(storedPath).pipe(transformer);
+
+    if (process.env.TEST === 'true') {
+      const writeStream =
+        fs.createWriteStream(path.join(__dirname, `../../../uploads/${newFileName}`));
+      stream.pipe(writeStream).close();
+
+      return new Promise<string>(((resolve, reject) => {
+        writeStream.on('close', () => {
+          resolve(newFileName);
+        });
+
+        writeStream.on('error', (e) => {
+          console.log(e);
+          reject(e);
+        });
+      }));
+    }
+
     // Update S3 credentials.
     config.update({
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     });
-
-    const transformer = Sharp().resize(imageSize, imageSize);
-    const stream = fs.createReadStream(storedPath).pipe(transformer);
 
     const s3: S3 = new S3();
     const params = {
@@ -242,6 +260,15 @@ export class MediaController implements IResourceController<IMedia> {
    * @returns {Promise<any>}
    */
   getMediaFromS3(key: string): Promise<any> {
+    if (process.env.TEST === 'true') {
+      return new Promise<any>((resolve, reject) => {
+        fs.readFile(path.join(__dirname, `../../../uploads/${key}`), (err, data) => {
+          if (err) reject(err);
+          resolve(data);
+        });
+      });
+    }
+
     // Update S3 credentials.
     config.update({
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,

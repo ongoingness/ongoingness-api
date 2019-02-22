@@ -28,7 +28,7 @@ export class DeviceController implements IResourceController<IDevice> {
     return await models.Device.findOne({ _id: id });
   }
 
-  /**
+  /**x
    * Get a device by mac address
    * @param {string} mac
    * @returns {Promise<IDevice>}
@@ -120,7 +120,7 @@ export class DeviceController implements IResourceController<IDevice> {
 
     try {
       device = await this.get(id);
-      user = await this.userController.get(device.owner);
+      user = await this.userController.get(device.userId);
     } catch (e) {
       e.message = '404';
       throw e;

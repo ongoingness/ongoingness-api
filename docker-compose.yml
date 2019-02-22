@@ -32,6 +32,7 @@ services:
         AWS_BUCKET: ${AWS_BUCKET}
         TEST: ${TEST}
         PORT: ${APP_PORT}
+        DB_TYPE: ${DB_TYPE}
   mongo:
     image: mongo
     ports:

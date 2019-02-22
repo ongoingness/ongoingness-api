@@ -3,11 +3,10 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import models from '../models';
 import { IDevice } from '../schemas/device';
-import { UserController } from './user';
-import { IResourceController } from './IResourceController';
-import ControllerFactory from './ControllerFactory';
+import { IResourceRepository } from '../repositories/IResourceRepository';
+import RepositoryFactory from '../repositories/RepositoryFactory';
 
-const userController: UserController = new UserController();
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
 /**
  * Authenticate a user
@@ -61,7 +60,7 @@ export function generateToken(user: IUser): string {
  * @returns {Promise<IUser>}
  */
 export async function authenticateWithMAC(mac: string): Promise<IUser> {
-  const deviceRepository: IResourceController<IDevice> = ControllerFactory.getController('device');
+  const deviceRepository: IResourceRepository<IDevice> = RepositoryFactory.getRepository('device');
   let user: IUser;
   let device: IDevice;
 
@@ -72,7 +71,7 @@ export async function authenticateWithMAC(mac: string): Promise<IUser> {
     throw new Error('404');
   }
 
-  user = await userController.get(device.userId);
+  user = await userRepository.get(device.userId);
 
   if (!user) {
     throw new Error('404');

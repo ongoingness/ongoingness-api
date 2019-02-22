@@ -2,8 +2,8 @@ import { NextFunction, Response, Request } from 'express';
 import RouterSchema from '../routes/RouterSchema';
 import { getSchema } from '../routes/index';
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
-import ControllerFactory from '../controllers/ControllerFactory';
-import { IResourceController } from '../controllers/IResourceController';
+import ControllerFactory from '../repositories/RepositoryFactory';
+import { IResourceRepository } from '../repositories/IResourceRepository';
 
 /**
  * Verfiy a user's JWT token
@@ -32,7 +32,7 @@ export async function userPermission(req: Request,
   }
 
   let resource: IBaseMongoResource;
-  const resController: IResourceController<IBaseMongoResource> = ControllerFactory.getController(routeSchema.table);
+  const resController: IResourceRepository<IBaseMongoResource> = ControllerFactory.getRepository(routeSchema.table);
   try {
     resource = await resController.get(id);
     if (res.locals.user.id === resource.getUserId().toString()) {

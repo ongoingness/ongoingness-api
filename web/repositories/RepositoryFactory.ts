@@ -1,25 +1,25 @@
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
 import { IDevice } from '../schemas/device';
 import { IUser } from '../schemas/user';
-import { IResourceController } from './IResourceController';
+import { IResourceRepository } from './IResourceRepository';
 import { MongoResourceRepository } from './MongoResourceRepository';
 
 /**
  * Generate a controller for the type of database
  */
-export default class ControllerFactory {
+export default class RepositoryFactory {
 
   /**
    * Determine database type and return fitting controller.
    * @param {string} resName
-   * @returns {IResourceController<IBaseMongoResource | any>}
+   * @returns {IResourceRepository<IBaseMongoResource | any>}
    */
-  public static getController(resName: string): IResourceController<IBaseMongoResource | any> {
+  public static getRepository(resName: string): IResourceRepository<IBaseMongoResource | any> {
     switch (process.env.DB_TYPE) {
       case 'MONGO':
-        return ControllerFactory.getMongoController(resName);
+        return RepositoryFactory.getMongoRepository(resName);
       default:
-        return ControllerFactory.getMongoController(resName);
+        return RepositoryFactory.getMongoRepository(resName);
     }
   }
 
@@ -28,7 +28,7 @@ export default class ControllerFactory {
    * @param {string} res
    * @returns {MongoResourceRepository<IBaseMongoResource>}
    */
-  private static getMongoController(res: string): MongoResourceRepository<IBaseMongoResource> {
+  private static getMongoRepository(res: string): MongoResourceRepository<IBaseMongoResource> {
     let cont: MongoResourceRepository<IBaseMongoResource>;
 
     switch (res) {

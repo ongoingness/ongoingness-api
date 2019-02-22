@@ -2,12 +2,12 @@ import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
 import { URL } from '../commons';
 import { expect } from 'chai';
-import { generateToken } from '../../web/controllers/auth';
+import { generateToken } from '../../web/controllers/Auth';
 import { IUser } from '../../web/schemas/user';
-import { IResourceController } from '../../web/controllers/IResourceController';
-import ControllerFactory from '../../web/controllers/ControllerFactory';
+import { IResourceRepository } from '../../web/repositories/IResourceRepository';
+import RepositoryFactory from '../../web/repositories/RepositoryFactory';
 
-const userController: IResourceController<IUser> = ControllerFactory.getController('user');
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 let user: IUser;
 let token: string;
 
@@ -16,7 +16,7 @@ describe('User', () => {
     const username: string = 'tester-user';
     const password: string  = 'secret';
 
-    user = await userController.store({ username, password, iv: '12345678' });
+    user = await userRepository.store({ username, password, iv: '12345678' });
     token = await generateToken(user);
   });
 

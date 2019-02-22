@@ -3,10 +3,12 @@ import axios, { AxiosError } from 'axios';
 import { URL } from '../commons';
 import { expect } from 'chai';
 import { IUser } from '../../web/schemas/user';
-import { UserController } from '../../web/controllers/user';
-import { generateToken } from '../../web/controllers/auth';
+import { generateToken } from '../../web/controllers/Auth';
+import { IResourceRepository } from '../../web/repositories/IResourceRepository';
+import RepositoryFactory from '../../web/repositories/RepositoryFactory';
+import CryptoHelper from '../../web/CryptoHelper';
 
-const userController: UserController = new UserController();
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
 let user: IUser;
 let token: string;
@@ -16,12 +18,12 @@ describe('Middleware', () => {
     const username: string = 'tester-middleware';
     const password: string  = 'secret';
 
-    user = await userController.store({ username, password });
+    user = await userRepository.store({ username, password, iv: CryptoHelper.getRandomString(16) });
     token = await generateToken(user);
   });
 
   after(async () => {
-    await userController.destroy(user._id);
+    await userRepository.destroy(user._id);
   });
 
   describe('Authentication', () => {

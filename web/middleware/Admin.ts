@@ -1,5 +1,5 @@
-import ControllerFactory from '../controllers/ControllerFactory';
-import { IResourceController } from '../controllers/IResourceController';
+import ControllerFactory from '../repositories/RepositoryFactory';
+import { IResourceRepository } from '../repositories/IResourceRepository';
 import { IUser } from '../schemas/user';
 import { UserRole } from '../UserRole';
 import { NextFunction, Request, Response } from 'express';
@@ -14,7 +14,7 @@ export async function checkAdmin(req: Request,
                                  res: Response,
                                  next: NextFunction) {
 
-  const userController: IResourceController<IUser> = ControllerFactory.getController('user');
+  const userController: IResourceRepository<IUser> = ControllerFactory.getRepository('user');
   let user: IUser;
   if (res.locals.error) {
     if (!(res.locals.error === 403)) return next();

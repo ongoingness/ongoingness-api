@@ -1,5 +1,5 @@
 import { Handler, NextFunction, Request, Response, Router } from 'express';
-import { IResourceController } from '../controllers/IResourceController';
+import { IResourceController } from '../controllers/IResourceRepository';
 import { HttpMethods } from '../HttpMethods';
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
 

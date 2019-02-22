@@ -3,11 +3,11 @@ import { IUser } from '../schemas/user';
 import { IMedia } from '../schemas/media';
 import models from '../models';
 import { Schema } from 'mongoose';
-import { IResourceController } from './IResourceController';
+import { IResourceRepository } from './IResourceRepository';
 import { config, S3 } from 'aws-sdk';
 import * as Sharp from 'sharp';
 import * as path from 'path';
-export class MediaController implements IResourceController<IMedia> {
+export class MediaRepository implements IResourceRepository<IMedia> {
   /**
    * Destroy a media record
    * @param {Schema.Types.ObjectId} id

@@ -1,13 +1,13 @@
 import { Schema } from 'mongoose';
 import { getModel } from '../models';
 import IBaseMongoResource from '../schemas/IBaseMongoResource';
-import { IResourceController } from './IResourceController';
+import { IResourceRepository } from './IResourceRepository';
 
 /**
  * MongoDB specific resource controller.
  */
 export class MongoResourceRepository<T extends IBaseMongoResource>
-  implements IResourceController<T> {
+  implements IResourceRepository<T> {
   private table: string;
 
   /**

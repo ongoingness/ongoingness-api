@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { Reply } from '../../reply';
 import { IUser } from '../../schemas/user';
-import { UserController } from '../../controllers/user';
-import { authenticateUser, authenticateWithMAC, generateToken } from '../../controllers/auth';
+import { UserController } from '../../repositories/user';
+import { authenticateUser, authenticateWithMAC, generateToken } from '../../controllers/Auth';
 import { BaseRouter } from '../BaseRouter';
 import { HttpMethods as Methods } from '../../HttpMethods';
 

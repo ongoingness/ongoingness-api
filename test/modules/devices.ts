@@ -1,17 +1,17 @@
 import { describe } from 'mocha';
 import axios, { AxiosResponse } from 'axios';
 import { URL } from '../commons';
-import { generateToken } from '../../web/controllers/auth';
+import { generateToken } from '../../web/controllers/Auth';
 import { IUser } from '../../web/schemas/user';
 import { expect } from 'chai';
 import { IDevice } from '../../web/schemas/device';
-import { IResourceController } from '../../web/controllers/IResourceController';
-import ControllerFactory from '../../web/controllers/ControllerFactory';
+import { IResourceRepository } from '../../web/repositories/IResourceRepository';
+import RepositoryFactory from '../../web/repositories/RepositoryFactory';
 import CryptoHelper from '../../web/CryptoHelper';
 
 let user: IUser;
 let token: string;
-const userRepository: IResourceController<IUser> = ControllerFactory.getController('user');
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
 describe('Devices', () => {
   let device1: IDevice;

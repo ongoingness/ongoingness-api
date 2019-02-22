@@ -1,19 +1,19 @@
 import { NextFunction, Request, Response } from 'express';
 import * as multer from 'multer';
-import { MediaController } from '../../controllers/media';
+import { MediaRepository } from '../../repositories/MediaRepository';
 import { checkToken } from '../../middleware/authenticate';
 import { IUser } from '../../schemas/user';
-import { UserController } from '../../controllers/user';
+import { UserController } from '../../repositories/user';
 import { Reply } from '../../reply';
 import { IMedia } from '../../schemas/media';
 import { Schema } from 'mongoose';
-import { SessionController } from '../../controllers/session';
+import { SessionRepository } from '../../repositories/SessionRepository';
 import { ResourceRouter } from './base';
 import { HttpMethods as Methods } from '../../HttpMethods';
 
 const upload = multer({ dest: 'uploads/' });
-const mediaController: MediaController = new MediaController();
-const sessionController: SessionController = new SessionController();
+const mediaController: MediaRepository = new MediaRepository();
+const sessionController: SessionRepository = new SessionRepository();
 const userController: UserController = new UserController();
 
 export class MediaRouter extends ResourceRouter {

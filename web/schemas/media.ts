@@ -1,11 +1,11 @@
 import { Schema } from 'mongoose';
-import { MediaController } from '../controllers/media';
+import { MediaRepository } from '../repositories/MediaRepository';
 import IBaseMongoResource from './IBaseMongoResource';
 
 const schemaOptions = {
   timestamps: true,
 };
-const mediaController: MediaController = new MediaController();
+const mediaController: MediaRepository = new MediaRepository();
 
 export interface IMedia extends IBaseMongoResource {
   user: Schema.Types.ObjectId;

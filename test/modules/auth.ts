@@ -3,18 +3,17 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import { URL } from '../commons';
 import { expect } from 'chai';
 import { IUser } from '../../web/schemas/user';
-import { UserController } from '../../web/controllers/user';
 import { IDevice } from '../../web/schemas/device';
-import { IResourceController } from '../../web/controllers/IResourceController';
-import ControllerFactory from '../../web/controllers/ControllerFactory';
+import { IResourceRepository } from '../../web/repositories/IResourceRepository';
+import RepositoryFactory from '../../web/repositories/RepositoryFactory';
 
 let user: IUser;
-const deviceRepository: IResourceController<IDevice> = ControllerFactory.getController('device');
-const userController: UserController = new UserController();
+const deviceRepository: IResourceRepository<IDevice> = RepositoryFactory.getRepository('device');
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
 describe('Auth', () => {
   after(async () => {
-    await userController.destroy(user._id);
+    await userRepository.destroy(user._id);
   });
 
   describe('Register', () => {

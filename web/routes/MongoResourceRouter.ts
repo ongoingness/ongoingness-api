@@ -1,6 +1,6 @@
 import * as e from 'express';
-import ControllerFactory from '../controllers/ControllerFactory';
-import { IResourceController } from '../controllers/IResourceController';
+import RepositoryFactory from '../repositories/RepositoryFactory';
+import { IResourceRepository } from '../repositories/IResourceRepository';
 import { HttpMethods } from '../HttpMethods';
 import { checkToken } from '../middleware/authenticate';
 import { Reply } from '../reply';
@@ -19,8 +19,8 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
   private readonly table: string;
   private readonly isProtected: boolean;
   private readonly isOwned: boolean;
-  private resourceController: IResourceController<T>;
-  private userController: IResourceController<IUser>;
+  private resourceController: IResourceRepository<T>;
+  private userController: IResourceRepository<IUser>;
 
   constructor(table: string, options: {isProtected: boolean, isOwned: boolean}) {
     super();
@@ -36,10 +36,10 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     this.addMiddleware(checkAdmin);
 
     this.addDefaultRoutes();
-    this.setResourceController(ControllerFactory.getController(this.table));
+    this.setResourceController(RepositoryFactory.getRepository(this.table));
 
     if (this.isOwned) {
-      this.userController = ControllerFactory.getController('user');
+      this.userController = RepositoryFactory.getRepository('user');
     }
   }
 
@@ -55,7 +55,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
 
   public async store(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
-    const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
+    const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const userId = res.locals.user.id;
     let resource: T;
     const data: any = {};
@@ -86,7 +86,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
   public async destroy(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
     const id: string = req.params.id;
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
-    const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
+    const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
 
     if (err) { return next(err); }
@@ -105,7 +105,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
 
   public async index(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
-    const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
+    const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
     let resources: T[];
     const q: any = req.query;
@@ -135,7 +135,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
 
   public async paged(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
-    const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
+    const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
     const page: number = parseInt(req.params.page, 10) || 0;
     const size: number = parseInt(req.params.limit, 10) || 0;
@@ -177,7 +177,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     let resource: T;
     const id: string = req.params.id;
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
-    const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
+    const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
 
     console.log(`In SHOW for: ${routeSchema.table}, getting resource: ${id}`);
@@ -209,7 +209,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
   public async search(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
     let resources: T[];
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
-    const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
+    const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
     const field = req.params.field;
     const term = req.params.term;
@@ -241,7 +241,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
 
   public async update(req: e.Request, res: e.Response, next: e.NextFunction): Promise<void | e.Response> {
     const routeSchema: RouterSchema = getSchema(req.originalUrl);
-    const cont: IResourceController<T> = ControllerFactory.getController(routeSchema.table);
+    const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     let resource: T;
     const data: any = {};
     const err: Error = BaseRouter.errorCheck(res);
@@ -271,7 +271,7 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     return res.json(new Reply(200, 'success', false, resource));
   }
 
-  public setResourceController(cont: IResourceController<T>): void {
+  public setResourceController(cont: IResourceRepository<T>): void {
     this.resourceController = cont;
   }
 

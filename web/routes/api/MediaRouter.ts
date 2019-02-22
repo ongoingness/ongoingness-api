@@ -1,22 +1,26 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import * as multer from 'multer';
-import { MediaController } from '../../controllers/media';
-import { checkToken } from '../../middleware/authenticate';
-import { IUser } from '../../schemas/user';
-import { UserController } from '../../controllers/user';
-import { Reply } from '../../reply';
-import { IMedia } from '../../schemas/media';
+import { MediaRepository } from '../../repositories/MediaRepository';
+import { checkToken } from '../../middleware/Authenticate';
+import { IUser } from '../../schemas/User';
+import { Reply } from '../../Reply';
+import { IMedia } from '../../schemas/Media';
 import { Schema } from 'mongoose';
-import { SessionController } from '../../controllers/session';
-import { ResourceRouter } from './base';
-import { Methods } from '../../methods';
+import { SessionRepository } from '../../repositories/SessionRepository';
+import { HttpMethods } from '../../HttpMethods';
+import { IResourceRepository } from '../../repositories/IResourceRepository';
+import RepositoryFactory from '../../repositories/RepositoryFactory';
+import IResourceRouter from '../IResourceRouter';
+import { BaseRouter } from '../BaseRouter';
 
 const upload = multer({ dest: 'uploads/' });
-const mediaController: MediaController = new MediaController();
-const sessionController: SessionController = new SessionController();
-const userController: UserController = new UserController();
+const mediaController: MediaRepository = new MediaRepository();
+const sessionController: SessionRepository = new SessionRepository();
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
-export class MediaRouter extends ResourceRouter {
+export class MediaRouter
+  extends BaseRouter
+  implements IResourceRouter<IMedia> {
   /**
    * Destroy media
    * TODO: Implement
@@ -35,7 +39,7 @@ export class MediaRouter extends ResourceRouter {
     }
 
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
       media = await user.getMedia(mediaId);
     } catch (e) {
       e.message = '500';
@@ -87,7 +91,7 @@ export class MediaRouter extends ResourceRouter {
     }
 
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
       media = await user.getMedia(mediaId);
     } catch (e) {
       e.message = '500';
@@ -197,7 +201,7 @@ export class MediaRouter extends ResourceRouter {
 
     try {
       const userId: Schema.Types.ObjectId = res.locals.user.id;
-      user = await userController.get(userId);
+      user = await userRepository.get(userId);
       media = await mediaController.getRandomPresentMedia(user._id);
 
       if (!media) {
@@ -249,7 +253,7 @@ export class MediaRouter extends ResourceRouter {
 
     let user: IUser;
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
@@ -314,7 +318,7 @@ export class MediaRouter extends ResourceRouter {
 
     let user: IUser;
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
@@ -376,7 +380,7 @@ export class MediaRouter extends ResourceRouter {
 
     let user: IUser;
     try {
-      user = await userController.get(res.locals.user.id);
+      user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -428,9 +432,38 @@ export class MediaRouter extends ResourceRouter {
     super();
     this.setFileUploadHandler(upload.single('file'));
     this.addMiddleware(checkToken);
-    this.addRoute('/links/:id', Methods.GET, this.getLinks);
-    this.addRoute('/links', Methods.POST, this.storeLink);
-    this.addRoute('/request', Methods.GET, this.getPresent);
+    this.addRoute('/links/:id', HttpMethods.GET, this.getLinks);
+    this.addRoute('/links', HttpMethods.POST, this.storeLink);
+    this.addRoute('/request', HttpMethods.GET, this.getPresent);
     this.addDefaultRoutes();
+  }
+
+  /**
+   * Setup router
+   * Add all default routes to router.
+   */
+  addDefaultRoutes(): void {
+    this.router.get('/:id', this.show);
+    this.router.delete('/:id', this.destroy);
+    this.router.post('/update', this.update);
+    this.router.get('/', this.index);
+
+    if (this.fileUploadHandler) {
+      this.router.post('/', this.fileUploadHandler, this.store);
+    } else {
+      this.router.post('/', this.store);
+    }
+  }
+
+  paged(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+    return undefined;
+  }
+
+  search(req: Request, res: Response, next: NextFunction): Promise<void | Response> | void {
+    return undefined;
+  }
+
+  setRouter(router: Router): void {
+    this.router = router;
   }
 }

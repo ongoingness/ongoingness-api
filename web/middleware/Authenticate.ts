@@ -1,6 +1,6 @@
 import * as jwt from 'jsonwebtoken';
 import * as express from 'express';
-import { IUser } from '../schemas/user';
+import { IUser } from '../schemas/User';
 
 export function checkToken(req: express.Request,
                            res: express.Response,

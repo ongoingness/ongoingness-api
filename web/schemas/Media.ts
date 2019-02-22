@@ -1,12 +1,13 @@
-import { Schema, Document } from 'mongoose';
-import { MediaController } from '../controllers/media';
+import { Schema } from 'mongoose';
+import { MediaRepository } from '../repositories/MediaRepository';
+import IBaseMongoResource from './IBaseMongoResource';
 
 const schemaOptions = {
   timestamps: true,
 };
-const mediaController: MediaController = new MediaController();
+const mediaController: MediaRepository = new MediaRepository();
 
-export interface IMedia extends Document {
+export interface IMedia extends IBaseMongoResource {
   user: Schema.Types.ObjectId;
   links: Schema.Types.ObjectId[];
   path: string;
@@ -19,6 +20,9 @@ export interface IMedia extends Document {
 
   // Functions
   createLink(linkId: Schema.Types.ObjectId): Promise<void>;
+  getId(): Schema.Types.ObjectId;
+  getTable(): string;
+  getUserId(): Schema.Types.ObjectId;
 }
 
 export const mediaSchema = new Schema({
@@ -72,4 +76,16 @@ mediaSchema.methods.createLink = async function (linkId: Schema.Types.ObjectId):
       await this.save();
     }
   }
+};
+
+mediaSchema.methods.getId = function (): Schema.Types.ObjectId {
+  return this._id;
+};
+
+mediaSchema.methods.getTable = function (): string {
+  return 'device';
+};
+
+mediaSchema.methods.getUserId = function (): Schema.Types.ObjectId {
+  return this.userId;
 };

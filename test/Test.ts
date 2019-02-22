@@ -1,5 +1,5 @@
 import { describe } from 'mocha';
-import { App } from '../web/server';
+import { App } from '../web/Server';
 import { Server } from 'http';
 
 let server: Server;
@@ -23,10 +23,10 @@ describe('api', () => {
   /**
    * Import tests from files
    */
-  require('./modules/media');
-  require('./modules/home');
-  require('./modules/auth');
-  require('./modules/middleware');
-  require('./modules/user');
-  require('./modules/devices');
+  require('./modules/Media');
+  require('./modules/Home');
+  require('./modules/Auth');
+  require('./modules/Middleware');
+  require('./modules/User');
+  require('./modules/Devices');
 });

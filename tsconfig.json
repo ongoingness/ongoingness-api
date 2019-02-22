@@ -9,7 +9,7 @@
     "compileOnSave": true,
     "include": [
         "web/**/*",
-        "app.ts",
+        "App.ts",
         "test/**/*"
     ],
     "exclude": [

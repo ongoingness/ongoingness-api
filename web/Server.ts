@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
-import * as handler from './middleware/handler';
+import * as handler from './middleware/Handler';
 import * as mongoose from 'mongoose';
 import { addRoutes } from './routes';
 import * as dotenv from 'dotenv';
@@ -21,8 +21,8 @@ export class App {
     /**
      * Skip auth if in development.
      */
-    if (process.env.DEBUG === 'true') {
-      mongoose.connect(process.env.MONGO_URI);
+    if (process.env.LOCAL === 'true') {
+      mongoose.connect(process.env.MONGO_URI_LOCAL);
     } else {
       mongoose.connect(process.env.MONGO_URI, {
         user: process.env.MONGODB_USER,

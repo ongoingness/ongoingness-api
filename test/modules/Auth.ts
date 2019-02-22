@@ -1,19 +1,19 @@
 import { describe } from 'mocha';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { URL } from '../commons';
+import { URL } from '../Commons';
 import { expect } from 'chai';
-import { IUser } from '../../web/schemas/user';
-import { UserController } from '../../web/controllers/user';
-import { IDevice } from '../../web/schemas/device';
-import { DeviceController } from '../../web/controllers/device';
+import { IUser } from '../../web/schemas/User';
+import { IDevice } from '../../web/schemas/Device';
+import { IResourceRepository } from '../../web/repositories/IResourceRepository';
+import RepositoryFactory from '../../web/repositories/RepositoryFactory';
 
 let user: IUser;
-const deviceController: DeviceController = new DeviceController();
-const userController: UserController = new UserController();
+const deviceRepository: IResourceRepository<IDevice> = RepositoryFactory.getRepository('device');
+const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
 describe('Auth', () => {
   after(async () => {
-    await userController.destroy(user._id);
+    await userRepository.destroy(user._id);
   });
 
   describe('Register', () => {
@@ -62,11 +62,11 @@ describe('Auth', () => {
     const dummyMAC = '00:00:00:00:00:00';
 
     before(async () => {
-      device = await deviceController.store({ owner: user._id, mac: dummyMAC });
+      device = await deviceRepository.store({ userId: user._id, mac: dummyMAC });
     });
 
     after(async () => {
-      await deviceController.destroy(device._id);
+      await deviceRepository.destroy(device._id);
     });
 
     it('Should return a JWT token for the user who owns a device with a matching MAC address',

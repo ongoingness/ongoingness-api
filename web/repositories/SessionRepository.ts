@@ -1,10 +1,10 @@
 import { ISession } from '../schemas/session';
-import models from '../models';
-import { IMedia } from '../schemas/media';
-import { IResourceController } from './base';
+import models from '../Models';
+import { IMedia } from '../schemas/Media';
+import { IResourceRepository } from './IResourceRepository';
 import { Schema } from 'mongoose';
 
-export class SessionController implements IResourceController<ISession> {
+export class SessionRepository implements IResourceRepository<ISession> {
   /**
    * Destroy a session
    * TODO: Implement
@@ -55,5 +55,24 @@ export class SessionController implements IResourceController<ISession> {
       throw new Error('Media must be of the present to start a session');
     }
     return await models.Session.create({ user: data.user, media: data.media._id });
+  }
+
+  findManyWithFilter(filter: {}, options?: { limit: number; skip: number }): Promise<ISession[]> {
+    return undefined;
+  }
+
+  findOneWithFilter(filter: {}): Promise<ISession> {
+    return undefined;
+  }
+
+  getCount(filter: {}): Promise<number> {
+    return undefined;
+  }
+
+  getTableName(): string {
+    return '';
+  }
+
+  setTableName(table: string): void {
   }
 }

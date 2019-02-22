@@ -21,8 +21,8 @@ export class App {
     /**
      * Skip auth if in development.
      */
-    if (process.env.DEBUG === 'true') {
-      mongoose.connect(process.env.MONGO_URI);
+    if (process.env.LOCAL === 'true') {
+      mongoose.connect(process.env.MONGO_URI_LOCAL);
     } else {
       mongoose.connect(process.env.MONGO_URI, {
         user: process.env.MONGODB_USER,

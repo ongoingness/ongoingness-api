@@ -169,8 +169,6 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     const cont: IResourceRepository<T> = RepositoryFactory.getRepository(routeSchema.table);
     const err: Error = BaseRouter.errorCheck(res);
 
-    console.log(`In SHOW for: ${routeSchema.table}, getting resource: ${id}`);
-
     if (err) {
       if (err.message === '403') {
         if (!res.locals.admin) {

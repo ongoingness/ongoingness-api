@@ -12,4 +12,5 @@ export default interface IResourceRouter<T extends IBaseMongoResource> {
 
   addDefaultRoutes(): void;
   setRouter(router: Router): void;
+  getRouter(): Router;
 }

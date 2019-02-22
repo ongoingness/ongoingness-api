@@ -20,7 +20,6 @@ RUN npm install
 # Install nodemon
 RUN npm install -g nodemon typescript apidoc
 
-COPY .env /app/.env
 COPY App.ts /app/App.ts
 COPY tsconfig.json /app/tsconfig.json
 COPY web /app/web

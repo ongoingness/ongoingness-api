@@ -158,6 +158,26 @@ describe('Media', () => {
         headers: {
           'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}`,
           'x-access-token': token,
+          emotions: 'joy,happy,amused',
+        },
+      }).then((response: AxiosResponse) => {
+        expect(response.status).to.equal(200);
+        expect(response.data.payload.emotions[0]).to.equal('joy');
+        done();
+      }).catch((error: AxiosError) => {
+        console.log(error);
+        throw error;
+      });
+    });
+    it('Should post and store data when emotions are missing', (done) => {
+      const formData = new FormData();
+      const file = fs.createReadStream(imagePath);
+      formData.append('file', file);
+
+      axios.post(`${URL}/api/media`, formData, {
+        headers: {
+          'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}`,
+          'x-access-token': token,
         },
       }).then((response: AxiosResponse) => {
         expect(response.status).to.equal(200);

@@ -1,39 +1,16 @@
 import * as fs from 'fs';
 import { IUser } from '../schemas/User';
 import { IMedia } from '../schemas/Media';
-import models from '../Models';
+import Models, { getModel } from '../Models';
 import { Schema } from 'mongoose';
-import { IResourceRepository } from './IResourceRepository';
 import { config, S3 } from 'aws-sdk';
 import * as Sharp from 'sharp';
 import * as path from 'path';
-export class MediaRepository implements IResourceRepository<IMedia> {
-  /**
-   * Destroy a media record
-   * @param {Schema.Types.ObjectId} id
-   * @returns {Promise<void>}
-   */
-  async destroy(id: Schema.Types.ObjectId): Promise<void> {
-    await models.Media.deleteOne({ _id: id });
-  }
-
-  /**
-   * Edit a media record
-   * @param {Schema.Types.ObjectId} id
-   * @param data
-   * @returns {Promise<IMedia>}
-   */
-  async edit(id: Schema.Types.ObjectId, data: any): Promise<IMedia> {
-    return undefined;
-  }
-
-  /**
-   * Get a media record.
-   * @param {Schema.Types.ObjectId} id
-   * @returns {Promise<IMedia>}
-   */
-  async get(id: Schema.Types.ObjectId): Promise<IMedia> {
-    return await models.Media.findOne({ _id: id });
+import { MongoResourceRepository } from './MongoResourceRepository';
+export class MediaRepository extends MongoResourceRepository<IMedia> {
+  constructor() {
+    super();
+    this.setTableName('media');
   }
 
   /**
@@ -42,7 +19,7 @@ export class MediaRepository implements IResourceRepository<IMedia> {
    * @returns {Promise<IMedia>}
    */
   async getRandomPresentMedia(id: Schema.Types.ObjectId): Promise<IMedia> {
-    const allMedia: IMedia[] = await models.Media.find({ user: id, era: 'present' });
+    const allMedia: IMedia[] = await Models.Media.find({ user: id, era: 'present' });
     return allMedia[Math.floor(Math.random() * allMedia.length)];
   }
 
@@ -71,7 +48,7 @@ export class MediaRepository implements IResourceRepository<IMedia> {
     }
 
     // Get all media
-    const allMedia: IMedia[] = await models.Media.find({ user: media.user });
+    const allMedia: IMedia[] = await Models.Media.find({ user: media.user });
     const matches: Schema.Types.ObjectId[][] = [[], [], []];
 
     // Loop through all media
@@ -113,7 +90,7 @@ export class MediaRepository implements IResourceRepository<IMedia> {
    */
   async addEmotionsToMedia(id: Schema.Types.ObjectId,
                            emotions: string): Promise<IMedia> {
-    let media: IMedia = await this.get(id);
+    let media: IMedia = await getModel('media').findOne({ _id: id }) as IMedia;
     if (!media) {
       throw new Error('Media not found');
     }
@@ -128,14 +105,6 @@ export class MediaRepository implements IResourceRepository<IMedia> {
   }
 
   /**
-   * Get all media records.
-   * @returns {Promise<IMedia[]>}
-   */
-  async getAll(): Promise<IMedia[]> {
-    return undefined;
-  }
-
-  /**
    * Store a media record.
    * @param {{path: string; mimetype: string; user: IUser; era?: string}} data
    * @returns {Promise<IMedia>}
@@ -146,13 +115,15 @@ export class MediaRepository implements IResourceRepository<IMedia> {
     user: IUser,
     era?: string,
     locket?: string,
+    emotions?: string[],
   }): Promise<IMedia> {
-    const media: IMedia = await models.Media.create({
+    const media: IMedia = await Models.Media.create({
       era: data.era || '',
       path: data.path,
       mimetype: data.mimetype,
       user: data.user._id,
       locket: data.locket || 'none',
+      emotions: data.emotions || [],
     });
 
     data.user.media.push(media._id);
@@ -231,6 +202,11 @@ export class MediaRepository implements IResourceRepository<IMedia> {
     }));
   }
 
+  /**
+   * Delete media from S3.
+   * @param {IMedia} media
+   * @returns {Promise<void>}
+   */
   deleteMedia(media: IMedia): Promise<void> {
     config.update({
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -289,24 +265,5 @@ export class MediaRepository implements IResourceRepository<IMedia> {
           reject(e);
         });
     }));
-  }
-
-  findManyWithFilter(filter: {}, options?: { limit: number; skip: number }): Promise<IMedia[]> {
-    return undefined;
-  }
-
-  findOneWithFilter(filter: {}): Promise<IMedia> {
-    return undefined;
-  }
-
-  getCount(filter: {}): Promise<number> {
-    return undefined;
-  }
-
-  getTableName(): string {
-    return '';
-  }
-
-  setTableName(table: string): void {
   }
 }

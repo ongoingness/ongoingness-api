@@ -6,7 +6,7 @@ import { IMedia, mediaSchema } from './schemas/Media';
 import { ISession, sessionSchema } from './schemas/session';
 import IBaseMongoResource from './schemas/IBaseMongoResource';
 
-// Export models
+// Export Models
 export default {
   User: model<IUser>(
     'User', userSchema,
@@ -35,6 +35,8 @@ export function getModel(t: string): Model<IBaseMongoResource> {
       return model<IUser>(
         'User', userSchema,
       );
+    case 'media':
+      return model<IMedia>('Media', mediaSchema);
     default:
       return null;
   }

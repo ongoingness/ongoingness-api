@@ -380,7 +380,7 @@ export class MediaRouter
     let imagePath: string;
     let media: IMedia;
     const emotionArray: string = req.headers['emotions'] as string;
-    const emotions: string[] = emotionArray.split(',') || [];
+    const emotions: string[] = emotionArray === undefined ? [] : emotionArray.split(',') || [];
 
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));

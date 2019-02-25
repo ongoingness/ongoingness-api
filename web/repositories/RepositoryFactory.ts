@@ -3,6 +3,7 @@ import { IDevice } from '../schemas/Device';
 import { IUser } from '../schemas/User';
 import { IResourceRepository } from './IResourceRepository';
 import { MongoResourceRepository } from './MongoResourceRepository';
+import { MediaRepository } from './MediaRepository';
 
 /**
  * Generate a controller for the type of database
@@ -37,6 +38,9 @@ export default class RepositoryFactory {
         break;
       case 'device':
         cont = new MongoResourceRepository<IDevice>();
+        break;
+      case 'media':
+        cont = new MediaRepository();
         break;
       default:
         cont = new MongoResourceRepository<IBaseMongoResource>();

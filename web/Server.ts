@@ -8,7 +8,7 @@ import * as dotenv from 'dotenv';
 dotenv.load();
 
 /**
- * Class that models the server application.
+ * Class that Models the server application.
  * Initialises a new instance of an express application in the constructor.
  * Can be started with App.express.listen(PORT: number).
  */

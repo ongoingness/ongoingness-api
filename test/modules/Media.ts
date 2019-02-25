@@ -158,9 +158,12 @@ describe('Media', () => {
         headers: {
           'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}`,
           'x-access-token': token,
+          emotions: 'joy,happy,amused',
         },
       }).then((response: AxiosResponse) => {
         expect(response.status).to.equal(200);
+        console.log(response.data.payload.emotions);
+        expect(response.data.payload.emotions[0]).to.equal('joy');
         done();
       }).catch((error: AxiosError) => {
         console.log(error);

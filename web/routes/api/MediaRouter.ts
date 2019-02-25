@@ -14,7 +14,7 @@ import IResourceRouter from '../IResourceRouter';
 import { BaseRouter } from '../BaseRouter';
 
 const upload = multer({ dest: 'uploads/' });
-const mediaController: MediaRepository = new MediaRepository();
+const mediaRepository: MediaRepository = new MediaRepository();
 const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 
@@ -51,8 +51,8 @@ export class MediaRouter
     }
 
     try {
-      await mediaController.deleteMedia(media);
-      await mediaController.destroy(media._id);
+      await mediaRepository.deleteMedia(media);
+      await mediaRepository.destroy(media._id);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -104,7 +104,7 @@ export class MediaRouter
 
     let data: any;
     try {
-      data = await mediaController.getMediaFromS3(media.path);
+      data = await mediaRepository.getMediaFromS3(media.path);
     } catch (e) {
       return next(new Error('500'));
     }
@@ -152,7 +152,7 @@ export class MediaRouter
     const mediaId: Schema.Types.ObjectId = req.params.id;
     let media: IMedia;
     try {
-      media = await mediaController.get(mediaId);
+      media = await mediaRepository.get(mediaId);
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -202,7 +202,7 @@ export class MediaRouter
     try {
       const userId: Schema.Types.ObjectId = res.locals.user.id;
       user = await userRepository.get(userId);
-      media = await mediaController.getRandomPresentMedia(user._id);
+      media = await mediaRepository.getRandomPresentMedia(user._id);
 
       if (!media) {
         return next(new Error('404'));
@@ -374,11 +374,18 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    const mimetype = req.file.mimetype;
+    const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
+    let user: IUser;
+    let imagePath: string;
+    let media: IMedia;
+    const emotionArray: string = req.headers['emotions'] as string;
+    const emotions: string[] = emotionArray.split(',') || [];
+
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
 
-    let user: IUser;
     try {
       user = await userRepository.get(res.locals.user.id);
     } catch (e) {
@@ -390,21 +397,17 @@ export class MediaRouter
       return next(new Error('400'));
     }
 
-    const mimetype = req.file.mimetype;
-    const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
-
-    let imagePath: string;
-    let media: IMedia;
     try {
-      imagePath = await mediaController.storeMedia(
+      imagePath = await mediaRepository.storeMedia(
         req.file.path,
         req.file.originalname,
         ext,
         user._id,
       );
-      media = await mediaController.store({
+      media = await mediaRepository.store({
         mimetype,
         user,
+        emotions,
         path: imagePath,
         era: <string>req.headers['era'] || 'past',
         locket: <string>req.headers['locket'] || 'none',

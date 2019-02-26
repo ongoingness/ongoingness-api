@@ -12,6 +12,7 @@ import { IResourceRepository } from '../../repositories/IResourceRepository';
 import RepositoryFactory from '../../repositories/RepositoryFactory';
 import IResourceRouter from '../IResourceRouter';
 import { BaseRouter } from '../BaseRouter';
+import MediaController from '../../controllers/MediaController';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaRepository: MediaRepository = new MediaRepository();
@@ -21,6 +22,7 @@ const userRepository: IResourceRepository<IUser> = RepositoryFactory.getReposito
 export class MediaRouter
   extends BaseRouter
   implements IResourceRouter<IMedia> {
+
   /**
    * Destroy media
    * TODO: Implement
@@ -31,6 +33,7 @@ export class MediaRouter
    */
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: Schema.Types.ObjectId = req.params.id;
+    const mediaController: MediaController = new MediaController();
     let user: IUser;
     let media: IMedia;
 
@@ -51,7 +54,7 @@ export class MediaRouter
     }
 
     try {
-      await mediaRepository.deleteMedia(media);
+      await mediaController.deleteMedia(media);
       await mediaRepository.destroy(media._id);
     } catch (e) {
       e.message = '500';
@@ -83,6 +86,7 @@ export class MediaRouter
    */
   async show(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: Schema.Types.ObjectId = req.params.id;
+    const mediaController: MediaController = new MediaController();
     let user: IUser;
     let media: IMedia;
 
@@ -104,7 +108,7 @@ export class MediaRouter
 
     let data: any;
     try {
-      data = await mediaRepository.getMediaFromS3(media.path);
+      data = await mediaController.getMediaFromS3(media.path);
     } catch (e) {
       return next(new Error('500'));
     }
@@ -192,6 +196,7 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async getPresent(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    const mediaController: MediaController = new MediaController();
     let user: IUser;
     let media: IMedia;
 
@@ -202,7 +207,7 @@ export class MediaRouter
     try {
       const userId: Schema.Types.ObjectId = res.locals.user.id;
       user = await userRepository.get(userId);
-      media = await mediaRepository.getRandomPresentMedia(user._id);
+      media = await mediaController.getRandomPresentMedia(user._id);
 
       if (!media) {
         return next(new Error('404'));
@@ -376,6 +381,7 @@ export class MediaRouter
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mimetype = req.file.mimetype;
     const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
+    const mediaController: MediaController = new MediaController();
     let user: IUser;
     let imagePath: string;
     let media: IMedia;
@@ -398,7 +404,7 @@ export class MediaRouter
     }
 
     try {
-      imagePath = await mediaRepository.storeMedia(
+      imagePath = await mediaController.storeMedia(
         req.file.path,
         req.file.originalname,
         ext,
@@ -413,6 +419,7 @@ export class MediaRouter
         locket: <string>req.headers['locket'] || 'none',
       });
     } catch (e) {
+      console.error(e);
       e.message = '500';
       return next(e);
     }

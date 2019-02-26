@@ -15,6 +15,7 @@ import { Schema } from 'mongoose';
 import { IResourceRepository } from '../../web/repositories/IResourceRepository';
 import RepositoryFactory from '../../web/repositories/RepositoryFactory';
 import CryptoHelper from '../../web/CryptoHelper';
+import MediaController from '../../web/controllers/MediaController';
 
 const URL: string = 'http://localhost:8888';
 let user: IUser;
@@ -27,6 +28,7 @@ const mediaRepository: MediaRepository = new MediaRepository();
 const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 const authController: AuthController = new AuthController();
+const mediaController: MediaController = new MediaController();
 
 describe('Media', () => {
   const imagePath: string = path.join(__dirname, '../../../test.jpg');
@@ -42,7 +44,7 @@ describe('Media', () => {
     device1 = await deviceRepository.store({ userId: user._id, mac: '1' });
     device2 = await deviceRepository.store({ userId: user._id, mac: '2' });
 
-    filepath = await mediaRepository.storeMedia(imagePath,
+    filepath = await mediaController.storeMedia(imagePath,
                                                 'test.jpg',
                                                 'jpg',
                                                 user._id,
@@ -67,7 +69,7 @@ describe('Media', () => {
 
   describe('Store media',  () => {
     it('Should store a file in the uploads folder', (done) => {
-      mediaRepository.storeMedia(imagePath, 'test.jpg', 'jpg', user._id).then((filepath) => {
+      mediaController.storeMedia(imagePath, 'test.jpg', 'jpg', user._id).then((filepath) => {
         console.log(filepath);
         expect(filepath.length).to.be.greaterThan(1);
         done();
@@ -79,7 +81,7 @@ describe('Media', () => {
     describe('Store emotions',  () => {
       it('Should store emotion string on media',  (done) => {
         const emotions = 'happy,accepted,valued';
-        mediaRepository.addEmotionsToMedia(media._id, emotions).then((media: IMedia) => {
+        mediaController.addEmotionsToMedia(media._id, emotions).then((media: IMedia) => {
           expect(media.emotions).to.include(emotions);
           done();
         });
@@ -89,7 +91,7 @@ describe('Media', () => {
     describe('Reject emotions in wrong format',  () => {
       it('Should throw an error for emotions being in wrong format',  (done) => {
         const emotions = 'happy,accepted-valued';
-        mediaRepository.addEmotionsToMedia(media._id, emotions)
+        mediaController.addEmotionsToMedia(media._id, emotions)
         .then()
         .catch((error) => {
           expect(error.message).to.equal('Emotions must be three words separated by commas');
@@ -123,9 +125,9 @@ describe('Media', () => {
         era: 'past',
       });
 
-      media1 = await mediaRepository.addEmotionsToMedia(media1._id, 'happy,accepted,valued');
-      media2 = await mediaRepository.addEmotionsToMedia(media2._id, 'happy,content,joyful');
-      media3 = await mediaRepository.addEmotionsToMedia(media3._id, 'happy,accepted,respected');
+      media1 = await mediaController.addEmotionsToMedia(media1._id, 'happy,accepted,valued');
+      media2 = await mediaController.addEmotionsToMedia(media2._id, 'happy,content,joyful');
+      media3 = await mediaController.addEmotionsToMedia(media3._id, 'happy,accepted,respected');
 
       media1.era = 'present';
       await media1.save();
@@ -138,7 +140,7 @@ describe('Media', () => {
     });
 
     it('Should return ids of matching media', (done) => {
-      mediaRepository.getEmotionalLinks(media1).then((matches: Schema.Types.ObjectId[][]) => {
+      mediaController.getEmotionalLinks(media1).then((matches: Schema.Types.ObjectId[][]) => {
         expect(matches[0].length).to.equal(3);
         expect(matches[1].length).to.equal(2);
         expect(matches[2].length).to.equal(1);
@@ -169,6 +171,7 @@ describe('Media', () => {
         throw error;
       });
     });
+
     it('Should post and store data when emotions are missing', (done) => {
       const formData = new FormData();
       const file = fs.createReadStream(imagePath);
@@ -272,7 +275,7 @@ describe('Media', () => {
 
     describe('Get random present media', () => {
       it('Should return a random media item of the present era', (done) => {
-        mediaRepository.getRandomPresentMedia(user._id).then((media: IMedia) => {
+        mediaController.getRandomPresentMedia(user._id).then((media: IMedia) => {
           expect(`${media.user}`).to.equal(`${user._id}`);
           done();
         });
@@ -311,7 +314,7 @@ describe('Media', () => {
 
     describe('Get a past image from the session', () => {
       it('Should return media linked to an image from the past', (done) => {
-        mediaRepository.getLinkedPastMedia(record2._id).then((media: IMedia) => {
+        mediaController.getLinkedPastMedia(record2._id).then((media: IMedia) => {
           expect(record2.links).contain(`${media._id}`);
           done();
         });

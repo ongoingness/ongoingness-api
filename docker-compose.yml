@@ -13,14 +13,13 @@ services:
       - "./dist:/app/dist"
       - "./test:/app/test"
       - "./static:/app/static"
-      - "./uploads:/app/uploads"
       depends_on:
         - mongo
       links:
         - mongo
       environment:
         SECRET: ${APP_SECRET}
-        LOCAL: ${LOCAL}
+        LOCAL: "false"
         MONGO_URI: ${MONGO_URI}
         MONGO_URI_LOCAL: ${MONGO_URI_LOCAL}
         MONGO_USER: ${MONGODB_USER}
@@ -30,7 +29,7 @@ services:
         AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
         AWS_BUCKET: ${AWS_BUCKET}
-        TEST: ${TEST}
+        TEST: "false"
         PORT: ${APP_PORT}
         DB_TYPE: ${DB_TYPE}
   mongo:

@@ -25,7 +25,7 @@ COPY tsconfig.json /app/tsconfig.json
 COPY web /app/web
 COPY test /app/test
 COPY test.jpg /app/test.jpg
-RUN mkdir uploads
+RUN mkdir -p uploads
 RUN mkdir -p /app/static/apidoc
 
 # Create docs

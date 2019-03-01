@@ -28,6 +28,41 @@ or pass them in through Docker. Boolean env variables are either `true` or `fals
 Use docker compose to build and run, this will create a mongo instance if you use the local `docker-compose.yml` file.
 Or the image can be built using `docker build .`, or can be pulled from `openlab/ongoingness-api`.
 
+## Route Structure
+# /
+Full docs for routes are found here.
+
+## Auth
+| Route | Method | Description |
+|-------|--------|-------------|
+| /api/auth/authenticate | POST | Returns a JWT token |
+| /api/auth/register | POST | Register a user |
+| /api/auth/mac | POST | Authenticate with a MAC address |
+
+## Media
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| /api/media/links | POST | Store a link |
+| /api/media/links/:id | GET | Get all links for an item of media |
+
+## Generic Resources
+If `x` is the generic resource, then the following routes apply. Routes are in the plural form of the word.
+For example a resource such as `device` would be `/api/devices/`.
+Media also has these, and the above routes are added on.
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| /api/x/ | GET | Get all instances of `x`, if `x` is owned resource then it will return all the instances belonging to the user |
+| /api/x/ | POST | Will store a record of `x`|
+| /api/x/:id | POST | Will update a record of `x` |
+| /api/x/:id | DELETE | Will delete `x` |
+| /api/x/:id | GET | Will return an instance of `x` |
+| /api/x/search/:field/:term | GET | Will return all instances where a field of `x` contains the term |
+| /api/x?y=z | GET | Will return all instances of `x` where the field `y` exactly matches `z`. Multiple terms can be applied |
+| /api/get/:page/:limit | GET | Will return a subset of `x` for pagination |
+| /api/media/links/:id | GET | Get all links for an item of media |
+
 ## Testing
 Make sure the necessary env parameters for testing are supplied. These are outlined above. Testing is done
 within the docker container, to give access to a dockerised MongoDB. First enter the container, then run:

@@ -19,7 +19,7 @@ services:
         - mongo
       environment:
         SECRET: ${APP_SECRET}
-        LOCAL: "false"
+        LOCAL: ${LOCAL}
         MONGO_URI: ${MONGO_URI}
         MONGO_URI_LOCAL: ${MONGO_URI_LOCAL}
         MONGO_USER: ${MONGODB_USER}
@@ -29,7 +29,7 @@ services:
         AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
         AWS_BUCKET: ${AWS_BUCKET}
-        TEST: "false"
+        TEST: ${TEST}
         PORT: ${APP_PORT}
         DB_TYPE: ${DB_TYPE}
   mongo:

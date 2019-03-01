@@ -59,13 +59,13 @@ export default class MediaController {
 
     if (supportedFileTypes.indexOf(ext) < 0) throw new Error('400');
 
-    if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
-      try {
-        await this.resizeImage(storedPath, p);
-      } catch (e) {
-        throw e;
-      }
+    try {
+      await this.resizeImage(storedPath, p);
+    } catch (e) {
+      throw e;
+    }
 
+    if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
       return path.join(newFileName);
     }
 

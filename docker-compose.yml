@@ -13,7 +13,6 @@ services:
       - "./dist:/app/dist"
       - "./test:/app/test"
       - "./static:/app/static"
-      - "./uploads:/app/uploads"
       depends_on:
         - mongo
       links:

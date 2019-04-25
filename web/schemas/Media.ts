@@ -12,6 +12,7 @@ export interface IMedia extends IBaseMongoResource {
   links: Schema.Types.ObjectId[];
   path: string;
   mimetype: string;
+  sizes: number[];
   era: string;
   emotions: string[];
   locket: string;
@@ -45,6 +46,9 @@ export const mediaSchema = new Schema({
   },
   emotions: [{
     type: String,
+  }],
+  sizes: [{
+    type: Number,
   }],
   path: {
     type: String,

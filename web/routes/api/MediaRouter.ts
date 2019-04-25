@@ -86,9 +86,27 @@ export class MediaRouter
    */
   async show(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: Schema.Types.ObjectId = req.params.id;
+    const rsize: string = req.query.size;
+    let size: number;
+    const defaultSize: number = 600;
+    const maxSize: number = 1024;
+    const minSize: number = 100;
     const mediaController: MediaController = new MediaController();
     let user: IUser;
     let media: IMedia;
+
+    // Sanitize size.
+    if (rsize) {
+      if (/\D+/g.test(rsize)) {
+        size = defaultSize;
+      } else {
+        size = parseInt(rsize, 10);
+        if (size > maxSize) size = maxSize;
+        if (size < minSize) size = minSize;
+      }
+    } else {
+      size = defaultSize;
+    }
 
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
@@ -108,7 +126,7 @@ export class MediaRouter
 
     let data: any;
     try {
-      data = await mediaController.getMediaFromS3(media);
+      data = await mediaController.getMediaFromS3(media, size);
     } catch (e) {
       return next(new Error('500'));
     }

@@ -45,6 +45,7 @@ Full docs for routes are found here.
 |-------|--------|-------------|
 | /api/media/links | POST | Store a link |
 | /api/media/links/:id | GET | Get all links for an item of media |
+| /api/media/:id | GET | Get an image from the server. To get an image you must pass your access token as a url query `token=<YOUR_TOKEN>`. You can also pass a `size` query to specify the image size, between `1024` and `100` pixels. |
 
 ## Generic Resources
 If `x` is the generic resource, then the following routes apply. Routes are in the plural form of the word.

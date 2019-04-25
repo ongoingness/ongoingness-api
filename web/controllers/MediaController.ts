@@ -28,11 +28,29 @@ export default class MediaController {
       // read in an image.
       Jimp.read(image)
         .then((img: any) => {
+          const width = img.bitmap.width;
+          const height = img.bitmap.height;
+          const isSquare: boolean = width === height;
+          const isPortrait: boolean = height > width && !isSquare;
+
+          let widthSize: number = this.maxImageSize;
+          let heightSize: number = this.maxImageSize;
+
+          if (isPortrait && !isSquare) {
+            widthSize = Jimp.AUTO;
+          } else {
+            heightSize = Jimp.AUTO;
+          }
+
           // resize, return image buffer.
           img
-            .resize(this.maxImageSize, this.maxImageSize)
+            .resize(heightSize, widthSize)
+            .cover(
+              this.maxImageSize,
+              this.maxImageSize,
+              isPortrait ? Jimp.VERTICAL_ALIGN_MIDDLE : Jimp.HORIZONTAL_ALIGN_CENTER,
+            )
             .getBuffer(mimetype, (err: Error, buffer: any) => {
-              console.log('got buffer');
               if (err) {
                 console.error(err);
                 reject(err);

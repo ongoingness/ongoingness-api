@@ -6,8 +6,10 @@ import * as fs from 'fs';
 import { IMedia } from '../schemas/Media';
 import { Schema } from 'mongoose';
 import { MediaRepository } from '../repositories/MediaRepository';
+import { promisify } from 'util';
 
 const Jimp = require('jimp');
+const unlink = promisify(fs.unlink);
 
 export default class MediaController {
   private maxImageSize: number = 600;
@@ -15,8 +17,7 @@ export default class MediaController {
 
   /**
    * Resize an image using JIMP
-   * fixme: really slow at returning
-   *  - should store a resized image for when the same size is requested again.
+   * todo: find something that doesnt take as long to redraw images...
    *
    * @param image
    * @param {string} mimetype
@@ -130,10 +131,29 @@ export default class MediaController {
 
   /**
    * Delete media from S3.
+   * fixme:
+   *  - Should remove local images
+   *  - Should remove all versions of images.
+   *
    * @param {IMedia} media
    * @returns {Promise<void>}
    */
-  deleteMedia(media: IMedia): Promise<void> {
+  async deleteMedia(media: IMedia): Promise<void> {
+    const filenames: string[] = [
+      media.path,
+    ];
+
+    media.sizes.forEach((size) => {
+      filenames.push(
+        `${media.path.split('.')[0]}-${size}.${media.path.split('.')[1]}`,
+      );
+    });
+
+    // if local
+    if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
+      filenames.forEach(async f => await unlink(path.join(__dirname, `../../../uploads/${f}`)));
+    }
+
     config.update({
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -142,11 +162,15 @@ export default class MediaController {
     const s3: S3 = new S3();
     const params = {
       Bucket: process.env.AWS_BUCKET,
-      Key: media.path,
+      Delete: {
+        Objects: filenames.map((f) => {
+          return { Key: f };
+        }),
+      },
     };
 
     return new Promise<void>(((resolve, reject) => {
-      s3.deleteObject(params).promise()
+      s3.deleteObjects(params).promise()
         .then(() => {
           resolve();
         })

@@ -8,25 +8,37 @@ import { Schema } from 'mongoose';
 import { MediaRepository } from '../repositories/MediaRepository';
 
 const Jimp = require('jimp');
+import { promisify } from 'util';
+
+const renameAsync = promisify(fs.rename);
 
 export default class MediaController {
   private maxImageSize: number = 600;
   private mediaRepository = new MediaRepository();
 
   /**
-   * Resize an image.
-   * @param {string} old
-   * @param {string} newPath
+   * Resize an image using JIMP
+   *
+   * @param image
+   * @param {string} mimetype
    * @returns {Promise<void>}
    */
-  resizeImage(old: string, newPath: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      Jimp.read(old)
+  resizeImage(image: any, mimetype: string): Promise<void> {
+    return new Promise<any>(async (resolve, reject) => {
+      // read in an image.
+      Jimp.read(image)
         .then((img: any) => {
+          // resize, return image buffer.
           img
-            .resize(this.maxImageSize, this.maxImageSize) // resize
-            .write(newPath); // save
-          resolve();
+            .resize(this.maxImageSize, this.maxImageSize)
+            .getBuffer(mimetype, (err: Error, buffer: any) => {
+              console.log('got buffer');
+              if (err) {
+                console.error(err);
+                reject(err);
+              }
+              resolve(buffer);
+            }); // resize
         })
         .catch((err: Error) => {
           reject(err);
@@ -59,14 +71,9 @@ export default class MediaController {
 
     if (supportedFileTypes.indexOf(ext) < 0) throw new Error('400');
 
-    try {
-      await this.resizeImage(storedPath, p);
-    } catch (e) {
-      throw e;
-    }
-
     if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
-      return path.join(newFileName);
+      await await renameAsync(storedPath, p);
+      return newFileName;
     }
 
     // Update S3 credentials.
@@ -78,7 +85,7 @@ export default class MediaController {
     const s3: S3 = new S3();
     const params = {
       Bucket: process.env.AWS_BUCKET,
-      Body: fs.createReadStream(p),
+      Body: fs.createReadStream(storedPath),
       Key: newFileName,
     };
 
@@ -126,14 +133,22 @@ export default class MediaController {
    * @param {string} key file key.
    * @returns {Promise<any>}
    */
-  getMediaFromS3(key: string): Promise<any> {
+  getMediaFromS3(media: IMedia): Promise<any> {
+    // Check if running locally, access local files instead of S3 bucket.
     if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
       return new Promise<any>((resolve, reject) => {
-        fs.readFile(path.join(__dirname, `../../../uploads/${key}`), (err, data) => {
+        fs.readFile(path.join(__dirname, `../../../uploads/${media.path}`), async (err, data) => {
           if (err) {
+            console.error(err);
             reject(err);
           }
-          resolve(data);
+
+          try {
+            const img = await this.resizeImage(data, media.mimetype);
+            resolve(img);
+          } catch (e) {
+            reject(e);
+          }
         });
       });
     }
@@ -147,13 +162,18 @@ export default class MediaController {
     const s3: S3 = new S3();
     const params = {
       Bucket: process.env.AWS_BUCKET,
-      Key: key,
+      Key: media.path,
     };
 
     return new Promise<any>(((resolve, reject) => {
       s3.getObject(params).promise()
-        .then((data: any) => {
-          resolve(data.Body);
+        .then(async (data: any) => {
+          try {
+            return await this.resizeImage(data, media.mimetype);
+          } catch (e) {
+            console.error(e);
+          }
+
         }).catch((e) => {
           reject(e);
         });

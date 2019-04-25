@@ -108,12 +108,12 @@ export class MediaRouter
 
     let data: any;
     try {
-      data = await mediaController.getMediaFromS3(media.path);
+      data = await mediaController.getMediaFromS3(media);
     } catch (e) {
       return next(new Error('500'));
     }
 
-    res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+    res.writeHead(200, { 'Content-Type': media.mimetype });
     res.write(data, 'binary');
     res.end(null, 'binary');
   }

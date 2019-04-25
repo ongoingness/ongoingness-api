@@ -6,32 +6,100 @@ import * as fs from 'fs';
 import { IMedia } from '../schemas/Media';
 import { Schema } from 'mongoose';
 import { MediaRepository } from '../repositories/MediaRepository';
+import { promisify } from 'util';
 
 const Jimp = require('jimp');
+const unlink = promisify(fs.unlink);
 
 export default class MediaController {
   private maxImageSize: number = 600;
   private mediaRepository = new MediaRepository();
 
   /**
-   * Resize an image.
-   * @param {string} old
-   * @param {string} newPath
+   * Resize an image using JIMP
+   * todo: find something that doesnt take as long to redraw images...
+   *
+   * @param image
+   * @param {string} mimetype
    * @returns {Promise<void>}
    */
-  resizeImage(old: string, newPath: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      Jimp.read(old)
+  resizeImage(image: any, mimetype: string, size: number): Promise<void> {
+    return new Promise<any>(async (resolve, reject) => {
+      // read in an image.
+      Jimp.read(image)
         .then((img: any) => {
+          // get image orientation, height, and width
+          const width = img.bitmap.width;
+          const height = img.bitmap.height;
+          const isSquare: boolean = width === height;
+          const isPortrait: boolean = height > width && !isSquare;
+          let widthSize: number = this.maxImageSize;
+          let heightSize: number = this.maxImageSize;
+
+          // auto size an edge depending on orientation.
+          if (isPortrait && !isSquare) {
+            widthSize = Jimp.AUTO;
+          } else {
+            heightSize = Jimp.AUTO;
+          }
+
+          // resize, return image buffer.
           img
-            .resize(this.maxImageSize, this.maxImageSize) // resize
-            .write(newPath); // save
-          resolve();
+            .resize(heightSize, widthSize)
+            .cover(
+              size,
+              size,
+              isPortrait ? Jimp.VERTICAL_ALIGN_MIDDLE : Jimp.HORIZONTAL_ALIGN_CENTER,
+            ) // crop image from the centre
+            .getBuffer(mimetype, (err: Error, buffer: any) => {
+              if (err) {
+                console.error(err);
+                reject(err);
+              }
+              resolve(buffer);
+            }); // resize
         })
         .catch((err: Error) => {
           reject(err);
         });
     });
+  }
+
+  async uploadMedia(filename: string, image: any): Promise<string> {
+    const p: string = path.join(__dirname, `../../../uploads/${filename}`);
+
+    if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
+      fs.writeFile(p, image, (err) => {
+        if (err) {
+          console.error(err);
+          throw err;
+        }
+        return filename;
+      });
+    }
+
+    // Update S3 credentials.
+    config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+
+    const s3: S3 = new S3();
+    const params = {
+      Bucket: process.env.AWS_BUCKET,
+      Body: image,
+      Key: filename,
+    };
+
+    return new Promise<string>(((resolve, reject) => {
+      s3.upload(params).promise()
+        .then((data: any) => {
+          resolve(data.key);
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    }));
   }
 
   /**
@@ -55,50 +123,37 @@ export default class MediaController {
       'jpg',
       'png',
     ];
-    const p: string = path.join(__dirname, `../../../uploads/${newFileName}`);
 
     if (supportedFileTypes.indexOf(ext) < 0) throw new Error('400');
 
-    try {
-      await this.resizeImage(storedPath, p);
-    } catch (e) {
-      throw e;
-    }
-
-    if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
-      return path.join(newFileName);
-    }
-
-    // Update S3 credentials.
-    config.update({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    });
-
-    const s3: S3 = new S3();
-    const params = {
-      Bucket: process.env.AWS_BUCKET,
-      Body: fs.createReadStream(p),
-      Key: newFileName,
-    };
-
-    return new Promise<string>(((resolve, reject) => {
-      s3.upload(params).promise()
-        .then((data: any) => {
-          resolve(data.key);
-        })
-        .catch((e) => {
-          reject(e);
-        });
-    }));
+    return await this.uploadMedia(newFileName, fs.readFileSync(storedPath));
   }
 
   /**
    * Delete media from S3.
+   * fixme:
+   *  - Should remove local images
+   *  - Should remove all versions of images.
+   *
    * @param {IMedia} media
    * @returns {Promise<void>}
    */
-  deleteMedia(media: IMedia): Promise<void> {
+  async deleteMedia(media: IMedia): Promise<void> {
+    const filenames: string[] = [
+      media.path,
+    ];
+
+    media.sizes.forEach((size) => {
+      filenames.push(
+        `${media.path.split('.')[0]}-${size}.${media.path.split('.')[1]}`,
+      );
+    });
+
+    // if local
+    if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
+      filenames.forEach(async f => await unlink(path.join(__dirname, `../../../uploads/${f}`)));
+    }
+
     config.update({
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -107,11 +162,15 @@ export default class MediaController {
     const s3: S3 = new S3();
     const params = {
       Bucket: process.env.AWS_BUCKET,
-      Key: media.path,
+      Delete: {
+        Objects: filenames.map((f) => {
+          return { Key: f };
+        }),
+      },
     };
 
     return new Promise<void>(((resolve, reject) => {
-      s3.deleteObject(params).promise()
+      s3.deleteObjects(params).promise()
         .then(() => {
           resolve();
         })
@@ -121,16 +180,12 @@ export default class MediaController {
     }));
   }
 
-  /**
-   * Fetch a file from S3 storage
-   * @param {string} key file key.
-   * @returns {Promise<any>}
-   */
-  getMediaFromS3(key: string): Promise<any> {
+  async fetchImage(key: string): Promise<any> {
     if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
       return new Promise<any>((resolve, reject) => {
-        fs.readFile(path.join(__dirname, `../../../uploads/${key}`), (err, data) => {
+        fs.readFile(path.join(__dirname, `../../../uploads/${key}`), async (err, data) => {
           if (err) {
+            console.error(err);
             reject(err);
           }
           resolve(data);
@@ -152,12 +207,45 @@ export default class MediaController {
 
     return new Promise<any>(((resolve, reject) => {
       s3.getObject(params).promise()
-        .then((data: any) => {
+        .then(async (data: any) => {
           resolve(data.Body);
         }).catch((e) => {
           reject(e);
         });
     }));
+  }
+
+  /**
+   * Fetch a file from S3 storage
+   *
+   * @param {IMedia} media
+   * @param {number} size, default 600
+   * @returns {Promise<any>}
+   */
+  async getMediaFromS3(media: IMedia, size: number = this.maxImageSize): Promise<any> {
+    // Check if running locally, access local files instead of S3 bucket.
+    let image: any;
+    const exists: boolean = media.sizes.indexOf(size) > -1;
+    const key: string =
+      !exists ? media.path : `${media.path.split('.')[0]}-${size}.${media.path.split('.')[1]}`;
+
+    try {
+      image = await this.fetchImage(key);
+      if (!exists) {
+        image = await this.resizeImage(image, media.mimetype, size);
+        await this.uploadMedia(
+          `${media.path.split('.')[0]}-${size}.${media.path.split('.')[1]}`,
+          image,
+        );
+        media.sizes.push(size);
+        await media.save();
+      }
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+
+    return image;
   }
 
   /**

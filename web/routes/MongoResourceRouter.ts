@@ -13,6 +13,8 @@ import { userPermission } from '../middleware/UserPermission';
 import { checkAdmin } from '../middleware/Admin';
 import { IUser } from '../schemas/User';
 import { Schema } from 'mongoose';
+import { MediaRepository } from '../repositories/MediaRepository';
+import { IDevice } from '../schemas/Device';
 
 export default class MongoResourceRouter<T extends IBaseMongoResource>
   extends BaseRouter
@@ -82,7 +84,6 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
     if (err) { return next(err); }
 
     try {
-      await cont.destroy(id);
       if (routeSchema.options.isOwned) {
         // remove from user.
         user = await userRepo.get(res.locals.user.id);
@@ -92,6 +93,26 @@ export default class MongoResourceRouter<T extends IBaseMongoResource>
         await user.setLinkedCollection(resourceList, routeSchema.table);
         await user.save();
       }
+
+      if (routeSchema.table === 'user') {
+        user = await userRepo.get(res.locals.user.id);
+
+        const mediaRepository: MediaRepository = new MediaRepository();
+        const deviceRepository: IResourceRepository<IDevice> =
+          RepositoryFactory.getRepository('device');
+
+        const devices = await deviceRepository.findManyWithFilter({ userId: user._id });
+
+        user.media.forEach(async (media) => {
+          await mediaRepository.destroy(media);
+        });
+
+        devices.forEach(async (device) => {
+          await deviceRepository.destroy(device._id);
+        });
+      }
+
+      await cont.destroy(id);
     } catch (e) {
       return next(e);
     }

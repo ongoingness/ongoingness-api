@@ -7,6 +7,7 @@ import { HttpMethods as Methods } from '../../HttpMethods';
 import CryptoHelper from '../../CryptoHelper';
 import { IResourceRepository } from '../../repositories/IResourceRepository';
 import RepositoryFactory from '../../repositories/RepositoryFactory';
+import * as jwt from 'jsonwebtoken';
 
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 const authController: AuthController = new AuthController();
@@ -20,6 +21,7 @@ export class AuthRouter extends BaseRouter {
     this.addRoute('/authenticate', Methods.POST, this.authenticateUser);
     this.addRoute('/register', Methods.POST, this.registerUser);
     this.addRoute('/mac', Methods.POST, this.authenticateWithMac);
+    this.addRoute('/me', Methods.GET, this.getUser);
   }
 
   /**
@@ -62,8 +64,9 @@ export class AuthRouter extends BaseRouter {
     }
 
     const token = authController.generateToken(user);
+    user.password = '';
 
-    const response = new Reply(200, 'success', false, { token });
+    const response = new Reply(200, 'success', false, { token, user });
     return res.json(response);
   }
 
@@ -173,5 +176,27 @@ export class AuthRouter extends BaseRouter {
 
     const response = new Reply(200, 'success', false, { user, token });
     return res.json(response);
+  }
+
+  async getUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const token : string =
+      req.body.token ||
+      req.query.token ||
+      req.headers['x-access-token'] ||
+      req.params.token;
+
+    if (!token) {
+      return next(new Error('401'));
+    }
+
+    jwt.verify(token, process.env.SECRET, async (err: Error, user: IUser) => {
+      if (err) {
+        return next(new Error('401'));
+      }
+
+      const stored: IUser = await userRepository.get(user.id);
+      stored.password = '';
+      return res.json(new Reply(200, 'success', false, { user: stored }));
+    });
   }
 }

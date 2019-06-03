@@ -18,6 +18,7 @@ const upload = multer({ dest: 'uploads/' });
 const mediaRepository: MediaRepository = new MediaRepository();
 const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
+const mime = require('mime-types');
 
 export class MediaRouter
   extends BaseRouter
@@ -397,6 +398,9 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+
+    req.setTimeout(500000, () => {next(new Error("Timeout"))});
+
     const mimetype = req.file.mimetype;
     const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
     const mediaController: MediaController = new MediaController();
@@ -405,7 +409,7 @@ export class MediaRouter
     let media: IMedia;
     const emotionArray: string = req.headers['emotions'] as string;
     const emotions: string[] = emotionArray === undefined ? [] : emotionArray.split(',') || [];
-
+    
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
@@ -422,21 +426,24 @@ export class MediaRouter
     }
 
     try {
+
       imagePath = await mediaController.storeMedia(
         req.file.path,
         req.file.originalname,
         ext,
         user._id,
       );
+
       media = await mediaRepository.store({
-        mimetype,
+        mimetype: mime.lookup(imagePath),
         user,
         emotions,
         path: imagePath,
         era: <string>req.headers['era'] || 'past',
         locket: <string>req.headers['locket'] || 'none',
       });
-    } catch (e) {
+
+    } catch (e) {       
       console.error(e);
       e.message = '500';
       return next(e);

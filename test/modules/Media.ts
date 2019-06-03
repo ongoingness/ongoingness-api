@@ -32,8 +32,23 @@ const mediaController: MediaController = new MediaController();
 
 describe('Media', () => {
   const imagePath: string = path.join(__dirname, '../../../test.jpg');
+  const videoPath: string = path.join(__dirname, '../../../test.mp4');
 
   before(async () => {
+
+    /*
+    var users = await userRepository.getAll();
+    var devices = await deviceRepository.getAll();
+
+    devices.forEach(async(device) => {
+      await deviceRepository.destroy(device._id);
+    });
+
+    users.forEach(async(user) => {
+      await userRepository.destroy(user._id);
+    });
+    */
+
     const username: string = 'random';
     const password: string  = 'secret';
     let filepath: string;
@@ -67,6 +82,19 @@ describe('Media', () => {
     await userRepository.destroy(user._id);
   });
 
+
+  describe('Convert video to gif', function() {
+    this.timeout(60000);
+    it('Should store a gif file in the uploads folder', (done) => {
+      mediaController.convertVideoToGIF(videoPath, 'test.mp4').then((filepath) => {
+        console.log(filepath);
+        expect(filepath.length).to.be.greaterThan(1);
+        done();
+      });
+    });
+  });
+
+  
   describe('Store media',  () => {
     it('Should store a file in the uploads folder', (done) => {
       mediaController.storeMedia(imagePath, 'test.jpg', 'jpg', user._id).then((filepath) => {

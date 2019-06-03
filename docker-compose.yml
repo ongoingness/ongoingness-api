@@ -6,13 +6,13 @@ services:
         dockerfile: Dockerfile
       ports:
       - 3000:3000
-      volumes:
-      - "./web:/app/web"
-      - "./app.ts:/app/app.ts"
-      - "./.env:/app/.env"
-      - "./dist:/app/dist"
-      - "./test:/app/test"
-      - "./static:/app/static"
+#      volumes:
+#      - "./web:/app/web"
+#      - "./App.ts:/app/App.ts"
+#      - "./.env:/app/.env"
+#      - "./dist:/app/dist"
+#      - "./test:/app/test"
+#      - "./static:/app/static"
       depends_on:
         - mongo
       links:
@@ -38,6 +38,6 @@ services:
       - "27017:27017"
     volumes:
       - 'data:/data/db'
-
+  
 volumes:
   data:

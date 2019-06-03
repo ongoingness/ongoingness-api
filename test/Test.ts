@@ -24,9 +24,9 @@ describe('api', () => {
    * Import tests from files
    */
   require('./modules/Media');
-  require('./modules/Home');
-  require('./modules/Auth');
-  require('./modules/Middleware');
-  require('./modules/User');
-  require('./modules/Devices');
+  //require('./modules/Home');
+  //require('./modules/Auth');
+  //require('./modules/Middleware');
+  //require('./modules/User');
+  //require('./modules/Devices');
 });

@@ -21,6 +21,7 @@ export interface IMedia extends IBaseMongoResource {
 
   // Functions
   createLink(linkId: Schema.Types.ObjectId): Promise<void>;
+  createMultipleLinks(linkIds: [Schema.Types.ObjectId]): Promise<void>;
   getId(): Schema.Types.ObjectId;
   getTable(): string;
   getUserId(): Schema.Types.ObjectId;
@@ -73,13 +74,20 @@ mediaSchema.methods.createLink = async function (linkId: Schema.Types.ObjectId):
   }
 
   // Check they are not the same era
-  if (!(link.era === this.era)) {
+  //if (!(link.era === this.era)) {
     // Check link does not already exist
     if (this.links.indexOf(link._id.toString()) === -1) {
       this.links.push(linkId);
       await this.save();
     }
-  }
+  //}
+};
+
+mediaSchema.methods.createMultipleLinks = async function (linkIds: Array<Schema.Types.ObjectId>): Promise<void> {
+  linkIds.forEach( (id : any) => {
+    this.links.push(id);
+  });
+  await this.save();
 };
 
 mediaSchema.methods.getId = function (): Schema.Types.ObjectId {

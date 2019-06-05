@@ -443,6 +443,19 @@ export class MediaRouter
         locket: <string>req.headers['locket'] || 'none',
       });
 
+      var links = <string>req.headers['links'] || 'none';
+
+      if(links != 'none') {
+        var splited = links.split(',');
+        var linkIds : any = [];
+       
+        splited.forEach( await (async(element : any) => {
+          const linkId: Schema.Types.ObjectId = element;
+          linkIds.push(linkId)        
+        }));
+        await media.createMultipleLinks(linkIds);
+      }
+
     } catch (e) {       
       console.error(e);
       e.message = '500';

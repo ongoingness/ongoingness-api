@@ -10,9 +10,12 @@ RUN unzip gifsicle-1.92.zip
 RUN cd gifsicle-1.92 && ./bootstrap.sh && ./configure && make install
 
 #Install a static and working version of ffmepg
-RUN wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz
+COPY ffmpeg-git-amd64-static.tar.xz /ffmpeg-git-amd64-static.tar.xz
+#RUN wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz
+#RUN mkdir ffmpegtemp
 RUN tar xvf ffmpeg-git-amd64-static.tar.xz
-RUN mv /ffmpeg-git-20190527-amd64-static/ffmpeg /usr/local/bin/ffmpeg
+RUN mv /ffmpeg-git-20190605-amd64-static/ffmpeg /usr/local/bin/ffmpeg
+
 
 # Make an app directory to hold the server files.
 RUN mkdir /app

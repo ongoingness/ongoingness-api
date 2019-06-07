@@ -15,8 +15,10 @@ services:
 #      - "./static:/app/static"
       depends_on:
         - mongo
+        - orientdb
       links:
         - mongo
+        - orientdb
       environment:
         SECRET: ${APP_SECRET}
         LOCAL: ${LOCAL}
@@ -32,12 +34,25 @@ services:
         TEST: ${TEST}
         PORT: ${APP_PORT}
         DB_TYPE: ${DB_TYPE}
+        ORIENTDB_ROOT_PASSWORD: '${ORIENTDB_ROOT_PASSWORD}'
   mongo:
     image: mongo
     ports:
       - "27017:27017"
     volumes:
       - 'data:/data/db'
+  orientdb:
+    image: orientdb
+    ports:
+      - "2424:2424"
+      - "2480:2480"
+    environment:
+      ORIENTDB_ROOT_PASSWORD: ${ORIENTDB_ROOT_PASSWORD}
+    volumes:
+      - data:/opt/orientdb/config
+      - data:/opt/orientdb/databases
+      - data:/opt/orientdb/backup
+
   
 volumes:
   data:

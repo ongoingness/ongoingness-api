@@ -2,7 +2,7 @@
 FROM node:alpine
 
 #Install depencies to install gifify
-RUN apk add ffmpeg imagemagick curl autoconf automake make gcc gawk clang libc-dev libass-dev fontconfig ffmpeg-libs
+RUN apk add ffmpeg imagemagick curl autoconf automake make gcc gawk clang libc-dev libass-dev fontconfig ffmpeg-libs python2 g++
 
 #Install gifsicle
 RUN curl -LJO https://github.com/kohler/gifsicle/archive/v1.92.zip

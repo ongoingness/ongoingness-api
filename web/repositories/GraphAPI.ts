@@ -15,7 +15,167 @@ const db = dbserver.use({
     });
 
  class GraphAPI {
-    
+
+    /**
+     * Returns tags associated with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_media_tags(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                await db
+                .query("SELECT FROM (TRAVERSE out('tagged_with') FROM (SELECT FROM #" + rid + ")) WHERE @class='tag' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns people associated with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_media_people(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE out('features_person') FROM (SELECT FROM #" + rid + ")) WHERE @class='person' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns time objects associated with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_media_times(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE out('has_time') FROM (SELECT FROM #" + rid + ")) WHERE @class='time' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns places associated with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_media_places(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE out('features_place') FROM (SELECT FROM #" + rid + ")) WHERE @class='place' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns collections associated with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_media_collections(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE in('has_media') FROM (SELECT FROM #" + rid + ")) WHERE @class='collection' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
     /**
      * Get a list of accounts in the graph database
      * 
@@ -99,126 +259,6 @@ const db = dbserver.use({
                 .select()
                 .from("SELECT FROM (TRAVERSE out('tagged_with') FROM (SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid='" + uuid + "') MAXDEPTH 1) WHERE @class='collection')) WHERE @class='media')) WHERE @class='tag'"+ this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .group('@rid')
-                .all()
-                //@ts-ignore
-                .then(function (vertex) 
-                {
-                    //@ts-ignore
-                    vertex.forEach( (element: any) => {
-                        returning.push(element);
-                    });
-                    resolve(returning);
-                });
-            }
-            catch(e)
-            {
-                reject(e);
-            }
-        });
-    }
-
-    async get_media_tags(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
-        return new Promise(async (resolve, reject) => {
-            var returning : any[] = [];
-            try{
-                await db
-                .query("SELECT FROM (TRAVERSE out('tagged_with') FROM (SELECT FROM #" + rid + ")) WHERE @class='tag' LIMIT " + results_limit + " OFFSET " + results_offset)
-                .all()
-                //@ts-ignore
-                .then(function (vertex) 
-                {
-                    //@ts-ignore
-                    vertex.forEach( (element: any) => {
-                        returning.push(element);
-                    });
-                    resolve(returning);
-                });
-            }
-            catch(e)
-            {
-                reject(e);
-            }
-        });
-    }
-
-    async get_media_people(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
-        return new Promise(async (resolve, reject) => {
-            var returning : any[] = [];
-            try{
-                db
-                .query("SELECT FROM (TRAVERSE out('features_person') FROM (SELECT FROM #" + rid + ")) WHERE @class='person' LIMIT " + results_limit + " OFFSET " + results_offset)
-                .all()
-                //@ts-ignore
-                .then(function (vertex) 
-                {
-                    //@ts-ignore
-                    vertex.forEach( (element: any) => {
-                        returning.push(element);
-                    });
-                    resolve(returning);
-                });
-            }
-            catch(e)
-            {
-                reject(e);
-            }
-        });
-    }
-
-    async get_media_times(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
-        return new Promise(async (resolve, reject) => {
-            var returning : any[] = [];
-            try{
-                db
-                .query("SELECT FROM (TRAVERSE out('has_time') FROM (SELECT FROM #" + rid + ")) WHERE @class='time' LIMIT " + results_limit + " OFFSET " + results_offset)
-                .all()
-                //@ts-ignore
-                .then(function (vertex) 
-                {
-                    //@ts-ignore
-                    vertex.forEach( (element: any) => {
-                        returning.push(element);
-                    });
-                    resolve(returning);
-                });
-            }
-            catch(e)
-            {
-                reject(e);
-            }
-        });
-    }
-
-    async get_media_places(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
-        return new Promise(async (resolve, reject) => {
-            var returning : any[] = [];
-            try{
-                db
-                .query("SELECT FROM (TRAVERSE out('features_place') FROM (SELECT FROM #" + rid + ")) WHERE @class='place' LIMIT " + results_limit + " OFFSET " + results_offset)
-                .all()
-                //@ts-ignore
-                .then(function (vertex) 
-                {
-                    //@ts-ignore
-                    vertex.forEach( (element: any) => {
-                        returning.push(element);
-                    });
-                    resolve(returning);
-                });
-            }
-            catch(e)
-            {
-                reject(e);
-            }
-        });
-    }
-
-    async get_media_collections(rid:string, query_params:any[], results_limit = -1, results_offset = 0){
-        return new Promise(async (resolve, reject) => {
-            var returning : any[] = [];
-            try{
-                db
-                .query("SELECT FROM (TRAVERSE in('has_media') FROM (SELECT FROM #" + rid + ")) WHERE @class='collection' LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -389,6 +429,134 @@ const db = dbserver.use({
                 .select()
                 .from("SELECT FROM (TRAVERSE out('related_to') FROM (SELECT FROM #" + media_id + ")) WHERE @rid <> " + media_id)
                 .group('@rid')
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns media that share tags in common with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_related_media_by_tag(rid: string, query_params: any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE in('tagged_with') FROM (SELECT FROM (TRAVERSE out('tagged_with') FROM #" + rid + ") WHERE @class='tag')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns media that share people in common with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_related_media_by_people(rid: string, query_params: any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE in('features_person') FROM (SELECT FROM (TRAVERSE out('features_person') FROM #" + rid + ") WHERE @class='person')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns media that share time in common with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_related_media_by_time(rid: string, query_params: any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE in('has_time') FROM (SELECT FROM (TRAVERSE out('has_time') FROM #" + rid + ") WHERE @class='time')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns media that share places in common with the specified media item.
+     * 
+     * @param rid The Record ID of the media item.
+     * @param query_params Array of query parameters to be applied.
+     * @param results_limit Limit the number of returned results. -1 returns all results.
+     * @param results_offset Offset for the results. Useful for paging.
+     */
+    async get_related_media_by_place(rid: string, query_params: any[], results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE in('features_place') FROM (SELECT FROM (TRAVERSE out('features_place') FROM #" + rid + ") WHERE @class='place')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 

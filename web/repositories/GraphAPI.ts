@@ -575,6 +575,30 @@ const db = dbserver.use({
         });
     }
 
+    async get_media_from_collection(uuid: string, collection_name: string, results_limit = -1, results_offset = 0){
+        return new Promise(async (resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid='" + uuid + "') MAXDEPTH 1) WHERE @class='collection' AND name='" + collection_name + "')) WHERE @class='media'")
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
     /**
      * Create a vertex in the graph. Returns the created object.
      * 

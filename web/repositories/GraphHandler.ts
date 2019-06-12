@@ -98,9 +98,6 @@ export class GraphHandler {
           await api.create_edge("RELATED_TO", to_link, media_item_id);
         });
 
-        
-
-
          /*
          * Loop through each place that has been passed to the function
          */
@@ -127,7 +124,6 @@ export class GraphHandler {
           if(place_edge_result.length == 0){
             await api.create_edge("FEATURES_PLACE", media_item_id, place_item_id);
           }
-          
         });
 
         /*
@@ -156,7 +152,6 @@ export class GraphHandler {
           if(people_edge_result.length == 0){
             await api.create_edge("FEATURES_PERSON", media_item_id, people_item_id);
           }
-          
         });
 
         /*
@@ -187,7 +182,7 @@ export class GraphHandler {
           }
         });
 
-        resolve(await this.retrieve_single_formatted_media_item(account_uuid,media_item_id));
+        resolve(await this.get_media_item(account_uuid,media_item_id, 0));
       }
       catch (e) {
         reject(e);
@@ -204,7 +199,7 @@ export class GraphHandler {
    * @param uuid UUID of the user account.
    * @param media_id RId of the media item to return.
    */
-  async retrieve_single_formatted_media_item(uuid: string, media_id: string){
+  async get_media_item(uuid: string, media_id: string, internal = 0){
     return new Promise( async (resolve, reject) => {
       try{
         let returning: any = {};
@@ -216,19 +211,19 @@ export class GraphHandler {
         returning.errors = "false";
         returning.payload = {};
         returning.payload.links = {};
-        returning.payload.links.tags = await this.get_media_tags(media_id, [], -1, 0);
-        returning.payload.links.collections = await this.get_media_collections(media_id, null, -1, 0);
-        returning.payload.links.people = await this.get_media_people(media_id, null, -1, 0);
-        returning.payload.links.places = await this.get_media_places(media_id, null, -1, 0);
-        returning.payload.links.times = await this.get_media_times(media_id, null, -1, 0);
-        returning.payload.links.related_media = await this.get_related_media(media_id, [], -1, 0);
+        returning.payload.links.tags = await this.get_media_tags(media_id, [], -1, 0, 1);
+        returning.payload.links.collections = await this.get_media_collections(media_id, null, -1, 0, 1);
+        returning.payload.links.people = await this.get_media_people(media_id, null, -1, 0, 1);
+        returning.payload.links.places = await this.get_media_places(media_id, null, -1, 0, 1);
+        returning.payload.links.times = await this.get_media_times(media_id, null, -1, 0, 1);
+        returning.payload.links.related_media = await this.get_related_media(media_id, [], -1, 0, 1);
         returning.payload.era = 'era';
-        returning.payload.tags = await this.get_media_tags(media_id, null, -1, 0);
-        returning.payload.collections = await this.get_media_collections(media_id, null, -1, 0);
-        returning.payload.people = await this.get_media_people(media_id, null, -1, 0);
-        returning.payload.places = await this.get_media_places(media_id, null, -1, 0);
-        returning.payload.times = await this.get_media_times(media_id, null, -1, 0);
-        returning.payload.related_media = await this.get_related_media(media_id, [], -1, 0);
+        returning.payload.tags = await this.get_media_tags(media_id, null, -1, 0, 1);
+        returning.payload.collections = await this.get_media_collections(media_id, null, -1, 0, 1);
+        returning.payload.people = await this.get_media_people(media_id, null, -1, 0, 1);
+        returning.payload.places = await this.get_media_places(media_id, null, -1, 0, 1);
+        returning.payload.times = await this.get_media_times(media_id, null, -1, 0, 1);
+        returning.payload.related_media = await this.get_related_media(media_id, [], -1, 0, 1);
         returning.payload.emotions = [];
         returning.payload._id = media_id;
         //@ts-ignore
@@ -239,7 +234,37 @@ export class GraphHandler {
         //@ts-ignore
         returning.payload.createdAt = results[0]['created_at'];
 
-        resolve(returning);
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch (e) {
+        reject(e);
+      }
+    })
+  }
+
+  /**
+   * Returns a single media item from a collection that belongs to the specified user.
+   * 
+   * @param uuid Account UUID 
+   * @param collection_name Name of the collection to retrieve a media item from.
+   */
+  async get_single_media_from_collection(uuid: string, collection_name: string) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        let results = await api.get_media_from_collection(uuid, collection_name, -1, 0);
+        let returning: Array<any> = [];
+
+        //@ts-ignore
+        results.forEach((element: any) => {
+          returning.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        let element_to_return = Math.floor(Math.random()*(returning.length+1)+0);
+        resolve(this.get_media_item(uuid, returning[element_to_return].id, 0));
       }
       catch (e) {
         reject(e);
@@ -292,25 +317,6 @@ export class GraphHandler {
   }
 
   /**
-   * Returns a single media item from the API.
-   * 
-   * @param uuid UUID of the user account
-   * @param rid Record ID of the media item to return.
-   */
-  async get_media_item(uuid: string, rid: string) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let api = new GraphAPI();
-        var results = await api.get_media(uuid, ["@rid = " + rid], 1, 0);
-        resolve(results);
-      }
-      catch (e) {
-        reject(e);
-      }
-    })
-  }
-
-  /**
    * Returns all tags related directly with a single media item.
    * 
    * @param rid Record ID of the media item
@@ -318,19 +324,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
    */
-  async get_media_tags(rid: string, params: any[], results_limit : number, results_offset = 0) {
+  async get_media_tags(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
         var results = await api.get_media_tags(rid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -346,20 +360,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
    */
-  async get_media_people(rid: string, params: any[], results_limit : number, results_offset = 0) {
+  async get_media_people(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-
         var results = await api.get_media_people(rid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(returning == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -375,20 +396,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
    */
-  async get_media_places(rid: string, params: any[], results_limit : number, results_offset = 0) {
+  async get_media_places(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-
         var results = await api.get_media_places(rid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+        
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -404,22 +432,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
    */
-  async get_media_times(rid: string, params: any[], results_limit : number, results_offset = 0) {
+  async get_media_times(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-        console.log(rid);
-        console.log(params);
-        console.log('calling api now');
         var results = await api.get_media_times(rid, params, results_limit, results_offset);
-        console.log(results);
-        let pretty_data: Array<any> = [];
+        
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'value': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'value': element.value, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -437,9 +470,20 @@ export class GraphHandler {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-        let params: Array<any> = [];
         var results = await api.get_tags(uuid, ["@rid = " + rid], 1, 0);
-        resolve(results);
+
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+        
+         //@ts-ignore
+         results.forEach((element: any) => {
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        resolve(returning);
       }
       catch (e) {
         reject(e);
@@ -455,20 +499,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
    */
-  async get_account_collections(uuid: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_account_collections(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-        let params: Array<any> = [];
         var results = await api.get_collections(uuid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -484,20 +535,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
    */
-  async get_account_people(uuid: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_account_people(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
       return new Promise(async (resolve, reject) => {
         try {
           let api = new GraphAPI();
-          let params: Array<any> = [];
           var results = await api.get_people(uuid, params, results_limit, results_offset);
 
-          let pretty_data: Array<any> = [];
+          let returning: any = {};
+          returning.code = 200;
+          returning.message = "success";
+          returning.errors = 'false';
+          returning.payload = [];
 
           //@ts-ignore
           results.forEach((element: any) => {
-            pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+            returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
           });
-          resolve(pretty_data);
+
+          if(internal == 0)
+            resolve(returning);
+          else
+            resolve(returning.payload);
         }
         catch (e) {
           reject(e);
@@ -513,20 +571,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
    */
-  async get_account_times(uuid: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_account_times(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
-        let api = new GraphAPI();
-        let params: Array<any> = [];
+        let api = new GraphAPI();;
         var results = await api.get_times(uuid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'value': element.value, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'value': element.value, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -542,20 +607,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
    */
-  async get_account_places(uuid: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_account_places(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-        let params: Array<any> = [];
         var results = await api.get_places(uuid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -571,20 +643,27 @@ export class GraphHandler {
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for results. Useful for paging.
    */
-  async get_account_tags(uuid: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_account_tags(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-        let params: Array<any> = [];
         var results = await api.get_tags(uuid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -600,20 +679,28 @@ export class GraphHandler {
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
    */
-  async get_media_collections(rid: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_media_collections(rid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
         let params: Array<any> = [];
         var results = await api.get_media_collections(rid, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);
@@ -629,20 +716,172 @@ export class GraphHandler {
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the results. Useful for paging.
    */
-  async get_related_media(media_id: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_related_media(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
-        let params: Array<any> = [];
         var results = await api.get_related_media(media_id, params, results_limit, results_offset);
 
-        let pretty_data: Array<any> = [];
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
 
         //@ts-ignore
         results.forEach((element: any) => {
-          pretty_data.push({ 'media_type': element.media_type, 'filename': element.value, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
-        resolve(pretty_data);
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch (e) {
+        reject(e);
+      }
+    })
+  }
+
+  /**
+   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * 
+   * @param media_id Record ID of the media item to begin searching from
+   * @param params Array of search parameters to apply to the media items returned.
+   * @param results_limit Limit the number of results to return. -1 returns all results.
+   * @param results_offset Offset for the results. Useful for paging.
+   */
+  async get_related_media_by_tags(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        var results = await api.get_related_media_by_tag(media_id, params, results_limit, results_offset);
+
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+
+        //@ts-ignore
+        results.forEach((element: any) => {
+          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch (e) {
+        reject(e);
+      }
+    })
+  }
+
+  /**
+   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * 
+   * @param media_id Record ID of the media item to begin searching from
+   * @param params Array of search parameters to apply to the media items returned.
+   * @param results_limit Limit the number of results to return. -1 returns all results.
+   * @param results_offset Offset for the results. Useful for paging.
+   */
+  async get_related_media_by_people(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+
+        var results = await api.get_related_media_by_people(media_id, params, results_limit, results_offset);
+
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+
+        //@ts-ignore
+        results.forEach((element: any) => {
+          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch (e) {
+        reject(e);
+      }
+    })
+  }
+
+  /**
+   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * 
+   * @param media_id Record ID of the media item to begin searching from
+   * @param params Array of search parameters to apply to the media items returned.
+   * @param results_limit Limit the number of results to return. -1 returns all results.
+   * @param results_offset Offset for the results. Useful for paging.
+   */
+  async get_related_media_by_time(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        var results = await api.get_related_media_by_time(media_id, params, results_limit, results_offset);
+
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+
+        //@ts-ignore
+        results.forEach((element: any) => {
+          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch (e) {
+        reject(e);
+      }
+    })
+  }
+
+  /**
+   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * 
+   * @param media_id Record ID of the media item to begin searching from
+   * @param params Array of search parameters to apply to the media items returned.
+   * @param results_limit Limit the number of results to return. -1 returns all results.
+   * @param results_offset Offset for the results. Useful for paging.
+   */
+  async get_related_media_by_place(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        var results = await api.get_related_media_by_place(media_id, params, results_limit, results_offset);
+
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+
+        //@ts-ignore
+        results.forEach((element: any) => {
+          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);

@@ -7,23 +7,29 @@
 The API requires the following envrionment variables, store these in a `.env` file at the route of the directory,
 or pass them in through Docker. Boolean env variables are either `true` or `false`. Uppercase will not be detected.
 
-| **Name**              | **Type**| **Description**                                                                               |
-|-----------------------|---------|---------------------------------------------------------------------------------------------|
-| DEBUG                 | Boolean | Returns full error messages if `true`                                                       |
-| APP_SECRET            | String  | Application secret for generating JWT tokens                                                |
-| LOCAL                 | Boolean | Uses local files rather than AWS S3 for file management if `true`, better for testing       |
-| TEST                  | Boolean | Restricts API calls if `true` for testing. Automatically set by unit tests if tests are ran |
-| APP_PRODUCTION        | Boolean | Limits print outs if `true`                                                                 |
-| APP_PORT              | Integer | Port to start application on                                                                |
-| MONGODB_USER          | String  | Username for MongoDB                                                                        |
-| MONGODB_PASS          | String  | Password for MongoDB                                                                        |
-| MONGODB_DATABASE      | String  | Database for MongoDB                                                                        |
-| MONGO_URI             | String  | URI for MongoDB                                                                             |
-| MONGO_URI_LOCAL       | String  | URI for local MongoDB, necessary for unit testing.                                          |
-| DB_TYPE               | String  | Selects database to use, for mongo enter `MONGO`.
-| AWS_ACCESS_KEY_ID     | String  | Access key for AWS                                                                          |
-| AWS_SECRET_ACCESS_KEY | String  | Secret key for AWS                                                                          |
-| AWS_BUCKET            | String  | AWS S3 bucket name                                                                          |
+| **Name**               | **Type**| **Description**                                                                             |
+|------------------------|---------|---------------------------------------------------------------------------------------------|
+| DEBUG                  | Boolean | Returns full error messages if `true`                                                       |
+| APP_SECRET             | String  | Application secret for generating JWT tokens                                                |
+| LOCAL                  | Boolean | Uses local files rather than AWS S3 for file management if `true`, better for testing       |
+| TEST                   | Boolean | Restricts API calls if `true` for testing. Automatically set by unit tests if tests are ran |
+| APP_PRODUCTION         | Boolean | Limits print outs if `true`                                                                 |
+| APP_PORT               | Integer | Port to start application on                                                                |
+| MONGODB_USER           | String  | Username for MongoDB                                                                        |
+| MONGODB_PASS           | String  | Password for MongoDB                                                                        |
+| MONGODB_DATABASE       | String  | Database for MongoDB                                                                        |
+| MONGO_URI              | String  | URI for MongoDB                                                                             |
+| MONGO_URI_LOCAL        | String  | URI for local MongoDB, necessary for unit testing.                                          |
+| DB_TYPE                | String  | Selects database to use, for mongo enter `MONGO`.                                           |
+| AWS_ACCESS_KEY_ID      | String  | Access key for AWS                                                                          |
+| AWS_SECRET_ACCESS_KEY  | String  | Secret key for AWS                                                                          |
+| AWS_BUCKET             | String  | AWS S3 bucket name                                                                          |
+| ORIENTDB_ROOT_PASSWORD | String  | Root password for OrientDB                                                                  |
+| ORIENTDB_DATABASE      | String  | Database name for OrientDB                                                                  |
+| ORIENTDB_USER          | String  | Username to use for database access for OrientDB                                            |
+| ORIENTDB_PASSWORD      | String  | Password to use for database access for OrientDB                                            |
+| ORIENTDB_PORT          | Integer | Port to use for OrientDB access                                                             |
+
 
 Use docker compose to build and run, this will create a mongo instance if you use the local `docker-compose.yml` file.
 Or the image can be built using `docker build .`, or can be pulled from `openlab/ongoingness-api`.

@@ -314,12 +314,26 @@ export class GraphHandler {
    * @param results_limit Number of results to return, -1 returns all results.
    * @param results_offset Results offset, useful for paging. 
    */
-  async get_account_media(uuid: string, params: any[], results_limit: number, results_offset = 0) {
+  async get_account_media(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
         var results = await api.get_media(uuid, params, results_limit, results_offset);
-        resolve(results);
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+
+        //@ts-ignore
+        results.forEach((element: any) => {
+          returning.payload.push({ 'filename': element.filename, 'media_type': element.media_type, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
       }
       catch (e) {
         reject(e);

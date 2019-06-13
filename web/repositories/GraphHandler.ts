@@ -185,7 +185,7 @@ export class GraphHandler {
         resolve(await this.get_media_item(account_uuid,media_item_id, 0));
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -240,7 +240,7 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -275,10 +275,9 @@ export class GraphHandler {
         {
           resolve({'code': 404, 'errors': true, 'message' : 'No results found.', 'payload': {}});
         }
-         
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -299,7 +298,7 @@ export class GraphHandler {
         resolve(results);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -313,6 +312,7 @@ export class GraphHandler {
    * @param params Array of query parameters 
    * @param results_limit Number of results to return, -1 returns all results.
    * @param results_offset Results offset, useful for paging. 
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_account_media(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -326,8 +326,9 @@ export class GraphHandler {
         returning.payload = [];
 
         //@ts-ignore
-        results.forEach((element: any) => {
+        results.forEach(async (element: any) => {
           returning.payload.push({ 'filename': element.filename, 'media_type': element.media_type, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push(this.get_media_item(uuid, element['@rid']['cluster'] + ":" + element['@rid']['position'],1));
         });
 
         if(internal == 0)
@@ -336,7 +337,7 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -348,6 +349,7 @@ export class GraphHandler {
    * @param params Array of query parameters to apply
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_media_tags(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -372,18 +374,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Returns all tags related directly with a single media item.
+   * Returns all people related directly with a single media item.
    * 
    * @param rid Record ID of the media item
    * @param params Array of query parameters to apply
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_media_people(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -402,24 +405,25 @@ export class GraphHandler {
           returning.payload.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
 
-        if(returning == 0)
+        if(internal == 0)
           resolve(returning);
         else
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Returns all tags related directly with a single media item.
+   * Returns all places related directly with a single media item.
    * 
    * @param rid Record ID of the media item
    * @param params Array of query parameters to apply
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_media_places(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -444,18 +448,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Returns all tags related directly with a single media item.
+   * Returns all times related directly with a single media item.
    * 
    * @param rid Record ID of the media item
    * @param params Array of query parameters to apply
    * @param results_limit Limit the number of returned results. -1 returns all results.
    * @param results_offset Offset the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_media_times(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -480,7 +485,7 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -511,7 +516,7 @@ export class GraphHandler {
         resolve(returning);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -523,6 +528,7 @@ export class GraphHandler {
    * @param params Array of search parameters to apply. 
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_account_collections(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -547,7 +553,7 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -559,6 +565,7 @@ export class GraphHandler {
    * @param params Array of search parameters to apply.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_account_people(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
       return new Promise(async (resolve, reject) => {
@@ -583,7 +590,7 @@ export class GraphHandler {
             resolve(returning.payload);
         }
         catch (e) {
-          reject(e);
+          reject({code: 500, message: e, errors : true, payload: []});
         }
       })
   }
@@ -595,6 +602,7 @@ export class GraphHandler {
    * @param params Array of search parameters to apply.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_account_times(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -619,7 +627,7 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -631,6 +639,7 @@ export class GraphHandler {
    * @param params Array of search terms to apply.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_account_places(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -655,7 +664,7 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
@@ -667,6 +676,7 @@ export class GraphHandler {
    * @param params Array of search params
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_account_tags(uuid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -691,18 +701,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Returns a list of places that are associated with the provided UUID.
+   * Returns a list of collections that feature the specified media item.
    * 
    * @param uuid UUID of the suer account
    * @param params Array of search terms to apply.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the returned results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_media_collections(rid: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -728,18 +739,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * Get a list of 'related' media - specifically using the 'related media' links specified by the user on data entry.
    * 
    * @param media_id Record ID of the media item to begin searching from
    * @param params Array of search parameters to apply to the media items returned.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_related_media(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -764,18 +776,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * Get a list of 'related' media - with links inferred by having tags in common.
    * 
    * @param media_id Record ID of the media item to begin searching from
    * @param params Array of search parameters to apply to the media items returned.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_related_media_by_tags(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -800,18 +813,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * Get a list of 'related' media - with links inferred by media feauturing the same people.
    * 
    * @param media_id Record ID of the media item to begin searching from
    * @param params Array of search parameters to apply to the media items returned.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_related_media_by_people(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -837,18 +851,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * Get a list of 'related' media - links are inferred by having 'time' in common.
    * 
    * @param media_id Record ID of the media item to begin searching from
    * @param params Array of search parameters to apply to the media items returned.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_related_media_by_time(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -873,18 +888,19 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }
 
   /**
-   * Get a list of 'related' media - specifically using the 'related media' links specified by the user.
+   * Get a list of 'related' media - inferred from media having 'place' in common.
    * 
    * @param media_id Record ID of the media item to begin searching from
    * @param params Array of search parameters to apply to the media items returned.
    * @param results_limit Limit the number of results to return. -1 returns all results.
    * @param results_offset Offset for the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
    */
   async get_related_media_by_place(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
     return new Promise(async (resolve, reject) => {
@@ -909,7 +925,7 @@ export class GraphHandler {
           resolve(returning.payload);
       }
       catch (e) {
-        reject(e);
+        reject({code: 500, message: e, errors : true, payload: []});
       }
     })
   }

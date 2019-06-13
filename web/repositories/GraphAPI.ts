@@ -29,7 +29,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 await db
-                .query("SELECT FROM (TRAVERSE out('tagged_with') FROM (SELECT FROM #" + rid + ")) WHERE @class='tag' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE out('tagged_with') FROM (SELECT FROM #" + rid + ")) WHERE @class='tag'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -61,7 +61,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE out('features_person') FROM (SELECT FROM #" + rid + ")) WHERE @class='person' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE out('features_person') FROM (SELECT FROM #" + rid + ")) WHERE @class='person'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -93,7 +93,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE out('has_time') FROM (SELECT FROM #" + rid + ")) WHERE @class='time' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE out('has_time') FROM (SELECT FROM #" + rid + ")) WHERE @class='time'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -125,7 +125,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE out('features_place') FROM (SELECT FROM #" + rid + ")) WHERE @class='place' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE out('features_place') FROM (SELECT FROM #" + rid + ")) WHERE @class='place'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -157,7 +157,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE in('has_media') FROM (SELECT FROM #" + rid + ")) WHERE @class='collection' LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE in('has_media') FROM (SELECT FROM #" + rid + ")) WHERE @class='collection'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -427,7 +427,7 @@ const db = dbserver.use({
             try{
                 db
                 .select()
-                .from("SELECT FROM (TRAVERSE out('related_to') FROM (SELECT FROM #" + media_id + ")) WHERE @rid <> " + media_id)
+                .from("SELECT FROM (TRAVERSE out('related_to') FROM (SELECT FROM #" + media_id + ")) WHERE @rid <> " + media_id + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET  " + results_offset)
                 .group('@rid')
                 .all()
                 //@ts-ignore
@@ -460,7 +460,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE in('tagged_with') FROM (SELECT FROM (TRAVERSE out('tagged_with') FROM #" + rid + ") WHERE @class='tag')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE in('tagged_with') FROM (SELECT FROM (TRAVERSE out('tagged_with') FROM #" + rid + ") WHERE @class='tag')) WHERE @class='media' AND @rid <> #" + rid +  this.build_query_from_params(query_params) + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -492,7 +492,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE in('features_person') FROM (SELECT FROM (TRAVERSE out('features_person') FROM #" + rid + ") WHERE @class='person')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE in('features_person') FROM (SELECT FROM (TRAVERSE out('features_person') FROM #" + rid + ") WHERE @class='person')) WHERE @class='media' AND @rid <> #" + rid + this.build_query_from_params(query_params) + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -524,7 +524,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE in('has_time') FROM (SELECT FROM (TRAVERSE out('has_time') FROM #" + rid + ") WHERE @class='time')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE in('has_time') FROM (SELECT FROM (TRAVERSE out('has_time') FROM #" + rid + ") WHERE @class='time')) WHERE @class='media' AND @rid <> #" + rid + this.build_query_from_params(query_params) + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -556,7 +556,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE in('features_place') FROM (SELECT FROM (TRAVERSE out('features_place') FROM #" + rid + ") WHERE @class='place')) WHERE @class='media' AND @rid <> #" + rid + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
+                .query("SELECT FROM (TRAVERSE in('features_place') FROM (SELECT FROM (TRAVERSE out('features_place') FROM #" + rid + ") WHERE @class='place')) WHERE @class='media' AND @rid <> #" + rid + this.build_query_from_params(query_params) + " GROUP BY @rid LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 
@@ -580,7 +580,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid='" + uuid + "') MAXDEPTH 1) WHERE @class='collection' AND name='" + collection_name + "')) WHERE @class='media'")
+                .query("SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid='" + uuid + "') MAXDEPTH 1) WHERE @class='collection' AND name='" + collection_name + "')) WHERE @class='media' LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 

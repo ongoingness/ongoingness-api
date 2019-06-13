@@ -283,7 +283,7 @@ export class GraphHandler {
   }
 
   /**
-   * 
+   * Returns a list of accounts
    * 
    * @param uuid User account UUID
    * @param params Array of query parameters to apply.

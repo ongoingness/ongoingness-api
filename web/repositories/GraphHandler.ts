@@ -263,8 +263,19 @@ export class GraphHandler {
           returning.push({ 'name': element.name, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
 
-        let element_to_return = Math.floor(Math.random()*(returning.length+1)+0);
-        resolve(this.get_media_item(uuid, returning[element_to_return].id, 0));
+        /*
+        * If array has no length, then no matching result
+        */
+        if(returning.length > 0)
+        {
+          let element_to_return = Math.floor(Math.random()*(returning.length+1)+0);
+          resolve(this.get_media_item(uuid, returning[element_to_return].id, 0));
+        }
+        else
+        {
+          resolve({'code': 404, 'errors': true, 'message' : 'No results found.', 'payload': {}});
+        }
+         
       }
       catch (e) {
         reject(e);

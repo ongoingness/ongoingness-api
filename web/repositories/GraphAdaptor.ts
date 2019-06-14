@@ -1,6 +1,6 @@
 import { GraphAPI } from './GraphAPI';
 
-export class GraphHandler {
+export class GraphAdaptor {
 
   /**
    * Creates media object and associated objects in the graph, then returns data in the same format as mongo db api.

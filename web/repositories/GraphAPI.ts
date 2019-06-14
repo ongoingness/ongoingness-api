@@ -697,7 +697,7 @@ const db = dbserver.use({
 
         data_properties.forEach( (element: any) => {
             property_names.push(element[0]);
-            property_values.push(element[1]);
+            property_values.push(element[1].tolowercase());
         });
 
        return [property_names, property_values];

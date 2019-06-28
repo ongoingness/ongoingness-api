@@ -929,4 +929,22 @@ export class GraphAdaptor {
       }
     })
   }
+
+  /**
+   * Creates a 'placeholder' user account based on the ID passed from creation in mongo.
+   * 
+   * @param uuid The ID of the user account to create.
+   */
+  async create_account(uuid: string) {
+    return new Promise(async (resolve, reject) => {
+      try{
+        let api = new GraphAPI();
+        await api.create_vertex('account',[["uuid","'" + uuid + "'"]]);
+        resolve(true);
+      }
+      catch (e) {
+        reject ({code: 500, message: e, errors: true, payload: []});
+      }
+    })
+  }
 }

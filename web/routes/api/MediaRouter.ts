@@ -13,6 +13,7 @@ import RepositoryFactory from '../../repositories/RepositoryFactory';
 import IResourceRouter from '../IResourceRouter';
 import { BaseRouter } from '../BaseRouter';
 import MediaController from '../../controllers/MediaController';
+import { GraphAdaptor } from '../../repositories/GraphAdaptor';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaRepository: MediaRepository = new MediaRepository();
@@ -398,7 +399,6 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-
     req.setTimeout(500000, () => {next(new Error("Timeout"))});
 
     const mimetype = req.file.mimetype;
@@ -407,6 +407,7 @@ export class MediaRouter
     let user: IUser;
     let imagePath: string;
     let media: IMedia;
+
     const emotionArray: string = req.headers['emotions'] as string;
     const emotions: string[] = emotionArray === undefined ? [] : emotionArray.split(',') || [];
     
@@ -427,12 +428,41 @@ export class MediaRouter
 
     try {
 
+      //This stores the actual media
       imagePath = await mediaController.storeMedia(
         req.file.path,
         req.file.originalname,
         ext,
         user._id,
       );
+
+      //Group 'emotions' into various tag groups
+      var tags_array : string[] = [];
+      var people_array : string[] = [];
+      var places_array : string[] = [];
+      var time_array: string[] = [];
+
+      emotions.forEach( await (async(element : string) => {
+        if(element.includes('@')){
+          //Place
+          element = element.replace('@','');
+          places_array.push(element.trim());
+        }else if(element.includes('t/')){
+          //Time
+          element = element.replace('t/','');
+          time_array.push(element.trim());
+        }else if(element.includes('p/')){
+          //People
+          element = element.replace('p/','');
+          people_array.push(element.trim());
+        }else{
+          //Tag
+          tags_array.push(element.trim());
+        }
+      }));
+
+     let ga = new GraphAdaptor();
+     await ga.create_media_object(user._id,"'" + imagePath + "'","'" + ext + "'",[],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
 
       media = await mediaRepository.store({
         mimetype: mime.lookup(imagePath),

@@ -35,6 +35,10 @@ services:
         PORT: ${APP_PORT}
         DB_TYPE: ${DB_TYPE}
         ORIENTDB_ROOT_PASSWORD: '${ORIENTDB_ROOT_PASSWORD}'
+        ORIENTDB_DATABASE: '${ORIENTDB_DATABASE}'
+        ORIENTDB_USER:  '${ORIENTDB_USER}'
+        ORIENTDB_PASSWORD:  '${ORIENTDB_PASSWORD}'
+        ORIENTDB_PORT:  ${ORIENTDB_PORT}
   mongo:
     image: mongo
     ports:

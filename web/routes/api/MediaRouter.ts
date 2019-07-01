@@ -465,7 +465,7 @@ export class MediaRouter
       }));
 
      let ga = new GraphAdaptor();
-     media = await ga.create_media_object(user._id,"'" + imagePath + "'","'" + mimetype + "'",[],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
+     media = await ga.create_media_object(user._id,"'" + imagePath + "'","'" + mimetype + "'",req.headers['links'],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
 
      /* media = await mediaRepository.store({
         mimetype: mime.lookup(imagePath),

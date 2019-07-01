@@ -15,7 +15,7 @@ export class GraphAdaptor {
    * @param times Array of strings - time values
    * @param collection String - name of collection, can be existing or new.
    */
-  async create_media_object(account_uuid: string, file_path: string, media_type: string, linked_media: string[], tags: string[], places: string[], people: string[], times: string[], collection: string){
+  async create_media_object(account_uuid: string, file_path: string, media_type: string, linked_media: any , tags: string[], places: string[], people: string[], times: string[], collection: string){
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
@@ -92,7 +92,8 @@ export class GraphAdaptor {
         /*
         * Loop through linked_media and create edges
         */
-        linked_media.forEach(async (to_link : any) => {
+        var linked_media_array = linked_media.split(",");
+        linked_media_array.forEach(async (to_link : any) => {
           //@ts-ignore
           await api.create_edge("RELATED_TO", media_item_id, to_link);
           await api.create_edge("RELATED_TO", to_link, media_item_id);

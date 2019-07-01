@@ -281,14 +281,24 @@ export default class MediaController {
    * @param {number} size, default 600
    * @returns {Promise<any>}
    */
-  async getMediaFromS3(media: IMedia, size: number = this.maxImageSize): Promise<any> {
+  async getMediaFromS3(media: any, size: number = this.maxImageSize): Promise<any> {
     // Check if running locally, access local files instead of S3 bucket.
+    //@ts-ignore
+    console.log('in this function');
     let image: any;
     const exists: boolean = media.sizes.indexOf(size) > -1;
+    console.log('path');
+    console.log(media.path);
     const key: string =
       !exists ? media.path : `${media.path.split('.')[0]}-${size}.${media.path.split('.')[1]}`;
-
+    //@ts-ignore
+    console.log('key');
+    console.log(key);
     try {
+      //@ts-ignore
+      console.log('getting image');
+      //@ts-ignore
+      console.log(key);
       image = await this.fetchImage(key);
       if (!exists) {
         image = await this.resizeImage(image, media.mimetype, size);
@@ -297,7 +307,7 @@ export default class MediaController {
           image,
         );
         media.sizes.push(size);
-        await media.save();
+        //await media.save();
       }
     } catch (e) {
       console.error(e);

@@ -30,7 +30,7 @@ export class GraphAdaptor {
         /*
         * Create media object first
         */
-        let media_item = await api.create_vertex('media', [['filename', file_path],['media_type',media_type]]);
+        let media_item = await api.create_vertex('media', [['filename', file_path],['mimetype',media_type]]);
           //@ts-ignore
         let media_item_id = media_item[0]['@rid']['cluster'] + ":" + media_item[0]['@rid']['position'];
         /*
@@ -229,7 +229,8 @@ export class GraphAdaptor {
         //@ts-ignore
         returning.payload.path = results[0]['filename'];
         //@ts-ignore
-        returning.payload.mimetype = results[0]['file_type'];
+        returning.payload.mimetype = results[0]['mimetype'];
+        returning.payload.sizes = [];
         returning.payload.user = uuid;
         //@ts-ignore
         returning.payload.createdAt = results[0]['created_at'];
@@ -327,7 +328,7 @@ export class GraphAdaptor {
 
         //@ts-ignore
         results.forEach(async (element: any) => {
-          returning.payload.push({ 'filename': element.filename, 'media_type': element.media_type, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'path': element.filename, 'locket' : 'temp', 'mimetype': element.mimetype, 'user': uuid, '_id': element['@rid']['cluster'] + ":" + element['@rid']['position'], 'createdAt' : element.created_at });
           returning.payload.push(this.get_media_item(uuid, element['@rid']['cluster'] + ":" + element['@rid']['position'],1));
         });
 

@@ -87,7 +87,7 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async show(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    const mediaId: Schema.Types.ObjectId = req.params.id;
+    const mediaId: any = req.params.id;
     const rsize: string = req.query.size;
     let size: number;
     const defaultSize: number = 600;
@@ -95,7 +95,7 @@ export class MediaRouter
     const minSize: number = 100;
     const mediaController: MediaController = new MediaController();
     let user: IUser;
-    let media: IMedia;
+    let media: any;
 
     // Sanitize size.
     if (rsize) {
@@ -115,8 +115,9 @@ export class MediaRouter
     }
 
     try {
-      user = await userRepository.get(res.locals.user.id);
-      media = await user.getMedia(mediaId);
+      let ga = new GraphAdaptor();
+      media = await ga.get_media_item(res.locals.user.id,mediaId,1);
+
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -127,6 +128,7 @@ export class MediaRouter
     }
 
     let data: any;
+
     try {
       data = await mediaController.getMediaFromS3(media, size);
     } catch (e) {
@@ -342,15 +344,16 @@ export class MediaRouter
     // return next(new Error('501'));
 
     let user: IUser;
+    let ga = new GraphAdaptor();
     try {
       user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
 
-    let media: IMedia[];
+    let media : any = [];
     try {
-      media = await user.getAllMedia();
+      media = await ga.get_account_media(user._id,[],-1,0,1);
     } catch (e) {
       e.message = '500';
     }
@@ -406,7 +409,7 @@ export class MediaRouter
     const mediaController: MediaController = new MediaController();
     let user: IUser;
     let imagePath: string;
-    let media: IMedia;
+    let media: any;
 
     const emotionArray: string = req.headers['emotions'] as string;
     const emotions: string[] = emotionArray === undefined ? [] : emotionArray.split(',') || [];
@@ -462,9 +465,9 @@ export class MediaRouter
       }));
 
      let ga = new GraphAdaptor();
-     await ga.create_media_object(user._id,"'" + imagePath + "'","'" + ext + "'",[],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
+     media = await ga.create_media_object(user._id,"'" + imagePath + "'","'" + mimetype + "'",[],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
 
-      media = await mediaRepository.store({
+     /* media = await mediaRepository.store({
         mimetype: mime.lookup(imagePath),
         user,
         emotions,
@@ -484,8 +487,8 @@ export class MediaRouter
           linkIds.push(linkId)        
         }));
         await media.createMultipleLinks(linkIds);
-      }
-
+      }*/
+      
     } catch (e) {       
       console.error(e);
       e.message = '500';

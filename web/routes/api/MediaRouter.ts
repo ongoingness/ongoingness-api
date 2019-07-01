@@ -36,34 +36,7 @@ export class MediaRouter
    */
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: any = req.params.id;
-    /*const mediaController: MediaController = new MediaController();
-    let user: IUser;
-    let media: IMedia;
-
-    if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`));
-    }
-
-    try {
-      user = await userRepository.get(res.locals.user.id);
-      media = await user.getMedia(mediaId);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    if (!media) {
-      return next(new Error('404'));
-    }
-
-    try {
-      await mediaController.deleteMedia(media);
-      await mediaRepository.destroy(media._id);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-    */
+    
    try{
      let ga = new GraphAdaptor();
      await ga.delete_media(mediaId);

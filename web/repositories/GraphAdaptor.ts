@@ -378,10 +378,11 @@ export class GraphAdaptor {
         returning.errors = 'false';
         returning.payload = [];
         //@ts-ignore
-        results.forEach(async (element: any) => {
-          returning.payload.push({ 'path': element.path, 'locket' : 'temp', 'mimetype': element.mimetype, 'user': uuid, '_id': element['@rid']['cluster'] + ":" + element['@rid']['position'], 'createdAt' : element.created_at });
-          returning.payload.push(this.get_media_item(uuid, element['@rid']['cluster'] + ":" + element['@rid']['position'],1));
-        });
+        for(let element of results)
+        {
+          returning.payload.push(await this.get_media_item(uuid, element['@rid']['cluster'] + ":" + element['@rid']['position'],1));
+        }
+        
         if(internal == 0)
           resolve(returning);
         else

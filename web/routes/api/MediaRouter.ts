@@ -35,8 +35,8 @@ export class MediaRouter
    * @returns {Promise<void | e.Response> | void}
    */
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    const mediaId: Schema.Types.ObjectId = req.params.id;
-    const mediaController: MediaController = new MediaController();
+    const mediaId: any = req.params.id;
+    /*const mediaController: MediaController = new MediaController();
     let user: IUser;
     let media: IMedia;
 
@@ -63,7 +63,15 @@ export class MediaRouter
       e.message = '500';
       return next(e);
     }
-
+    */
+   try{
+     let ga = new GraphAdaptor();
+     await ga.delete_media(mediaId);
+   }
+   catch(e)
+   {
+     return(e);
+   }
     return res.json(new Reply(200, 'success', false, null));
   }
 

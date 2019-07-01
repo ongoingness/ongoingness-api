@@ -243,6 +243,28 @@ const db = dbserver.use({
     }
 
     /**
+     * 
+     * @param uuid 
+     * @param query_params 
+     * @param results_limit 
+     * @param results_offset 
+     */
+    async delete_media(media_id: string)
+    {
+        return new Promise((resolve, reject) => {
+            try{
+                db
+                .query("DELETE VERTEX FROM media WHERE @rid = " + media_id);
+                resolve('success');
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        })
+    }
+
+    /**
      * Get a list of tags that belongs to a given user.
      * 
      * @param uuid UUID of account that media should belong to 

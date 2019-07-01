@@ -230,7 +230,6 @@ export class GraphAdaptor {
         returning.payload.places = await this.get_media_places(media_id, null, -1, 0, 1);
         returning.payload.times = await this.get_media_times(media_id, null, -1, 0, 1);
         returning.payload.related_media = await this.get_related_media(media_id, [], -1, 0, 1);
-        
 
         returning.payload._id = media_id;
         //@ts-ignore
@@ -997,6 +996,19 @@ export class GraphAdaptor {
       }
       catch (e) {
         reject({code: 500, message: e, errors : true, payload: []});
+      }
+    })
+  }
+
+  async delete_media(media_id: string) {
+    return new Promise(async (resolve, reject) => {
+      try{
+        let api = new GraphAPI();
+        await api.delete_media(media_id);
+        resolve('success');
+      }
+      catch(e){
+        reject(e);
       }
     })
   }

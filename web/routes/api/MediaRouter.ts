@@ -36,7 +36,7 @@ export class MediaRouter
    */
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     const mediaId: any = req.params.id;
-    
+
    try{
      let ga = new GraphAdaptor();
      await ga.delete_media(mediaId);
@@ -226,6 +226,9 @@ export class MediaRouter
     return res.json(new Reply(200, 'success', false, media._id));
   }
 
+  /**
+   * Returns media from the user's specified collection.
+   */
   async getCollectionMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     try {
       const userId: any = res.locals.user.id;

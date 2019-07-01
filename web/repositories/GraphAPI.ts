@@ -243,11 +243,9 @@ const db = dbserver.use({
     }
 
     /**
+     * Deletes a media item from graph database
      * 
-     * @param uuid 
-     * @param query_params 
-     * @param results_limit 
-     * @param results_offset 
+     * @param media_id ID of the media to remove 
      */
     async delete_media(media_id: string)
     {

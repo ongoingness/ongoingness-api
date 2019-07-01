@@ -14,6 +14,7 @@ import IResourceRouter from '../IResourceRouter';
 import { BaseRouter } from '../BaseRouter';
 import MediaController from '../../controllers/MediaController';
 import { GraphAdaptor } from '../../repositories/GraphAdaptor';
+import ResourceRouterFactory from '../ResourceRouterFactory';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaRepository: MediaRepository = new MediaRepository();
@@ -244,6 +245,21 @@ export class MediaRouter
     return res.json(new Reply(200, 'success', false, media._id));
   }
 
+  async getCollectionMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {
+      const userId: any = res.locals.user.id;
+      const collectionName : string = req.query.collection;
+      let ga = new GraphAdaptor();
+      
+      var results = await ga.get_collection_media(userId,collectionName,[],-1,0,1);
+
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
   /**
    * @api {post} /api/media/link Store a link between media.
    * @apiGroup Media
@@ -466,29 +482,6 @@ export class MediaRouter
 
      let ga = new GraphAdaptor();
      media = await ga.create_media_object(user._id,"'" + imagePath + "'","'" + mimetype + "'",req.headers['links'],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
-
-     /* media = await mediaRepository.store({
-        mimetype: mime.lookup(imagePath),
-        user,
-        emotions,
-        path: imagePath,
-        era: <string>req.headers['era'] || 'past',
-        locket: <string>req.headers['locket'] || 'none',
-      });
-
-      var links = <string>req.headers['links'] || 'none';
-
-      if(links != 'none') {
-        var splited = links.split(',');
-        var linkIds : any = [];
-       
-        splited.forEach( await (async(element : any) => {
-          const linkId: Schema.Types.ObjectId = element;
-          linkIds.push(linkId)        
-        }));
-        await media.createMultipleLinks(linkIds);
-      }*/
-      
     } catch (e) {       
       console.error(e);
       e.message = '500';
@@ -516,6 +509,7 @@ export class MediaRouter
     this.addRoute('/links/:id', HttpMethods.GET, this.getLinks);
     this.addRoute('/links', HttpMethods.POST, this.storeLink);
     this.addRoute('/request', HttpMethods.GET, this.getPresent);
+    this.addRoute('/collectionMedia', HttpMethods.GET, this.getCollectionMedia);
     this.addDefaultRoutes();
   }
 

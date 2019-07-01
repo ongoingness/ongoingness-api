@@ -30,7 +30,7 @@ export class GraphAdaptor {
         /*
         * Create media object first
         */
-        let media_item = await api.create_vertex('media', [['filename', file_path],['mimetype',media_type]]);
+        let media_item = await api.create_vertex('media', [['path', file_path],['mimetype',media_type]]);
           //@ts-ignore
         let media_item_id = media_item[0]['@rid']['cluster'] + ":" + media_item[0]['@rid']['position'];
         /*
@@ -92,12 +92,17 @@ export class GraphAdaptor {
         /*
         * Loop through linked_media and create edges
         */
-        var linked_media_array = linked_media.split(",");
-        linked_media_array.forEach(async (to_link : any) => {
-          //@ts-ignore
-          await api.create_edge("RELATED_TO", media_item_id, to_link);
-          await api.create_edge("RELATED_TO", to_link, media_item_id);
-        });
+        if(linked_media !== '')
+        {
+          var linked_media_array : Array<any> = linked_media.split(",");
+          if(linked_media_array.length > 0){
+            linked_media_array.forEach(async (to_link : any) => {
+              //@ts-ignore
+              await api.create_edge("RELATED_TO", media_item_id, to_link);
+              await api.create_edge("RELATED_TO", to_link, media_item_id);
+            });
+          }
+        }
 
          /*
          * Loop through each place that has been passed to the function
@@ -225,16 +230,23 @@ export class GraphAdaptor {
         returning.payload.places = await this.get_media_places(media_id, null, -1, 0, 1);
         returning.payload.times = await this.get_media_times(media_id, null, -1, 0, 1);
         returning.payload.related_media = await this.get_related_media(media_id, [], -1, 0, 1);
-        returning.payload.emotions = [];
+        
+
         returning.payload._id = media_id;
         //@ts-ignore
-        returning.payload.path = results[0]['filename'];
+        returning.payload.path = results[0]['path'];
         //@ts-ignore
         returning.payload.mimetype = results[0]['mimetype'];
         returning.payload.sizes = [];
         returning.payload.user = uuid;
         //@ts-ignore
         returning.payload.createdAt = results[0]['created_at'];
+
+        /**
+         * THESE ARE TEMP FIXES TO MATCH WHAT THE WEBAPP IS EXPECTING
+         */
+        returning.payload.locket = returning.payload.collections[0].name;
+        returning.payload.emotions = await this.get_media_combined_tag_names(media_id,[],-1,0,1);
 
         if(internal == 0)
           resolve(returning);
@@ -328,11 +340,49 @@ export class GraphAdaptor {
         returning.payload = [];
 
         //@ts-ignore
+        for(let element of results)
+        {
+         let temp : any = await this.get_media_item(uuid, element['@rid']['cluster'] + ":" + element['@rid']['position'],1);
+         returning.payload.push(temp);
+        };
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch (e) {
+        reject({code: 500, message: e, errors : true, payload: []});
+      }
+    })
+  }
+
+  /**
+   * Returns media associated with an account.
+   * 
+   * Requires the UUID of the account, and will accept an array of further parameters to query with.
+   * 
+   * @param uuid UUID of the user account
+   * @param params Array of query parameters 
+   * @param results_limit Number of results to return, -1 returns all results.
+   * @param results_offset Results offset, useful for paging. 
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
+   */
+  async get_collection_media(uuid: string, collection_name: string, params: any[], results_limit: number, results_offset = 0, internal = 0) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        var results = await api.get_collection_media(uuid, collection_name, params, results_limit, results_offset);
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+        //@ts-ignore
         results.forEach(async (element: any) => {
-          returning.payload.push({ 'path': element.filename, 'locket' : 'temp', 'mimetype': element.mimetype, 'user': uuid, '_id': element['@rid']['cluster'] + ":" + element['@rid']['position'], 'createdAt' : element.created_at });
+          returning.payload.push({ 'path': element.path, 'locket' : 'temp', 'mimetype': element.mimetype, 'user': uuid, '_id': element['@rid']['cluster'] + ":" + element['@rid']['position'], 'createdAt' : element.created_at });
           returning.payload.push(this.get_media_item(uuid, element['@rid']['cluster'] + ":" + element['@rid']['position'],1));
         });
-
         if(internal == 0)
           resolve(returning);
         else
@@ -479,6 +529,62 @@ export class GraphAdaptor {
         //@ts-ignore
         results.forEach((element: any) => {
           returning.payload.push({ 'value': element.value, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        });
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch (e) {
+        reject({code: 500, message: e, errors : true, payload: []});
+      }
+    })
+  }
+
+  /**
+   * Returns all times related directly with a single media item.
+   * 
+   * @param rid Record ID of the media item
+   * @param params Array of query parameters to apply
+   * @param results_limit Limit the number of returned results. -1 returns all results.
+   * @param results_offset Offset the results. Useful for paging.
+   * @param internal Flag. When 0, returns data formatted similar to mongo API. When 1, returns just results for use in other functions.
+   */
+  async get_media_combined_tag_names(rid: string, params: any[], results_limit : number, results_offset = 0, internal = 0) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        var results_times = await api.get_media_times(rid, params, results_limit, results_offset);
+        var results_tags = await api.get_media_tags(rid, params, results_limit, results_offset);
+        var results_places = await api.get_media_places(rid, params, results_limit, results_offset);
+        var results_people = await api.get_media_people(rid, params, results_limit, results_offset);
+
+
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+
+        //@ts-ignore
+        results_times.forEach((element: any) => {
+          returning.payload.push('t/' + element.value);
+        });
+
+        //@ts-ignore
+        results_tags.forEach((element: any) => {
+          returning.payload.push(element.name);
+        });
+
+        //@ts-ignore
+        results_places.forEach((element: any) => {
+          returning.payload.push('@' + element.name);
+        });
+
+        //@ts-ignore
+        results_people.forEach((element: any) => {
+          returning.payload.push('p/' + element.name);
         });
 
         if(internal == 0)
@@ -769,7 +875,7 @@ export class GraphAdaptor {
 
         //@ts-ignore
         results.forEach((element: any) => {
-          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'mimetype': element.mimetype, 'path': element.path, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
 
         if(internal == 0)
@@ -806,7 +912,7 @@ export class GraphAdaptor {
 
         //@ts-ignore
         results.forEach((element: any) => {
-          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'mimetype': element.mimetype, 'path': element.path, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
 
         if(internal == 0)
@@ -844,7 +950,7 @@ export class GraphAdaptor {
 
         //@ts-ignore
         results.forEach((element: any) => {
-          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'mimetype': element.mimetype, 'path': element.path, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
 
         if(internal == 0)
@@ -881,7 +987,7 @@ export class GraphAdaptor {
 
         //@ts-ignore
         results.forEach((element: any) => {
-          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'mimetype': element.mimetype, 'path': element.path, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
 
         if(internal == 0)
@@ -918,7 +1024,7 @@ export class GraphAdaptor {
 
         //@ts-ignore
         results.forEach((element: any) => {
-          returning.payload.push({ 'media_type': element.media_type, 'filename': element.filename, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+          returning.payload.push({ 'mimetype': element.mimetype, 'path': element.path, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
         });
 
         if(internal == 0)

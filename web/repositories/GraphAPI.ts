@@ -28,7 +28,7 @@ const db = dbserver.use({
         return new Promise(async (resolve, reject) => {
             var returning : any[] = [];
             try{
-                await db
+                db
                 .query("SELECT FROM (TRAVERSE out('tagged_with') FROM (SELECT FROM #" + rid + ")) WHERE @class='tag'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .all()
                 //@ts-ignore
@@ -229,7 +229,7 @@ const db = dbserver.use({
                 .then(function (vertex) 
                 {
                     //@ts-ignore
-                    vertex.forEach( (element: any) => {
+                    vertex.forEach(async (element: any) => {
                         returning.push(element);
                     });
                     resolve(returning);
@@ -259,6 +259,39 @@ const db = dbserver.use({
                 .select()
                 .from("SELECT FROM (TRAVERSE out('tagged_with') FROM (SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid='" + uuid + "') MAXDEPTH 1) WHERE @class='collection')) WHERE @class='media')) WHERE @class='tag'"+ this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .group('@rid')
+                .all()
+                //@ts-ignore
+                .then(function (vertex) 
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                });
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Get a list of media that belongs to a given user & collection.
+     * 
+     * @param uuid UUID of account that media should belong to 
+     * @param collection_name Name of collection to search for
+     * @param query_params Accepts an array of query parameters to narrow results
+     * @param results_limit Limit number of returned results
+     * @param results_offset Offset to use for returned results. Useful for paging.
+     */
+    async get_collection_media(uuid:string, collection_name : string, query_params:any[], results_limit=-1, results_offset = 0){
+        return new Promise((resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid = '" + uuid +"') MAXDEPTH 1) WHERE @class='collection' AND name ='"+ collection_name + "')) WHERE @class='media'")
                 .all()
                 //@ts-ignore
                 .then(function (vertex) 

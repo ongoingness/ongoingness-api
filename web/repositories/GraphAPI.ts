@@ -501,12 +501,12 @@ const db = dbserver.use({
     }
 
     /**
+     * Get media that is related to a specified media item. Uses any edge type.
      * 
-     * @param rid Get media that is related to a specified media item. Uses any edge type.
-     * 
-     * @param query_params 
-     * @param results_limit 
-     * @param results_offset 
+     * @param media_id ID of media item to begin from
+     * @param query_params Array of query params to apply.
+     * @param results_limit Limit number of returned results. -1 returns all results.
+     * @param results_offset Offset for results. Useful for paging.
      */
     async get_related_media_all(media_id: string, query_params: any[], results_limit = -1, results_offset = 0){
         return new Promise((resolve, reject) => {

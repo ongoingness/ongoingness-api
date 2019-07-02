@@ -889,12 +889,21 @@ export class GraphAdaptor {
     })
   }
 
+  /**
+   * Get a list of 'related' media - uses any available linking edge.
+   * 
+   * @param media_id Record ID of the media item to begin searching from.
+   * @param params Array of search parameters to apply to the media items returned.
+   * @param results_limit Limit the number of results to return. -1 returns all results.
+   * @param results_offset Offset fro the results. Useful for paging.
+   * @param internal Flag. When 0, returns full API formatted results. Wehn 1, returns just results for use in other functions.
+   */
   async get_related_media_all(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0){
     return new Promise(async (resolve, reject) => {
       try {
         let api = new GraphAPI();
         var results = await api.get_related_media_all(media_id, params, results_limit, results_offset);
-        console.log(2);
+
         let returning: any = {};
         returning.code = 200;
         returning.message = "success";

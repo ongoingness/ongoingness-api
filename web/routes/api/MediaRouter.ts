@@ -254,11 +254,11 @@ export class MediaRouter
    */
   async getInferredLinkedMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     try {
-      //const userId: any = res.locals.user.id;
+      const userId: any = res.locals.user.id;
       const mediaId: string = req.query.mediaId;
       const numResults: number = req.query.numResults;
       let ga = new GraphAdaptor();
-      console.log(1);
+
       var results = await ga.get_related_media_all(mediaId, [], numResults, 0);
       return res.json(results);
     }

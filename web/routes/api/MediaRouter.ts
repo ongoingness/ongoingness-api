@@ -28,7 +28,7 @@ export class MediaRouter
 
   /**
    * Destroy media
-   * TODO: Implement
+   * 
    * @param {e.Request} req
    * @param {e.Response} res
    * @param {e.NextFunction} next
@@ -237,6 +237,29 @@ export class MediaRouter
       
       var results = await ga.get_collection_media(userId,collectionName,[],-1,0,1);
 
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
+  /**
+   * 
+   * Get linked media, based on inferred links from any tag, place, person or time.
+   * 
+   * @param req 
+   * @param res 
+   * @param next 
+   */
+  async getInferredLinkedMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {
+      //const userId: any = res.locals.user.id;
+      const mediaId: string = req.query.mediaId;
+      const numResults: number = req.query.numResults;
+      let ga = new GraphAdaptor();
+      console.log(1);
+      var results = await ga.get_related_media_all(mediaId, [], numResults, 0);
       return res.json(results);
     }
     catch(e){
@@ -494,6 +517,7 @@ export class MediaRouter
     this.addRoute('/links', HttpMethods.POST, this.storeLink);
     this.addRoute('/request', HttpMethods.GET, this.getPresent);
     this.addRoute('/collectionMedia', HttpMethods.GET, this.getCollectionMedia);
+    this.addRoute('/linkedMediaAll', HttpMethods.GET, this.getInferredLinkedMedia);
     this.addDefaultRoutes();
   }
 

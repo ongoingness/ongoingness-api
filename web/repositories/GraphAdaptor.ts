@@ -889,6 +889,35 @@ export class GraphAdaptor {
     })
   }
 
+  async get_related_media_all(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0){
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        var results = await api.get_related_media_all(media_id, params, results_limit, results_offset);
+        console.log(2);
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+        
+        //@ts-ignore
+        for(let element of results)
+        {
+          returning.payload.push( {'mimetype': element.mimetype, 'path': element.path, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'] });
+        }
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch(e) {
+        reject({code: 500, message: e, errors: true, payload: []});
+      }
+    })
+  }
+
   /**
    * Get a list of 'related' media - with links inferred by having tags in common.
    * 

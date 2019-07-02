@@ -467,9 +467,9 @@ const db = dbserver.use({
     }
 
     /**
-     * Get a list of time objects that belong to a given user.
+     * Get media that is related to a specified media item. Specifically uses the 'related to' edge.
      * 
-     * @param uuid UUID of account that media should belong to 
+     * @param media_id ID of media to begin from
      * @param query_params Accepts an array of query parameters to narrow results
      * @param results_limit Limit number of returned results
      * @param results_offset Offset to use for returned results. Useful for paging.
@@ -498,6 +498,38 @@ const db = dbserver.use({
                 reject(e);
             }
         });
+    }
+
+    /**
+     * 
+     * @param rid Get media that is related to a specified media item. Uses any edge type.
+     * 
+     * @param query_params 
+     * @param results_limit 
+     * @param results_offset 
+     */
+    async get_related_media_all(media_id: string, query_params: any[], results_limit = -1, results_offset = 0){
+        return new Promise((resolve, reject) => {
+            var returning : any[] = [];
+            try{
+                db
+                .query("SELECT FROM (TRAVERSE * FROM #" + media_id + ") WHERE @class = 'media' AND @rid <> #" + media_id)
+                .all()
+                //@ts-ignore
+                .then(function (vertex)
+                {
+                    //@ts-ignore
+                    vertex.forEach( (element: any) => {
+                        returning.push(element);
+                    });
+                    resolve(returning);
+                })
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        })
     }
 
     /**

@@ -513,7 +513,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE * FROM #" + media_id + " MAXDEPTH 4 WHILE @class <> 'HAS_MEDIA' AND @class <> 'collection' LIMIT -1) WHERE @class = 'media' AND @rid <> #" + media_id + " LIMIT " + results_limit)
+                .query("SELECT FROM (TRAVERSE * FROM #" + media_id + ") WHERE @class = 'media' AND @rid <> #" + media_id)
                 .all()
                 //@ts-ignore
                 .then(function (vertex)
@@ -747,6 +747,110 @@ const db = dbserver.use({
             }
             catch(e){
                 reject(e);
+            }
+        });
+    }
+
+    /**
+     * Returns the number of tags in common between two media items, based on @rid of these media
+     * 
+     * @param id1 Specify the @rid of the media item 1
+     * @param id2 Specify the @rid of the media item 2
+     * 
+     */
+    async num_tags_in_common(id1: string, id2: string){
+        return new Promise((resolve, reject) => {
+            var returning : number;
+            try{
+                db
+                .query("select intersect(out('tagged_with').name) as number_in_common from media where @rid in ['" + id1 + "', '" + id2 + "']")
+                .all()
+                //@ts-ignore
+                .then(async function (vertex)
+                {
+                    resolve(vertex[0].number_in_common.length);
+                });
+            }
+            catch(e){
+                reject(e)
+            }
+        });
+    }
+
+    /**
+     * Returns the number of people in common between two media items, based on @rid of these media
+     * 
+     * @param id1 Specify the @rid of the media item 1
+     * @param id2 Specify the @rid of the media item 2
+     * 
+     */
+    async num_people_in_common(id1: string, id2: string){
+        return new Promise((resolve, reject) => {
+            var returning : number;
+            try{
+                db
+                .query("select intersect(out('features_person').name) as number_in_common from media where @rid in ['" + id1 + "', '" + id2 + "']")
+                .all()
+                //@ts-ignore
+                .then(async function (vertex)
+                {
+                    resolve(vertex[0].number_in_common.length);
+                });
+            }
+            catch(e){
+                reject(e)
+            }
+        });
+    }
+
+    /**
+     * Returns the number of tags in common between two media items, based on @rid of these media
+     * 
+     * @param id1 Specify the @rid of the media item 1
+     * @param id2 Specify the @rid of the media item 2
+     * 
+     */
+    async num_times_in_common(id1: string, id2: string){
+        return new Promise((resolve, reject) => {
+            var returning : number;
+            try{
+                db
+                .query("select intersect(out('has_time').name) as number_in_common from media where @rid in ['" + id1 + "', '" + id2 + "']")
+                .all()
+                //@ts-ignore
+                .then(async function (vertex)
+                {
+                    resolve(vertex[0].number_in_common.length);
+                });
+            }
+            catch(e){
+                reject(e)
+            }
+        });
+    }
+
+    /**
+     * Returns the number of places in common between two media items, based on @rid of these media
+     * 
+     * @param id1 Specify the @rid of the media item 1
+     * @param id2 Specify the @rid of the media item 2
+     * 
+     */
+    async num_places_in_common(id1: string, id2: string){
+        return new Promise((resolve, reject) => {
+            var returning : number;
+            try{
+                db
+                .query("select intersect(out('features_place').name) as number_in_common from media where @rid in ['" + id1 + "', '" + id2 + "']")
+                .all()
+                //@ts-ignore
+                .then(async function (vertex)
+                {
+                    resolve(vertex[0].number_in_common.length);
+                });
+            }
+            catch(e){
+                reject(e)
             }
         });
     }

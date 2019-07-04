@@ -928,6 +928,72 @@ export class GraphAdaptor {
   }
 
   /**
+   * Get a list of 'related' media - uses any available linking edge.
+   * 
+   * @param media_id Record ID of the media item to begin searching from.
+   * @param params Array of search parameters to apply to the media items returned.
+   * @param results_limit Limit the number of results to return. -1 returns all results.
+   * @param results_offset Offset fro the results. Useful for paging.
+   * @param internal Flag. When 0, returns full API formatted results. Wehn 1, returns just results for use in other functions.
+   */
+  async get_related_media_all_weighted(media_id: string, params: any[], results_limit: number, results_offset = 0, internal = 0, tag_weight: number, people_weight: number, places_weight: number, times_weight: number){
+    return new Promise(async (resolve, reject) => {
+      try {
+        let api = new GraphAPI();
+        var results = await api.get_related_media_all(media_id, params, results_limit, results_offset);
+
+        let returning: any = {};
+        returning.code = 200;
+        returning.message = "success";
+        returning.errors = 'false';
+        returning.payload = [];
+        
+        //@ts-ignore
+        for(let element of results)
+        {
+          let num_tags_in_common = await this.get_num_tags_between_vertexes(media_id, element['@rid']['cluster'] + ":" + element['@rid']['position']);
+          //@ts-ignore
+          let tag_weighted : number = num_tags_in_common * tag_weight;
+          let num_people_in_common = await this.get_num_people_between_vertexes(media_id, element['@rid']['cluster'] + ":" + element['@rid']['position']);
+          //@ts-ignore
+          let people_weighted : number = num_people_in_common * people_weight;
+          let num_places_in_common = await this.get_num_places_between_vertexes(media_id, element['@rid']['cluster'] + ":" + element['@rid']['position']);
+          //@ts-ignore
+          let places_weighted : number = num_places_in_common * places_weight;
+          let num_times_in_common = await this.get_num_times_between_vertexes(media_id, element['@rid']['cluster'] + ":" + element['@rid']['position']);
+          //@ts-ignore
+          let times_weighted : number = num_times_in_common * times_weight;
+
+          //@ts-ignore
+          let total_links_count = num_people_in_common + num_places_in_common + num_tags_in_common + num_times_in_common;
+          //@ts-ignore
+          let total_links_weighted = tag_weighted + people_weighted + places_weighted + times_weighted;
+
+          if(total_links_count > 0)
+            returning.payload.push( {'mimetype': element.mimetype, 'path': element.path, 'id': element['@rid']['cluster'] + ":" + element['@rid']['position'], 'num_tags' : num_tags_in_common, 'num_people' : num_people_in_common, 'num_places' : num_places_in_common, 'num_num_times' : num_times_in_common, 'total_common_links' : total_links_count, 'total_weighted_common_links' : total_links_weighted});
+        }
+
+        //@ts-ignore
+        returning.payload = returning.payload.sort(function(a, b) {
+          if (a.total_weighted_common_links > b.total_weighted_common_links)
+            return -1;
+          if (a.total_weighted_common_links < b.total_weighted_common_links)
+            return 1;
+          return 0;
+        });
+
+        if(internal == 0)
+          resolve(returning);
+        else
+          resolve(returning.payload);
+      }
+      catch(e) {
+        reject({code: 500, message: e, errors: true, payload: []});
+      }
+    })
+  }
+
+  /**
    * Get a list of 'related' media - with links inferred by having tags in common.
    * 
    * @param media_id Record ID of the media item to begin searching from
@@ -1085,6 +1151,58 @@ export class GraphAdaptor {
       }
       catch (e) {
         reject({code: 500, message: e, errors : true, payload: []});
+      }
+    })
+  }
+
+  async get_num_tags_between_vertexes(id1: string, id2: string){
+    return new Promise(async (resolve, reject) => {
+      try{
+        let api = new GraphAPI();
+        let num = api.num_tags_in_common(id1,id2);
+        resolve(num);
+      }
+      catch (e) {
+        reject ({code: 500, message: e, errors: true, payload: []});
+      }
+    })
+  }
+
+  async get_num_places_between_vertexes(id1: string, id2: string){
+    return new Promise(async (resolve, reject) => {
+      try{
+        let api = new GraphAPI();
+        let num = api.num_places_in_common(id1,id2);
+        resolve(num);
+      }
+      catch (e) {
+        reject ({code: 500, message: e, errors: true, payload: []});
+      }
+    })
+  }
+
+  async get_num_people_between_vertexes(id1: string, id2: string){
+    return new Promise(async (resolve, reject) => {
+      try{
+        let api = new GraphAPI();
+        let num = api.num_people_in_common(id1,id2);
+        resolve(num);
+      }
+      catch (e) {
+        reject ({code: 500, message: e, errors: true, payload: []});
+      }
+    })
+  }
+
+  async get_num_times_between_vertexes(id1: string, id2: string){
+    return new Promise(async (resolve, reject) => {
+      try{
+        let api = new GraphAPI();
+        let num = api.num_times_in_common(id1,id2);
+        resolve(num);
+      }
+      catch (e) {
+        reject ({code: 500, message: e, errors: true, payload: []});
       }
     })
   }

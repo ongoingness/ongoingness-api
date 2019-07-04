@@ -268,6 +268,57 @@ export class MediaRouter
   }
 
   /**
+   * 
+   * Get linked media, based on inferred links from any tag, place, person or time. Weights value of results, 
+   * and splits results across 
+   * 
+   * @param req 
+   * @param res 
+   * @param next 
+   */
+  async getInferredLinkedMedia_Weighted(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {
+      const userId: any = res.locals.user.id;
+      const mediaId: string = req.query.mediaId;
+      let ga = new GraphAdaptor();
+
+      let results : any = [];
+      //Weights for individual types (tags,people etc) can be set, to prioritise one kind of link over another. All set to 1.0 for now.
+      results = await ga.get_related_media_all_weighted(mediaId, [], -1, 1,0,1.0,1.0,1.0,1.0);
+      let max = results.payload.length;
+      let temp_payload : any = [];
+
+      //This needs refining, currently expects to return 5 images based on the specified image ID
+      if(max > 5)
+      {
+        //Will pick one image from the lower 20% 
+        let rand1 = Math.floor((Math.random()*((max*0.2)-1+1)+1));
+
+        //Will pick two images from the middle 40 percent
+        let rand2 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
+        let rand3 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
+
+        //Will pick two images from the 'top' 40 percent.
+        let rand4 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
+        let rand5 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
+
+        temp_payload.push(results.payload[rand1]);
+        temp_payload.push(results.payload[rand2]);
+        temp_payload.push(results.payload[rand3]);
+        temp_payload.push(results.payload[rand4]);
+        temp_payload.push(results.payload[rand5]);
+
+        results.payload = temp_payload;
+      }
+
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
+  /**
    * @api {post} /api/media/link Store a link between media.
    * @apiGroup Media
    * @apiPermission authenticated
@@ -518,6 +569,7 @@ export class MediaRouter
     this.addRoute('/request', HttpMethods.GET, this.getPresent);
     this.addRoute('/collectionMedia', HttpMethods.GET, this.getCollectionMedia);
     this.addRoute('/linkedMediaAll', HttpMethods.GET, this.getInferredLinkedMedia);
+    this.addRoute('/linkedMediaAll_Weighted', HttpMethods.GET, this.getInferredLinkedMedia_Weighted);
     this.addDefaultRoutes();
   }
 

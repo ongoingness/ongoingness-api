@@ -513,7 +513,7 @@ const db = dbserver.use({
             var returning : any[] = [];
             try{
                 db
-                .query("SELECT FROM (TRAVERSE * FROM #" + media_id + ") WHERE @class = 'media' AND @rid <> #" + media_id)
+                .query("SELECT FROM (TRAVERSE * FROM #" + media_id + " MAXDEPTH 4 WHILE @class <> 'HAS_MEDIA' AND @class <> 'collection' LIMIT -1) WHERE @class = 'media' AND @rid <> #" + media_id + " LIMIT -1 ")
                 .all()
                 //@ts-ignore
                 .then(function (vertex)

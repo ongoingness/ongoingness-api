@@ -534,6 +534,7 @@ export class MediaRouter
           people_array.push(element.trim());
         }else{
           //Tag
+          element = element.replace('#', '');
           tags_array.push(element.trim());
         }
       }));

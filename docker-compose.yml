@@ -53,10 +53,10 @@ services:
     environment:
       ORIENTDB_ROOT_PASSWORD: ${ORIENTDB_ROOT_PASSWORD}
     volumes:
-      - data:/opt/orientdb/config
-      - data:/opt/orientdb/databases
-      - data:/opt/orientdb/backup
+      - graph_data:/orientdb/config
+      - graph_data:/orientdb/databases
+      - graph_data:/orientdb/backup
 
-  
 volumes:
   data:
+  graph_data:

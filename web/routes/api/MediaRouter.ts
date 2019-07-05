@@ -520,22 +520,22 @@ export class MediaRouter
       var time_array: string[] = [];
 
       emotions.forEach( await (async(element : string) => {
-        if(element.includes('@')){
+        if(element.includes('p/')){
           //Place
-          element = element.replace('@','');
-          places_array.push(element.trim());
+          element = element.replace('p/','');
+          places_array.push(element.trim().toLowerCase());
         }else if(element.includes('t/')){
           //Time
           element = element.replace('t/','');
-          time_array.push(element.trim());
-        }else if(element.includes('p/')){
+          time_array.push(element.trim().toLowerCase());
+        }else if(element.includes('@')){
           //People
-          element = element.replace('p/','');
-          people_array.push(element.trim());
+          element = element.replace('@','');
+          people_array.push(element.trim().toLowerCase());
         }else{
           //Tag
           element = element.replace('#', '');
-          tags_array.push(element.trim());
+          tags_array.push(element.trim().toLowerCase());
         }
       }));
 
@@ -561,6 +561,32 @@ export class MediaRouter
     return next(new Error('501'));
   }
 
+  async getTagSuggestions(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {
+      const userId: any = res.locals.user.id;
+      const term = req.body.term
+
+      console.log(term)
+
+      let ga = new GraphAdaptor();
+
+      let results
+      if(term.includes('t/')) {
+        results = await ga.get_account_times(userId, [["value like '%" + term.replace('t/','') + "%'"]], 5)
+      } else if(term.includes('@')) {
+        results = await ga.get_account_people(userId, [["name like '%" + term.replace('@','') + "%'"]], 5)
+      } else if(term.includes('p/')) {
+        results = await ga.get_account_places(userId, [["name like '%" + term.replace('p/','') + "%'"]], 5)
+      } else {
+        results = await ga.get_account_tags(userId, ["name like '%" + term + "%'"], 5)
+      }
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
   constructor() {
     super();
     this.setFileUploadHandler(upload.single('file'));
@@ -571,6 +597,8 @@ export class MediaRouter
     this.addRoute('/collectionMedia', HttpMethods.GET, this.getCollectionMedia);
     this.addRoute('/linkedMediaAll', HttpMethods.GET, this.getInferredLinkedMedia);
     this.addRoute('/linkedMediaAll_Weighted', HttpMethods.GET, this.getInferredLinkedMedia_Weighted);
+    this.addRoute('/tags', HttpMethods.POST, this.getTagSuggestions);
+
     this.addDefaultRoutes();
   }
 

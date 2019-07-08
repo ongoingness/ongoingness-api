@@ -8,6 +8,8 @@ import CryptoHelper from '../../CryptoHelper';
 import { IResourceRepository } from '../../repositories/IResourceRepository';
 import RepositoryFactory from '../../repositories/RepositoryFactory';
 import * as jwt from 'jsonwebtoken';
+import { GraphAdaptor } from '../../repositories/GraphAdaptor';
+
 
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 const authController: AuthController = new AuthController();
@@ -175,6 +177,11 @@ export class AuthRouter extends BaseRouter {
     const token = authController.generateToken(user);
 
     const response = new Reply(200, 'success', false, { user, token });
+
+    //Pass ID of user to graph api
+    let ga = new GraphAdaptor();
+    await ga.create_account(user._id);
+
     return res.json(response);
   }
 

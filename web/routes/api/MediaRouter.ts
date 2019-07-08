@@ -13,11 +13,14 @@ import RepositoryFactory from '../../repositories/RepositoryFactory';
 import IResourceRouter from '../IResourceRouter';
 import { BaseRouter } from '../BaseRouter';
 import MediaController from '../../controllers/MediaController';
+import { GraphAdaptor } from '../../repositories/GraphAdaptor';
+import ResourceRouterFactory from '../ResourceRouterFactory';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaRepository: MediaRepository = new MediaRepository();
 const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
+const mime = require('mime-types');
 
 export class MediaRouter
   extends BaseRouter
@@ -25,42 +28,23 @@ export class MediaRouter
 
   /**
    * Destroy media
-   * TODO: Implement
+   * 
    * @param {e.Request} req
    * @param {e.Response} res
    * @param {e.NextFunction} next
    * @returns {Promise<void | e.Response> | void}
    */
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    const mediaId: Schema.Types.ObjectId = req.params.id;
-    const mediaController: MediaController = new MediaController();
-    let user: IUser;
-    let media: IMedia;
+    const mediaId: any = req.params.id;
 
-    if (res.locals.error) {
-      return next(new Error(`${res.locals.error}`));
-    }
-
-    try {
-      user = await userRepository.get(res.locals.user.id);
-      media = await user.getMedia(mediaId);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
-    if (!media) {
-      return next(new Error('404'));
-    }
-
-    try {
-      await mediaController.deleteMedia(media);
-      await mediaRepository.destroy(media._id);
-    } catch (e) {
-      e.message = '500';
-      return next(e);
-    }
-
+   try{
+     let ga = new GraphAdaptor();
+     await ga.delete_media(mediaId);
+   }
+   catch(e)
+   {
+     return(e);
+   }
     return res.json(new Reply(200, 'success', false, null));
   }
 
@@ -85,7 +69,7 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async show(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    const mediaId: Schema.Types.ObjectId = req.params.id;
+    const mediaId: any = req.params.id;
     const rsize: string = req.query.size;
     let size: number;
     const defaultSize: number = 600;
@@ -93,7 +77,7 @@ export class MediaRouter
     const minSize: number = 100;
     const mediaController: MediaController = new MediaController();
     let user: IUser;
-    let media: IMedia;
+    let media: any;
 
     // Sanitize size.
     if (rsize) {
@@ -113,8 +97,9 @@ export class MediaRouter
     }
 
     try {
-      user = await userRepository.get(res.locals.user.id);
-      media = await user.getMedia(mediaId);
+      let ga = new GraphAdaptor();
+      media = await ga.get_media_item(res.locals.user.id,mediaId,1);
+
     } catch (e) {
       e.message = '500';
       return next(e);
@@ -125,6 +110,7 @@ export class MediaRouter
     }
 
     let data: any;
+
     try {
       data = await mediaController.getMediaFromS3(media, size);
     } catch (e) {
@@ -241,6 +227,124 @@ export class MediaRouter
   }
 
   /**
+   * Returns media from the user's specified collection.
+   */
+  async getCollectionMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {
+      const userId: any = res.locals.user.id;
+      const collectionName : string = req.query.collection;
+      let ga = new GraphAdaptor();
+      
+      var results = await ga.get_collection_media(userId,collectionName,[],-1,0,1);
+
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
+  /**
+   * 
+   * Get linked media, based on inferred links from any tag, place, person or time.
+   * 
+   * @param req 
+   * @param res 
+   * @param next 
+   */
+  async getInferredLinkedMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {      
+      const userId: any = res.locals.user.id;
+      const mediaId: string = req.query.mediaId;
+      const numResults: number = req.query.numResults;
+      let ga = new GraphAdaptor();
+
+      var results = await ga.get_related_media_all(mediaId, [], numResults, 0);
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
+  /**
+   * 
+   * Get linked media, based on inferred links from any tag, place, person or time. Weights value of results, 
+   * and splits results across 
+   * 
+   * @param req 
+   * @param res 
+   * @param next 
+   */
+  async getInferredLinkedMedia_Weighted(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {      
+      const userId: any = res.locals.user.id;
+      let mediaId: string = req.query.mediaId;
+      const drawIfNew: number = req.query.drawIfNew
+
+      let ga = new GraphAdaptor();
+
+      let draw: boolean = true
+
+      if(drawIfNew == 1) {
+        var presentMedia = await ga.get_collection_media(userId, "present", [], -1)
+        var payload = (presentMedia as any).payload
+
+        if(payload.length > 0) {
+          if(payload[payload.length -1]._id == mediaId) {
+            draw = false
+          } else {
+            draw = true
+            mediaId = payload[payload.length -1]._id 
+          }
+        } else 
+          draw = false
+        console.log(`lastest in db: ${payload[payload.length -1]._id} lastest on refind: ${mediaId} draw new? ${draw}`)
+      }
+     
+      let results : any = [];
+
+      if(draw) {
+        //Weights for individual types (tags,people etc) can be set, to prioritise one kind of link over another. All set to 1.0 for now.
+        results = await ga.get_related_media_all_weighted(mediaId, [], -1, 1,0,1.0,1.0,1.0,1.0);
+        let max = results.payload.length;
+        let temp_payload : any = [];
+
+        //This needs refining, currently expects to return 5 images based on the specified image ID
+        if(max > 5)
+        {
+          //Will pick one image from the lower 20% 
+          let rand1 = Math.floor((Math.random()*((max*0.2)-1+1)+1));
+
+          //Will pick two images from the middle 40 percent
+          let rand2 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
+          let rand3 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
+
+          //Will pick two images from the 'top' 40 percent.
+          let rand4 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
+          let rand5 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
+
+          let media = await ga.get_media_item(userId, mediaId) as any
+
+          temp_payload.push(media.payload)
+          temp_payload.push(results.payload[rand1]);
+          temp_payload.push(results.payload[rand2]);
+          temp_payload.push(results.payload[rand3]);
+          temp_payload.push(results.payload[rand4]);
+          temp_payload.push(results.payload[rand5]);
+
+          results.payload = temp_payload;
+        }
+      }
+
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
+  /**
    * @api {post} /api/media/link Store a link between media.
    * @apiGroup Media
    * @apiPermission authenticated
@@ -340,15 +444,16 @@ export class MediaRouter
     // return next(new Error('501'));
 
     let user: IUser;
+    let ga = new GraphAdaptor();
     try {
       user = await userRepository.get(res.locals.user.id);
     } catch (e) {
       e.message = '500';
     }
 
-    let media: IMedia[];
+    let media : any = [];
     try {
-      media = await user.getAllMedia();
+      media = await ga.get_account_media(user._id,[],-1,0,1);
     } catch (e) {
       e.message = '500';
     }
@@ -397,15 +502,18 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    req.setTimeout(500000, () => {next(new Error("Timeout"))});
+
     const mimetype = req.file.mimetype;
     const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
     const mediaController: MediaController = new MediaController();
     let user: IUser;
     let imagePath: string;
-    let media: IMedia;
+    let media: any;
+
     const emotionArray: string = req.headers['emotions'] as string;
     const emotions: string[] = emotionArray === undefined ? [] : emotionArray.split(',') || [];
-
+    
     if (res.locals.error) {
       return next(new Error(`${res.locals.error}`));
     }
@@ -422,25 +530,50 @@ export class MediaRouter
     }
 
     try {
+
+      //This stores the actual media
       imagePath = await mediaController.storeMedia(
         req.file.path,
         req.file.originalname,
         ext,
         user._id,
       );
-      media = await mediaRepository.store({
-        mimetype,
-        user,
-        emotions,
-        path: imagePath,
-        era: <string>req.headers['era'] || 'past',
-        locket: <string>req.headers['locket'] || 'none',
-      });
-    } catch (e) {
+
+      //Group 'emotions' into various tag groups
+      var tags_array : string[] = [];
+      var people_array : string[] = [];
+      var places_array : string[] = [];
+      var time_array: string[] = [];
+
+      emotions.forEach( await (async(element : string) => {
+        if(element.includes('p/')){
+          //Place
+          element = element.replace('p/','');
+          places_array.push(element.trim().toLowerCase());
+        }else if(element.includes('t/')){
+          //Time
+          element = element.replace('t/','');
+          time_array.push(element.trim().toLowerCase());
+        }else if(element.includes('@')){
+          //People
+          element = element.replace('@','');
+          people_array.push(element.trim().toLowerCase());
+        }else{
+          //Tag
+          element = element.replace('#', '');
+          tags_array.push(element.trim().toLowerCase());
+        }
+      }));
+
+     let ga = new GraphAdaptor();
+     media = await ga.create_media_object(user._id,"'" + imagePath + "'","'" + mimetype + "'",req.headers['links'],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
+    } catch (e) {       
       console.error(e);
       e.message = '500';
       return next(e);
     }
+
+    console.log(media)
 
     return res.json(new Reply(200, 'success', false, media));
   }
@@ -456,6 +589,30 @@ export class MediaRouter
     return next(new Error('501'));
   }
 
+  async getTagSuggestions(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {
+      const userId: any = res.locals.user.id;
+      const term = req.body.term
+
+      let ga = new GraphAdaptor();
+
+      let results
+      if(term.includes('t/')) {
+        results = await ga.get_account_times(userId, [["value like '%" + term.replace('t/','') + "%'"]], 5)
+      } else if(term.includes('@')) {
+        results = await ga.get_account_people(userId, [["name like '%" + term.replace('@','') + "%'"]], 5)
+      } else if(term.includes('p/')) {
+        results = await ga.get_account_places(userId, [["name like '%" + term.replace('p/','') + "%'"]], 5)
+      } else {
+        results = await ga.get_account_tags(userId, ["name like '%" + term + "%'"], 5)
+      }
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
   constructor() {
     super();
     this.setFileUploadHandler(upload.single('file'));
@@ -463,6 +620,11 @@ export class MediaRouter
     this.addRoute('/links/:id', HttpMethods.GET, this.getLinks);
     this.addRoute('/links', HttpMethods.POST, this.storeLink);
     this.addRoute('/request', HttpMethods.GET, this.getPresent);
+    this.addRoute('/collectionMedia', HttpMethods.GET, this.getCollectionMedia);
+    this.addRoute('/linkedMediaAll', HttpMethods.GET, this.getInferredLinkedMedia);
+    this.addRoute('/linkedMediaAll_Weighted', HttpMethods.GET, this.getInferredLinkedMedia_Weighted);
+    this.addRoute('/tags', HttpMethods.POST, this.getTagSuggestions);
+
     this.addDefaultRoutes();
   }
 

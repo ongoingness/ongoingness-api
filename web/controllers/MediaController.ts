@@ -11,9 +11,44 @@ import { promisify } from 'util';
 const Jimp = require('jimp');
 const unlink = promisify(fs.unlink);
 
+const gifify = require('gifify');
+const mime = require('mime-types');
+const { GifUtil, GifCodec } = require('gifwrap');
+
 export default class MediaController {
   private maxImageSize: number = 600;
   private mediaRepository = new MediaRepository();
+
+  /**
+   * Converts a video to a gif using Gifify
+   * 
+   * @param {string} videoPath 
+   * @param {string} filename 
+   */
+  async convertVideoToGIF(videoPath: string, filename: string) : Promise<string> {
+    const outputPath: string = path.join(__dirname, `../../../uploads/${filename}`);
+    var gif = fs.createWriteStream(outputPath);
+
+    //TODO remove from and to
+
+    var options = {
+      resize: `${this.maxImageSize}:${this.maxImageSize}`,
+      from: 30,
+      to: 40,
+      colors: 255,
+      compress: 0,
+    };
+
+    gifify(videoPath, options).pipe(gif);
+    return await new Promise<string>( async (resolve, reject) => {
+      gif.on('close', () => {
+        resolve(outputPath);
+      }); 
+      gif.on('error', (e: any) => {
+        reject(e);
+      });
+    });
+  }
 
   /**
    * Resize an image using JIMP
@@ -25,43 +60,52 @@ export default class MediaController {
    */
   resizeImage(image: any, mimetype: string, size: number): Promise<void> {
     return new Promise<any>(async (resolve, reject) => {
-      // read in an image.
-      Jimp.read(image)
-        .then((img: any) => {
-          // get image orientation, height, and width
-          const width = img.bitmap.width;
-          const height = img.bitmap.height;
-          const isSquare: boolean = width === height;
-          const isPortrait: boolean = height > width && !isSquare;
-          let widthSize: number = this.maxImageSize;
-          let heightSize: number = this.maxImageSize;
-
-          // auto size an edge depending on orientation.
-          if (isPortrait && !isSquare) {
-            widthSize = Jimp.AUTO;
-          } else {
-            heightSize = Jimp.AUTO;
-          }
-
-          // resize, return image buffer.
-          img
-            .resize(heightSize, widthSize)
-            .cover(
-              size,
-              size,
-              isPortrait ? Jimp.VERTICAL_ALIGN_MIDDLE : Jimp.HORIZONTAL_ALIGN_CENTER,
-            ) // crop image from the centre
-            .getBuffer(mimetype, (err: Error, buffer: any) => {
-              if (err) {
-                console.error(err);
-                reject(err);
-              }
-              resolve(buffer);
-            }); // resize
-        })
-        .catch((err: Error) => {
-          reject(err);
+      if(mimetype == "image/gif") {
+        console.log("resize gif");
+        //read in an gif
+        GifUtil.read(image).then( (inputGif: any) => {
+          resolve(inputGif.buffer);     
         });
+      } else {
+        console.log("resize image");
+        // read in an image.
+        Jimp.read(image)
+          .then((img: any) => {
+            // get image orientation, height, and width
+            const width = img.bitmap.width;
+            const height = img.bitmap.height;
+            const isSquare: boolean = width === height;
+            const isPortrait: boolean = height > width && !isSquare;
+            let widthSize: number = this.maxImageSize;
+            let heightSize: number = this.maxImageSize;
+
+            // auto size an edge depending on orientation.
+            if (isPortrait && !isSquare) {
+              widthSize = Jimp.AUTO;
+            } else {
+              heightSize = Jimp.AUTO;
+            }
+
+            // resize, return image buffer.
+            img
+              .resize(heightSize, widthSize)
+              .cover(
+                size,
+                size,
+                isPortrait ? Jimp.VERTICAL_ALIGN_MIDDLE : Jimp.HORIZONTAL_ALIGN_CENTER,
+              ) // crop image from the centre
+              .getBuffer(mimetype, (err: Error, buffer: any) => {
+                if (err) {
+                  console.error(err);
+                  reject(err);
+                }
+                resolve(buffer);
+              }); // resize
+          })
+          .catch((err: Error) => {
+            reject(err);
+          });
+      }
     });
   }
 
@@ -94,7 +138,7 @@ export default class MediaController {
     return new Promise<string>(((resolve, reject) => {
       s3.upload(params).promise()
         .then((data: any) => {
-          resolve(data.key);
+          resolve(data.Key);
         })
         .catch((e) => {
           reject(e);
@@ -117,16 +161,31 @@ export default class MediaController {
   ): Promise<string> {
     // get a date string in the format YYYYMMDDHHMMSS
     const now: string = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
-    const newFileName: string = `${userId}_${now}.${ext}`;
-    const supportedFileTypes: string[] = [
-      'jpeg',
-      'jpg',
-      'png',
-    ];
+    var type: string = mime.lookup(fileName);
+    let newFileName: string;
+    let newStorePath : string;
 
-    if (supportedFileTypes.indexOf(ext) < 0) throw new Error('400');
+    if(type.includes("image")) {
 
-    return await this.uploadMedia(newFileName, fs.readFileSync(storedPath));
+      console.log("its a image");
+      newFileName = `${userId}_${now}.${ext}`
+      newStorePath = storedPath;
+    
+    } else if (type.includes("video")) {
+      
+      console.log("its a video");
+      newFileName = `${userId}_${now}.gif`;
+      await this.convertVideoToGIF(storedPath, newFileName).then((path: any) => {
+        newStorePath = path;
+      }).catch((e: any) => {
+        throw new Error(`500`);
+      });
+    
+    } else {
+      throw new Error('400');
+    }
+
+    return await this.uploadMedia(newFileName, fs.readFileSync(newStorePath));
   }
 
   /**
@@ -222,7 +281,7 @@ export default class MediaController {
    * @param {number} size, default 600
    * @returns {Promise<any>}
    */
-  async getMediaFromS3(media: IMedia, size: number = this.maxImageSize): Promise<any> {
+  async getMediaFromS3(media: any, size: number = this.maxImageSize): Promise<any> {
     // Check if running locally, access local files instead of S3 bucket.
     let image: any;
     const exists: boolean = media.sizes.indexOf(size) > -1;
@@ -230,6 +289,7 @@ export default class MediaController {
       !exists ? media.path : `${media.path.split('.')[0]}-${size}.${media.path.split('.')[1]}`;
 
     try {
+
       image = await this.fetchImage(key);
       if (!exists) {
         image = await this.resizeImage(image, media.mimetype, size);
@@ -238,7 +298,7 @@ export default class MediaController {
           image,
         );
         media.sizes.push(size);
-        await media.save();
+        //await media.save();
       }
     } catch (e) {
       console.error(e);

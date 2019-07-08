@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 dotenv.load();
 
 const dbserver = orientjs({
-    host: 'orientdb',
+    host: 'dig-mysql.ncl.ac.uk',
     port: 2424
     });
 

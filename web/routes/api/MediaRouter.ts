@@ -253,7 +253,7 @@ export class MediaRouter
    * @param next 
    */
   async getInferredLinkedMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    try {
+    try {      
       const userId: any = res.locals.user.id;
       const mediaId: string = req.query.mediaId;
       const numResults: number = req.query.numResults;
@@ -277,38 +277,64 @@ export class MediaRouter
    * @param next 
    */
   async getInferredLinkedMedia_Weighted(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    try {
+    try {      
       const userId: any = res.locals.user.id;
-      const mediaId: string = req.query.mediaId;
+      let mediaId: string = req.query.mediaId;
+      const drawIfNew: number = req.query.drawIfNew
+
       let ga = new GraphAdaptor();
 
+      let draw: boolean = true
+
+      if(drawIfNew == 1) {
+        var presentMedia = await ga.get_collection_media(userId, "present", [], -1)
+        var payload = (presentMedia as any).payload
+
+        if(payload.length > 0) {
+          if(payload[payload.length -1]._id == mediaId) {
+            draw = false
+          } else {
+            draw = true
+            mediaId = payload[payload.length -1]._id 
+          }
+        } else 
+          draw = false
+        console.log(`lastest in db: ${payload[payload.length -1]._id} lastest on refind: ${mediaId} draw new? ${draw}`)
+      }
+     
       let results : any = [];
-      //Weights for individual types (tags,people etc) can be set, to prioritise one kind of link over another. All set to 1.0 for now.
-      results = await ga.get_related_media_all_weighted(mediaId, [], -1, 1,0,1.0,1.0,1.0,1.0);
-      let max = results.payload.length;
-      let temp_payload : any = [];
 
-      //This needs refining, currently expects to return 5 images based on the specified image ID
-      if(max > 5)
-      {
-        //Will pick one image from the lower 20% 
-        let rand1 = Math.floor((Math.random()*((max*0.2)-1+1)+1));
+      if(draw) {
+        //Weights for individual types (tags,people etc) can be set, to prioritise one kind of link over another. All set to 1.0 for now.
+        results = await ga.get_related_media_all_weighted(mediaId, [], -1, 1,0,1.0,1.0,1.0,1.0);
+        let max = results.payload.length;
+        let temp_payload : any = [];
 
-        //Will pick two images from the middle 40 percent
-        let rand2 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
-        let rand3 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
+        //This needs refining, currently expects to return 5 images based on the specified image ID
+        if(max > 5)
+        {
+          //Will pick one image from the lower 20% 
+          let rand1 = Math.floor((Math.random()*((max*0.2)-1+1)+1));
 
-        //Will pick two images from the 'top' 40 percent.
-        let rand4 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
-        let rand5 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
+          //Will pick two images from the middle 40 percent
+          let rand2 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
+          let rand3 = Math.floor((Math.random()*((max*0.6)-(max*0.2)+1)+(max*0.2)));
 
-        temp_payload.push(results.payload[rand1]);
-        temp_payload.push(results.payload[rand2]);
-        temp_payload.push(results.payload[rand3]);
-        temp_payload.push(results.payload[rand4]);
-        temp_payload.push(results.payload[rand5]);
+          //Will pick two images from the 'top' 40 percent.
+          let rand4 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
+          let rand5 = Math.floor((Math.random()*((max)-(max*0.6)+1)+(max*0.6)));
 
-        results.payload = temp_payload;
+          let media = await ga.get_media_item(userId, mediaId) as any
+
+          temp_payload.push(media.payload)
+          temp_payload.push(results.payload[rand1]);
+          temp_payload.push(results.payload[rand2]);
+          temp_payload.push(results.payload[rand3]);
+          temp_payload.push(results.payload[rand4]);
+          temp_payload.push(results.payload[rand5]);
+
+          results.payload = temp_payload;
+        }
       }
 
       return res.json(results);
@@ -547,6 +573,8 @@ export class MediaRouter
       return next(e);
     }
 
+    console.log(media)
+
     return res.json(new Reply(200, 'success', false, media));
   }
 
@@ -565,8 +593,6 @@ export class MediaRouter
     try {
       const userId: any = res.locals.user.id;
       const term = req.body.term
-
-      console.log(term)
 
       let ga = new GraphAdaptor();
 

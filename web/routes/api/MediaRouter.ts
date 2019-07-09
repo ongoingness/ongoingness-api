@@ -286,28 +286,32 @@ export class MediaRouter
 
       let draw: boolean = true
 
-      if(drawIfNew == 1) {
-        var presentMedia = await ga.get_collection_media(userId, "present", [], -1)
-        var payload = (presentMedia as any).payload
+      var presentMedia = await ga.get_collection_media(userId, "present", [], -1)
+      var payload = (presentMedia as any).payload
+      if(payload.length == 0) draw = false
 
-        if(payload.length > 0) {
-          if(payload[payload.length -1]._id == mediaId) {
-            draw = false
-          } else {
-            draw = true
-            mediaId = payload[payload.length -1]._id 
-          }
-        } else 
+      if(draw) {
+        if(drawIfNew == 1 && payload[payload.length-1]._id == mediaId)
           draw = false
-        console.log(`lastest in db: ${payload[payload.length -1]._id} lastest on refind: ${mediaId} draw new? ${draw}`)
+        else if(drawIfNew == 0)
+          mediaId = payload[payload.length-1]._id
       }
-     
       let results : any = [];
 
       if(draw) {
         //Weights for individual types (tags,people etc) can be set, to prioritise one kind of link over another. All set to 1.0 for now.
         results = await ga.get_related_media_all_weighted(mediaId, [], -1, 1,0,1.0,1.0,1.0,1.0);
-        let max = results.payload.length;
+
+        //remove the images from the present collection
+        let past_results = []
+        for(var i = 0; i < results.payload.length; i++) {
+          let collection = await ga.get_media_collections(results.payload[i].id, null, -1, 0, 1) as any;
+          if(collection[0].name == 'past') {
+            past_results.push(results.payload[i]);
+          }
+        }
+ 
+        let max = past_results.length;
         let temp_payload : any = [];
 
         //This needs refining, currently expects to return 5 images based on the specified image ID
@@ -327,11 +331,11 @@ export class MediaRouter
           let media = await ga.get_media_item(userId, mediaId) as any
 
           temp_payload.push(media.payload)
-          temp_payload.push(results.payload[rand1]);
-          temp_payload.push(results.payload[rand2]);
-          temp_payload.push(results.payload[rand3]);
-          temp_payload.push(results.payload[rand4]);
-          temp_payload.push(results.payload[rand5]);
+          temp_payload.push(past_results[rand1]);
+          temp_payload.push(past_results[rand2]);
+          temp_payload.push(past_results[rand3]);
+          temp_payload.push(past_results[rand4]);
+          temp_payload.push(past_results[rand5]);
 
           results.payload = temp_payload;
         }

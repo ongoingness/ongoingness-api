@@ -596,7 +596,7 @@ export class MediaRouter
   async getTagSuggestions(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     try {
       const userId: any = res.locals.user.id;
-      const term = req.body.term
+      const term = req.query.term.toLowerCase();
 
       let ga = new GraphAdaptor();
 
@@ -617,6 +617,25 @@ export class MediaRouter
     }
   }
 
+  async getAllTags(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    try {
+      const userId: any = res.locals.user.id;
+      let ga = new GraphAdaptor();
+
+      let results = {
+        time:   ((await ga.get_account_times(userId, [], -1)) as any).payload ,
+        people: ((await ga.get_account_people(userId, [], -1)) as any).payload,
+        places: ((await ga.get_account_places(userId, [], -1)) as any).payload,
+        tags:   ((await ga.get_account_tags(userId, [], -1)) as any).payload
+      };
+      
+      return res.json(results);
+    }
+    catch(e){
+      return res.json(e);
+    }
+  }
+
   constructor() {
     super();
     this.setFileUploadHandler(upload.single('file'));
@@ -627,7 +646,8 @@ export class MediaRouter
     this.addRoute('/collectionMedia', HttpMethods.GET, this.getCollectionMedia);
     this.addRoute('/linkedMediaAll', HttpMethods.GET, this.getInferredLinkedMedia);
     this.addRoute('/linkedMediaAll_Weighted', HttpMethods.GET, this.getInferredLinkedMedia_Weighted);
-    this.addRoute('/tags', HttpMethods.POST, this.getTagSuggestions);
+    this.addRoute('/tags', HttpMethods.GET, this.getTagSuggestions);
+    this.addRoute('/tagsall', HttpMethods.GET, this.getAllTags);
 
     this.addDefaultRoutes();
   }

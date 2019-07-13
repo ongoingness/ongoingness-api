@@ -291,10 +291,15 @@ export class MediaRouter
       if(payload.length == 0) draw = false
 
       if(draw) {
-        if(drawIfNew == 1 && payload[payload.length-1]._id == mediaId)
-          draw = false
-        else if(drawIfNew == 0)
+        if(drawIfNew == 1 && payload[payload.length-1]._id != mediaId) {
           mediaId = payload[payload.length-1]._id
+        } else if(drawIfNew == 0) {
+          try {
+            await ga.get_media_item(userId, mediaId) as any
+          } catch(e) {
+            draw = false;
+          }   
+        }
       }
       let results : any = [];
 

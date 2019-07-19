@@ -22,9 +22,13 @@ const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
 const mime = require('mime-types');
 
+var previousAccess = new Map();
+
 export class MediaRouter
   extends BaseRouter
   implements IResourceRouter<IMedia> {
+
+    
 
   /**
    * Destroy media
@@ -253,7 +257,7 @@ export class MediaRouter
    * @param next 
    */
   async getInferredLinkedMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    try {      
+    try {
       const userId: any = res.locals.user.id;
       const mediaId: string = req.query.mediaId;
       const numResults: number = req.query.numResults;
@@ -278,6 +282,7 @@ export class MediaRouter
    */
   async getInferredLinkedMedia_Weighted(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     try {      
+      
       const userId: any = res.locals.user.id;
       let mediaId: string = req.query.mediaId;
       const drawIfNew: number = req.query.drawIfNew
@@ -285,6 +290,21 @@ export class MediaRouter
       let ga = new GraphAdaptor();
 
       let draw: boolean = true
+
+
+      var access = previousAccess.get(res.locals.user.id);
+      var currentTime = Date.now()
+      previousAccess.set(res.locals.user.id, currentTime)
+
+      if(access != null) {
+        console.log(Math.abs(access - currentTime))
+        if(Math.abs(access - currentTime) < 10000) {
+          draw = false;
+          console.log("request ready sent")
+        } else {
+          console.log("eeeee")
+        }
+      }
 
       var presentMedia = await ga.get_collection_media(userId, "present", [], -1)
       var payload = (presentMedia as any).payload

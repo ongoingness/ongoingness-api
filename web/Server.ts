@@ -5,6 +5,10 @@ import * as handler from './middleware/Handler';
 import * as mongoose from 'mongoose';
 import { addRoutes } from './routes';
 import * as dotenv from 'dotenv';
+
+
+var mongoUriBuilder = require('mongo-uri-builder');
+
 dotenv.load();
 
 /**
@@ -24,12 +28,34 @@ export class App {
     if (process.env.LOCAL === 'true') {
       mongoose.connect(process.env.MONGO_URI_LOCAL);
     } else {
+/*
+      var connectionString = mongoUriBuilder({
+        username:  'ongoingness-v2',
+        password: 'catalog-gorgeous-dominica-augustan',
+        host: 'dig-mysql.ncl.ac.uk',
+        port: 27017,
+        database: 'ongoingness-v2',
+      });
+
+      console.log(connectionString)
+
+      mongoose.connect(connectionString, {
+        user: process.env.MONGODB_USER,
+        pass: process.env.MONGODB_PASS,
+        dbName: process.env.MONGODB_DATABASE,
+        authdb: 'admin',
+      });
+
+*/
+
+      
       mongoose.connect(process.env.MONGO_URI, {
         user: process.env.MONGODB_USER,
         pass: process.env.MONGODB_PASS,
         dbName: process.env.MONGODB_DATABASE,
         authdb: 'admin',
       });
+      
     }
 
     // Descriptions of each in method declaration.

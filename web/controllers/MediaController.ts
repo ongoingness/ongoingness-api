@@ -28,18 +28,15 @@ export default class MediaController {
   async convertVideoToGIF(videoPath: string, filename: string) : Promise<string> {
     const outputPath: string = path.join(__dirname, `../../../uploads/${filename}`);
     var gif = fs.createWriteStream(outputPath);
-
-    //TODO remove from and to
-
+ 
     var options = {
       resize: `${this.maxImageSize}:${this.maxImageSize}`,
-      from: 30,
-      to: 40,
       colors: 255,
       compress: 0,
     };
 
     gifify(videoPath, options).pipe(gif);
+    
     return await new Promise<string>( async (resolve, reject) => {
       gif.on('close', () => {
         resolve(outputPath);
@@ -60,7 +57,7 @@ export default class MediaController {
    */
   resizeImage(image: any, mimetype: string, size: number): Promise<void> {
     return new Promise<any>(async (resolve, reject) => {
-      if(mimetype == "image/gif") {
+      if(mimetype.includes("video") || mimetype == "application/octet-stream" || mimetype == "image/gif") {
         console.log("resize gif");
         //read in an gif
         GifUtil.read(image).then( (inputGif: any) => {

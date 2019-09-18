@@ -161,7 +161,7 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async getLinks(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    const mediaId: Schema.Types.ObjectId = req.params.id;
+    const mediaId: Schema.Types.ObjectId = new Schema.Types.ObjectId(req.params.id);
     let media: IMedia;
     try {
       media = await mediaRepository.get(mediaId);

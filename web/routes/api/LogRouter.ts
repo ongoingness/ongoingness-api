@@ -150,8 +150,6 @@ export class LogRouter extends BaseRouter {
         await logRepository.store(data)
       } catch (error) {
         console.log(error)
-        console.log(req.body.logs)
-        console.log(logs)
       }
     }
     return res.json(new Reply(200, 'success', false, []));

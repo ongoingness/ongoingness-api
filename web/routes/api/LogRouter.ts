@@ -134,7 +134,7 @@ export class LogRouter extends BaseRouter {
       e.message = '500';
       return next(e);
     }
-
+    console.log(req.body.logs)
     for(var i = 0; i < req.body.logs.length; i++) {
       try {
 

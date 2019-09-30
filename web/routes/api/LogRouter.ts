@@ -137,6 +137,8 @@ export class LogRouter extends BaseRouter {
 
     for(var i = 0; i < req.body.logs.length; i++) {
       try {
+
+        console.log(req.body.logs[i])
         var data = {} as any
         data['level'] = req.body.logs[i].level
         data['code'] = req.body.logs[i].code

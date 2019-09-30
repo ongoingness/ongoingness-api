@@ -48,7 +48,9 @@
     "nodemon": "1.17.5",
     "require-directory": "2.1.1",
     "smartcrop": "2.0.3",
-    "smartcrop-gm": "2.0.2"
+    "smartcrop-gm": "2.0.2",
+    "typescript-logging": "^0.6.3",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "@types/axios": "0.14.0",

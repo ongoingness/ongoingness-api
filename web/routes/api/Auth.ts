@@ -9,6 +9,8 @@ import { IResourceRepository } from '../../repositories/IResourceRepository';
 import RepositoryFactory from '../../repositories/RepositoryFactory';
 import * as jwt from 'jsonwebtoken';
 import { GraphAdaptor } from '../../repositories/GraphAdaptor';
+import Logger from '../../Logger';
+import { LogType } from '../../LogHelper';
 
 
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
@@ -69,6 +71,9 @@ export class AuthRouter extends BaseRouter {
     user.password = '';
 
     const response = new Reply(200, 'success', false, { token, user });
+
+    Logger.log(LogType.LOGIN, {user: user._id, token: token})
+
     return res.json(response);
   }
 
@@ -109,6 +114,8 @@ export class AuthRouter extends BaseRouter {
     }
 
     const token = authController.generateToken(user);
+
+    Logger.log(LogType.LOGIN, {user: user._id, token: token})
 
     return res.json(new Reply(200, 'success', false, token));
   }
@@ -181,6 +188,8 @@ export class AuthRouter extends BaseRouter {
     //Pass ID of user to graph api
     let ga = new GraphAdaptor();
     await ga.create_account(user._id);
+
+    Logger.log(LogType.REGISTER, {user: user._id, token: token})
 
     return res.json(response);
   }

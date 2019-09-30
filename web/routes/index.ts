@@ -4,6 +4,7 @@ import { AuthRouter } from './api/Auth';
 import { MediaRouter } from './api/MediaRouter';
 import RouterSchema from './RouterSchema';
 import ResourceRouterFactory from './ResourceRouterFactory';
+import { LogRouter } from './api/LogRouter';
 
 /**
  * [use description]
@@ -13,6 +14,7 @@ import ResourceRouterFactory from './ResourceRouterFactory';
 export function addRoutes(app: Express): Express {
   app.use('/api/auth', new AuthRouter().getRouter());
   app.use('/api/media', new MediaRouter().getRouter());
+  app.use('/api/log', new LogRouter().getRouter())
 
   routes.forEach((schema: RouterSchema) => {
     app.use(

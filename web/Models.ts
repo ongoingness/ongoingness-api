@@ -5,6 +5,7 @@ import { IPair, pairSchema } from './schemas/pair';
 import { IMedia, mediaSchema } from './schemas/Media';
 import { ISession, sessionSchema } from './schemas/session';
 import IBaseMongoResource from './schemas/IBaseMongoResource';
+import { logSchema, ILog } from './schemas/Log';
 
 // Export Models
 export default {
@@ -36,7 +37,9 @@ export function getModel(t: string): Model<IBaseMongoResource> {
         'User', userSchema,
       );
     case 'media':
-      return model<IMedia>('Media', mediaSchema);
+      return model<IMedia>('Media', mediaSchema)
+    case 'log':
+      return model<ILog>("Log", logSchema)
     default:
       return null;
   }

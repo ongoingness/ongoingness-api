@@ -15,6 +15,8 @@ import { BaseRouter } from '../BaseRouter';
 import MediaController from '../../controllers/MediaController';
 import { GraphAdaptor } from '../../repositories/GraphAdaptor';
 import ResourceRouterFactory from '../ResourceRouterFactory';
+import Logger from '../../Logger';
+import { LogType } from '../../LogHelper';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaRepository: MediaRepository = new MediaRepository();
@@ -49,6 +51,9 @@ export class MediaRouter
    {
      return(e);
    }
+
+    Logger.log(LogType.DEL_MEDIA, {user: res.locals.user.id, media: mediaId})
+
     return res.json(new Reply(200, 'success', false, null));
   }
 
@@ -300,9 +305,6 @@ export class MediaRouter
         console.log(Math.abs(access - currentTime))
         if(Math.abs(access - currentTime) < 10000) {
           draw = false;
-          console.log("request ready sent")
-        } else {
-          console.log("eeeee")
         }
       }
 
@@ -366,7 +368,12 @@ export class MediaRouter
           temp_payload.push(past_results[rand5]);
 
           results.payload = temp_payload;
+
+          Logger.log(LogType.GET_INF_MEDIA, {media: results.payload, user: userId})
+
         }
+      } else {
+        Logger.log(LogType.GET_INF_MEDIA, {media: results, user: userId})
       }
 
       return res.json(results);
@@ -490,6 +497,8 @@ export class MediaRouter
       e.message = '500';
     }
 
+    Logger.log(LogType.GET_ALL_MEDIA, {user: user._id});
+
     return res.json(new Reply(200, 'success', false, media));
   }
 
@@ -605,7 +614,7 @@ export class MediaRouter
       return next(e);
     }
 
-    console.log(media)
+    Logger.log(LogType.NEW_MEDIA, {user: user._id, media: media.payload})
 
     return res.json(new Reply(200, 'success', false, media));
   }

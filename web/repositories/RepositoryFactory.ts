@@ -4,6 +4,7 @@ import { IUser } from '../schemas/User';
 import { IResourceRepository } from './IResourceRepository';
 import { MongoResourceRepository } from './MongoResourceRepository';
 import { MediaRepository } from './MediaRepository';
+import { LogRepository } from './LogRepository';
 
 /**
  * Generate a controller for the type of database
@@ -42,6 +43,9 @@ export default class RepositoryFactory {
       case 'media':
         cont = new MediaRepository();
         break;
+      case 'log':
+        cont = new LogRepository();
+
       default:
         cont = new MongoResourceRepository<IBaseMongoResource>();
         break;

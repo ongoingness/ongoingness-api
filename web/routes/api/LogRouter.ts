@@ -134,8 +134,7 @@ export class LogRouter extends BaseRouter {
       e.message = '500';
       return next(e);
     }
-    console.log(req.body.logs)
-
+    
     var logs = JSON.parse(req.body.logs);
 
     for(var i = 0; i < logs.length; i++) {
@@ -148,7 +147,6 @@ export class LogRouter extends BaseRouter {
         data['message'] = logs[i].message
         data['timestamp'] = new Date(logs[i].timestamp * 1).toISOString()
         await logRepository.store(data)
-        console.log(logs[i])
       } catch (error) {
         console.log(error)
       }

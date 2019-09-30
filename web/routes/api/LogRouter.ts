@@ -135,18 +135,23 @@ export class LogRouter extends BaseRouter {
       return next(e);
     }
     console.log(req.body.logs)
-    for(var i = 0; i < req.body.logs.length; i++) {
+
+    var logs = JSON.parse(req.body.logs);
+
+    for(var i = 0; i < logs.length; i++) {
       try {
         var data = {} as any
-        data['level'] = req.body.logs[i].level
-        data['code'] = req.body.logs[i].code
+        data['level'] = logs[i].level
+        data['code'] = logs[i].code
         data['user'] = user._id
-        data['content'] = req.body.logs[i].content
-        data['message'] = req.body.logs[i].message
-        data['timestamp'] = new Date(req.body.logs[i].timestamp * 1).toISOString()
+        data['content'] = logs[i].content
+        data['message'] = logs[i].message
+        data['timestamp'] = new Date(logs[i].timestamp * 1).toISOString()
         await logRepository.store(data)
       } catch (error) {
         console.log(error)
+        console.log(req.body.logs)
+        console.log(logs)
       }
     }
     return res.json(new Reply(200, 'success', false, []));

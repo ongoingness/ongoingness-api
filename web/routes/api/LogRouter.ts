@@ -148,6 +148,7 @@ export class LogRouter extends BaseRouter {
         data['message'] = logs[i].message
         data['timestamp'] = new Date(logs[i].timestamp * 1).toISOString()
         await logRepository.store(data)
+        console.log(logs[i])
       } catch (error) {
         console.log(error)
       }

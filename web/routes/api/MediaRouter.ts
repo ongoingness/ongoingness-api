@@ -543,10 +543,10 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-    req.setTimeout(500000, () => {next(new Error("Timeout"))});
+    req.setTimeout(1000000, () => {next(new Error("Timeout"))});
 
     let mimetype
-    if(req.file.mimetype.includes("video") || req.file.mimetype == "application/octet-stream" || req.file.mimetype == "image/gif") {
+    if(req.file.mimetype.includes("video") || req.file.mimetype == "application/octet-stream") {
       mimetype = "image/gif"
     } else {
       mimetype = req.file.mimetype

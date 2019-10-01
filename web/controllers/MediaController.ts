@@ -57,7 +57,7 @@ export default class MediaController {
    */
   resizeImage(image: any, mimetype: string, size: number): Promise<void> {
     return new Promise<any>(async (resolve, reject) => {
-      if(mimetype.includes("video") || mimetype == "application/octet-stream" || mimetype == "image/gif") {
+      if(mimetype == "image/gif") {
         console.log("resize gif");
         //read in an gif
         GifUtil.read(image).then( (inputGif: any) => {

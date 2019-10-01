@@ -1,7 +1,6 @@
 import { ILog } from '../schemas/Log';
 import { getModel } from '../Models';
 import { MongoResourceRepository } from './MongoResourceRepository';
-import { IUser } from '../schemas/User';
 
 export class LogRepository extends MongoResourceRepository<ILog> {
   constructor() {

@@ -2,30 +2,22 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { checkToken } from '../../middleware/Authenticate';
 import { IUser } from '../../schemas/User';
 import { Reply } from '../../Reply';
-import { SessionRepository } from '../../repositories/SessionRepository';
 import { HttpMethods } from '../../HttpMethods';
 import { IResourceRepository } from '../../repositories/IResourceRepository';
 import RepositoryFactory from '../../repositories/RepositoryFactory';
 import { BaseRouter } from '../BaseRouter';
-import MediaController from '../../controllers/MediaController';
-import { GraphAdaptor } from '../../repositories/GraphAdaptor';
 
-import Logger from '../../Logger';
-import { LogType } from '../../LogHelper';
 import { LogRepository } from '../../repositories/LogRepository';
 import { ILog } from '../../schemas/Log';
 
 const logRepository: LogRepository = new LogRepository();
-const sessionController: SessionRepository = new SessionRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
-
-var previousAccess = new Map();
 
 export class LogRouter extends BaseRouter {
 
   /**
-   * @api {get} /api/media/ Get all media
-   * @apiGroup Media
+   * @api {get} /api/log/ Get all logs
+   * @apiGroup Log
    * @apiPermission authenticated
    *
    * @apiUse isAuthenticated
@@ -43,51 +35,43 @@ export class LogRouter extends BaseRouter {
       "payload": {
         [
           {
-            "links": [],
-            "era": "past",
-            "emotions": [],
-            "_id": "media_id",
-            "path": "path_to_file",
-            "mimetype": "image/jpeg",
-            "user": "user_id",
-            "createdAt": "2018-12-13T13:23:34.081Z",
-            "updatedAt": "2018-12-13T13:23:34.081Z",
+            "_id": "logID",
+            "level": "info",
+            "code": "LOGCODE",
+            "user": "userID",
+            "content": { "example" : "test" },
+            "message": "Log message",
+            "timestamp": "2019-09-30T11:44:50.025Z",
             "__v": 0
           }
         ]
       }
     }
    *
-   * @apiDescription Get all user's media
+   * @apiDescription Get all user's logs
    *
-   * Show all media.
+   * Show all logs.
    * @param {e.Request} req
    * @param {e.Response} res
    * @param {e.NextFunction} next
    * @returns {Promise<void | e.Response> | void}
    */
   async index(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-  
-    let user: IUser;
+
     try {
-      user = await userRepository.get(res.locals.user.id);
+      let user: IUser = await userRepository.get(res.locals.user.id);
+      let logs : ILog[] = await logRepository.findManyWithFilter({ user: user._id });
+      return res.json(new Reply(200, 'success', false, logs));
     } catch (e) {
       e.message = '500';
-    }
- 
-    let logs : ILog[] = [];
-    try {
-      logs = await logRepository.findManyWithFilter({ user: user._id });
-    } catch (e) {
-      e.message = '500';
+      return next(e)
     }
 
-    return res.json(new Reply(200, 'success', false, logs));
   }
 
   /**
-   * @api {post} /api/media/ Store media
-   * @apiGroup Media
+   * @api {post} /api/log/ Store logs
+   * @apiGroup Log
    * @apiPermission authenticated
    *
    * @apiUse isAuthenticated
@@ -102,24 +86,12 @@ export class LogRouter extends BaseRouter {
       "code": 200,
       "message": "success",
       "errors": false,
-      "payload": {
-        "links": [],
-        "era": "past",
-        "emotions": [],
-        "_id": "media_id",
-        "path": "path_to_file",
-        "mimetype": "image/jpeg",
-        "user": "user_id",
-        "createdAt": "2018-12-13T13:23:34.081Z",
-        "updatedAt": "2018-12-13T13:23:34.081Z",
-        "__v": 0
-      }
+      "payload": {[]}
     }
    *
-   * @apiParam {File} file  Image to upload.
-   * @apiParam {String} [era]  Era the image is from, must be 'past' or 'present'. Default is past.
+   * @apiParam {String} [Log] List of logs
    *
-   * @apiDescription Upload media.
+   * @apiDescription Upload Logs.
    * @param {e.Request} req
    * @param {e.Response} res
    * @param {e.NextFunction} next
@@ -130,28 +102,27 @@ export class LogRouter extends BaseRouter {
     let user: IUser;
     try {
       user = await userRepository.get(res.locals.user.id);
+    
+      var logs = JSON.parse(req.body.logs);
+
+      for(var i = 0; i < logs.length; i++) {
+          var data = {} as any
+          data['level'] = logs[i].level
+          data['code'] = logs[i].code
+          data['user'] = user._id
+          data['content'] = logs[i].content
+          data['message'] = logs[i].message
+          data['timestamp'] = new Date(logs[i].timestamp * 1).toISOString()
+          await logRepository.store(data)
+      }
+
+      return res.json(new Reply(200, 'success', false, []));
+
     } catch (e) {
       e.message = '500';
       return next(e);
     }
-    
-    var logs = JSON.parse(req.body.logs);
-
-    for(var i = 0; i < logs.length; i++) {
-      try {
-        var data = {} as any
-        data['level'] = logs[i].level
-        data['code'] = logs[i].code
-        data['user'] = user._id
-        data['content'] = logs[i].content
-        data['message'] = logs[i].message
-        data['timestamp'] = new Date(logs[i].timestamp * 1).toISOString()
-        await logRepository.store(data)
-      } catch (error) {
-        console.log(error)
-      }
-    }
-    return res.json(new Reply(200, 'success', false, []));
+   
   }
 
   constructor() {

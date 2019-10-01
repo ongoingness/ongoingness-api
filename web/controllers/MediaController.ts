@@ -168,7 +168,7 @@ export default class MediaController {
       newFileName = `${userId}_${now}.${ext}`
       newStorePath = storedPath;
     
-    } else if (type.includes("video")) {
+    } else if ( type.includes("video") || type == "application/octet-stream" ) {
       
       console.log("its a video");
       newFileName = `${userId}_${now}.gif`;

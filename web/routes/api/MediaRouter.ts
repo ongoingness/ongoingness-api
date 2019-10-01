@@ -545,7 +545,13 @@ export class MediaRouter
   async store(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     req.setTimeout(500000, () => {next(new Error("Timeout"))});
 
-    const mimetype = req.file.mimetype;
+    let mimetype
+    if(req.file.mimetype.includes("video") || req.file.mimetype == "application/octet-stream" || req.file.mimetype == "image/gif") {
+      mimetype = "image/gif"
+    } else {
+      mimetype = req.file.mimetype
+    }
+
     const ext = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
     const mediaController: MediaController = new MediaController();
     let user: IUser;

@@ -493,11 +493,10 @@ export class MediaRouter
     let media : any = [];
     try {
       media = await ga.get_account_media(user._id,[],-1,0,1);
+      Logger.log(LogType.GET_ALL_MEDIA, {user: user._id});
     } catch (e) {
       e.message = '500';
     }
-
-    Logger.log(LogType.GET_ALL_MEDIA, {user: user._id});
 
     return res.json(new Reply(200, 'success', false, media));
   }

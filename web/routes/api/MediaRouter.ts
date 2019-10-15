@@ -78,6 +78,10 @@ export class MediaRouter
    * @returns {Promise<void | e.Response>}
    */
   async show(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+    
+    //AWFUL
+    req.setTimeout(1000000, () => {next(new Error("Timeout"))});
+
     const mediaId: any = req.params.id;
     const rsize: string = req.query.size;
     let size: number;

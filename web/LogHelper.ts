@@ -19,6 +19,9 @@ export default class LogHelper {
         result.message = `User ${content.user._id} logged in.`
         break
 
+      case LogType.LOGIN_DEVICE:
+        result.message = `User ${content.user._id} logged in`
+      
       case LogType.NEW_MEDIA:
         result.message = `User ${content.user._id} added new media ${content.media._id}.`
         break
@@ -34,6 +37,10 @@ export default class LogHelper {
       case LogType.GET_INF_MEDIA:
         result.message = `User ${content.user} got inferred media.`
         break
+
+      case LogType.RECEIVED_LOGS:
+        result.message = 'Received Logs.'
+        break
       
     };
 
@@ -46,10 +53,12 @@ export default class LogHelper {
 export enum LogType {
   REGISTER             = 'REGISTER',
   LOGIN                = 'LOGIN',
+  LOGIN_DEVICE         = 'LOGIN_DEVICE',
   NEW_MEDIA            = 'NEW_MEDIA',
   DEL_MEDIA            = 'DEL_MEDIA',
   GET_ALL_MEDIA        = 'GET_MEDIA',
-  GET_INF_MEDIA        = 'GET_INF_MEDIA'
+  GET_INF_MEDIA        = 'GET_INF_MEDIA',
+  RECEIVED_LOGS        = 'RECEIVED_LOGS'
 }
 
 

@@ -72,7 +72,7 @@ export class AuthRouter extends BaseRouter {
 
     const response = new Reply(200, 'success', false, { token, user });
 
-    Logger.log(LogType.LOGIN, {user: user._id, token: token})
+    Logger.log(LogType.LOGIN, {user: user._id})
 
     return res.json(response);
   }
@@ -115,7 +115,7 @@ export class AuthRouter extends BaseRouter {
 
     const token = authController.generateToken(user);
 
-    Logger.log(LogType.LOGIN, {user: user._id, token: token})
+    Logger.log(LogType.LOGIN_DEVICE, {user: user._id})
 
     return res.json(new Reply(200, 'success', false, token));
   }
@@ -189,7 +189,7 @@ export class AuthRouter extends BaseRouter {
     let ga = new GraphAdaptor();
     await ga.create_account(user._id);
 
-    Logger.log(LogType.REGISTER, {user: user._id, token: token})
+    Logger.log(LogType.REGISTER, {user: user._id})
 
     return res.json(response);
   }

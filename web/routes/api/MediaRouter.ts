@@ -17,6 +17,7 @@ import { GraphAdaptor } from '../../repositories/GraphAdaptor';
 import ResourceRouterFactory from '../ResourceRouterFactory';
 import Logger from '../../Logger';
 import { LogType } from '../../LogHelper';
+import CryptoHelper from '../../CryptoHelper';
 
 const upload = multer({ dest: 'uploads/' });
 const mediaRepository: MediaRepository = new MediaRepository();
@@ -623,7 +624,14 @@ export class MediaRouter
       return next(e);
     }
 
-    Logger.log(LogType.NEW_MEDIA, {user: user._id, media: media.payload})
+    try {
+      let data = await mediaController.getMediaFromS3(media.payload, 600);
+      let dataString = String(data);
+      let dataHash = CryptoHelper.hashString(dataString);
+      Logger.log(LogType.NEW_MEDIA, {user: user._id, hash: dataHash, media: media.payload})
+    } catch (e) {
+      console.log(e)
+    }
 
     return res.json(new Reply(200, 'success', false, media));
   }

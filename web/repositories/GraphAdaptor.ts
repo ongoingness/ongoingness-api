@@ -1105,11 +1105,52 @@ export class GraphAdaptor {
     })
   }
 
-  async delete_media(media_id: string) {
+  async delete_media(account_uuid: string, media_id: string) {
     return new Promise(async (resolve, reject) => {
       try{
         let api = new GraphAPI();
-        await api.delete_media(media_id);
+        /*
+        * Get RId of account with specified uuid
+        */
+        let account_item = await api.get_accounts(account_uuid,[],-1,0);
+        //@ts-ignore
+        let account_id = account_item[0]['@rid']['cluster'] + ":" + account_item[0]['@rid']['position'];
+
+        /*
+        * Get or create collection
+        */
+       let collections : any = await api.get_collections(account_uuid, [],-1,0);
+
+       let hasRemovedCollection : boolean = false; 
+       let removedCollectionId: string = ''
+
+       for(let i = 0; i < collections.length; i++) {
+        let collectionId = `${collections[i]['@rid']['cluster']}:${collections[i]['@rid']['position']}`;
+          if(collections[i]['name'] == 'removed') {
+            hasRemovedCollection = true
+            removedCollectionId = collectionId;
+          } else {
+            let collection_has_media = await api.check_edge("HAS_MEDIA", collectionId, media_id);
+            if(collection_has_media)
+              await api.delete_edge('HAS_MEDIA', collectionId, media_id, []);
+          }
+       }
+
+       if(!hasRemovedCollection) {
+        
+          let new_collection: any = await api.create_vertex('collection', [['name', "'" + "removed"+ "'"]]);
+          removedCollectionId = new_collection[0]['@rid']['cluster'] + ":" + new_collection[0]['@rid']['position'];
+
+          let owns_edge_result = await api.check_edge("OWNS", account_id, removedCollectionId);
+
+          //@ts-ignore
+          if(owns_edge_result.length == 0){
+            await api.create_edge("OWNS", account_id, removedCollectionId);
+          }
+
+       }
+
+        await api.create_edge("HAS_MEDIA", removedCollectionId, media_id);
         resolve('success');
       }
       catch(e){

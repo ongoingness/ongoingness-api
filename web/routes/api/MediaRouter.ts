@@ -46,7 +46,7 @@ export class MediaRouter
 
    try{
      let ga = new GraphAdaptor();
-     await ga.delete_media(mediaId);
+     await ga.delete_media(res.locals.user.id, mediaId);
    }
    catch(e)
    {

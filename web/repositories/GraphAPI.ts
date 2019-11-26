@@ -1,6 +1,7 @@
 //@ts-ignore
 import orientjs = require("orientjs");
 import * as dotenv from 'dotenv';
+import { rejects } from "assert";
 dotenv.load();
 
 const dbserver = orientjs({
@@ -261,6 +262,8 @@ const db = dbserver.use({
             }
         })
     }
+
+
 
     /**
      * Get a list of tags that belongs to a given user.
@@ -721,6 +724,19 @@ const db = dbserver.use({
             }
         });
     }
+
+    //TODO Make it more flexible
+    async delete_edge(vertex_class: string, from_id: string, to_id: string, params: any[]) {
+        return new Promise((resolve, reject) => {
+            try {
+                let result = db.query(`DELETE EDGE FROM #${from_id} TO #${to_id} WHERE @class= '${vertex_class}'`)
+                resolve(result);
+            } catch(e) {
+                reject(e);
+            }
+        });
+    }
+
 
     /**
      * Checks if an edge already exists within the graph.

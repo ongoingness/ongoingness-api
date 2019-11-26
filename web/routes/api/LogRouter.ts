@@ -160,6 +160,8 @@ export class LogRouter extends BaseRouter {
     const firstPage = Number(req.query.firstPage);
     const pageAmount = Number(req.query.pageAmount);
     const pageSize = Number(req.query.pageSize);
+    const from = req.query.from;
+    const to = req.query.to;
   
     codes = codes.split(',');
 
@@ -170,7 +172,19 @@ export class LogRouter extends BaseRouter {
     var resultLogs: ILog[] = [];
 
     for(var i = 0; i < codes.length; i++) {
-      var result = await logRepository.findManyWithFilter({ user: user, code: codes[i]});
+
+      var result: ILog[] = [];
+
+      console.log(from);
+      console.log(to);
+
+      if(from != 0 && to != 0) {
+        var fromDate = new Date(Number(from)).toISOString();
+        var toDate = new Date(Number(to)).toISOString();
+
+        result = await logRepository.findManyWithFilter({ user: user, code: codes[i], timestamp: {$gt: fromDate, $lt: toDate }});
+      } else
+        result = await logRepository.findManyWithFilter({ user: user, code: codes[i] });
       resultLogs = resultLogs.concat(result);
     }
 

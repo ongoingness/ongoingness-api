@@ -11,6 +11,7 @@ import { LogRepository } from '../../repositories/LogRepository';
 import { ILog } from '../../schemas/Log';
 import Logger from '../../Logger';
 import { LogType } from '../../LogHelper';
+import { UserRole } from '../../UserRole';
 
 const logRepository: LogRepository = new LogRepository();
 const userRepository: IResourceRepository<IUser> = RepositoryFactory.getRepository('user');
@@ -132,6 +133,9 @@ export class LogRouter extends BaseRouter {
   async usersLogsAmount(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
   
     try {
+      let currentUser = await userRepository.get(res.locals.user.id);
+      if(currentUser.role != UserRole.ADMIN)
+        return res.json(new Reply(404, 'success', false, []));
 
       var users = await userRepository.getAll();
       var usersLogsList = []
@@ -155,6 +159,11 @@ export class LogRouter extends BaseRouter {
   }
 
   async search(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+
+    let currentUser = await userRepository.get(res.locals.user.id);
+    if(currentUser.role != UserRole.ADMIN)
+      return res.json(new Reply(404, 'success', false, []));
+
     var codes = req.query.codes;
     var user = req.query.user;
     const firstPage = Number(req.query.firstPage);
@@ -171,21 +180,43 @@ export class LogRouter extends BaseRouter {
 
     var resultLogs: ILog[] = [];
 
-    for(var i = 0; i < codes.length; i++) {
+    var searchParameters : any = {user: user};
 
-      var result: ILog[] = [];
+    if(from != 0 && to != 0) {
+      var fromDate = new Date(Number(from)).toISOString();
+      var toDate = new Date(Number(to)).toISOString();
+      searchParameters['timestamp'] = {$gt: fromDate, $lt: toDate }
+    }
 
-      console.log(from);
-      console.log(to);
-
-      if(from != 0 && to != 0) {
-        var fromDate = new Date(Number(from)).toISOString();
-        var toDate = new Date(Number(to)).toISOString();
-
-        result = await logRepository.findManyWithFilter({ user: user, code: codes[i], timestamp: {$gt: fromDate, $lt: toDate }});
-      } else
-        result = await logRepository.findManyWithFilter({ user: user, code: codes[i] });
-      resultLogs = resultLogs.concat(result);
+    if(codes.length == 0 || codes.includes("ALL"))
+      resultLogs = await logRepository.findManyWithFilter(searchParameters);  
+    else {
+      if(codes.includes("WEBSITE")) {
+        if(!codes.includes("REGISTER")) codes.push("REGISTER");
+        if(!codes.includes("LOGIN")) codes.push("LOGIN");
+        if(!codes.includes("NEW_MEDIA")) codes.push("NEW_MEDIA");
+        if(!codes.includes("DEL_MEDIA")) codes.push("DEL_MEDIA");
+        if(!codes.includes("GET_MEDIA")) codes.push("GET_MEDIA");
+        if(!codes.includes("GET_INF_MEDIA")) codes.push("GET_INF_MEDIA");
+        if(!codes.includes("RECEIVED_LOGS")) codes.push("RECEIVED_LOGS");
+      } else if (codes.includes("PIECE")) {
+        if(!codes.includes("LOGIN_DEVICE")) codes.push("LOGIN_DEVICE");
+        if(!codes.includes("WAKE_UP")) codes.push("WAKE_UP");
+        if(!codes.includes("CONTENT_DISPLAYED")) codes.push("CONTENT_DISPLAYED");
+        if(!codes.includes("SLEEP")) codes.push("SLEEP");
+        if(!codes.includes("ACTIVITY_STARTED")) codes.push("ACTIVITY_STARTED");
+        if(!codes.includes("ACTIVITY_TERMINATED")) codes.push("ACTIVITY_TERMINATED");
+        if(!codes.includes("CHARGER_CONNECTED")) codes.push("CHARGER_CONNECTED");
+        if(!codes.includes("CHARGER_DISCONNECTED")) codes.push("CHARGER_DISCONNECTED");
+        if(!codes.includes("PULLED_CONTENT")) codes.push("PULLED_CONTENT");
+        if(!codes.includes("PUSHED_LOGS")) codes.push("PUSHED_LOGS");
+        if(!codes.includes("NEW_CONTENT_ADDED")) codes.push("NEW_CONTENT_ADDED");
+        if(!codes.includes("CONTENT_REMOVED")) codes.push("CONTENT_REMOVED");
+        if(!codes.includes("STARTED_WATCHFACE")) codes.push("STARTED_WATCHFACE");
+        if(!codes.includes("STOPPED_WATCHFACE")) codes.push("STOPPED_WATCHFACE");
+      }
+      searchParameters['code'] = codes;
+      resultLogs = await logRepository.findManyWithFilter(searchParameters);
     }
 
     resultLogs.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -219,6 +250,109 @@ export class LogRouter extends BaseRouter {
     return res.json(new Reply(200, 'success', false, payload));
   }
 
+  async numberOfSessions(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+
+    let currentUser = await userRepository.get(res.locals.user.id);
+    if(currentUser.role != UserRole.ADMIN)
+      return res.json(new Reply(404, 'success', false, []));
+
+    const user = req.query.user;
+    const from = req.query.from;
+    const to = req.query.to;
+    const timescale = req.query.timescale;
+
+    var fromDate = new Date(Number(from)).toISOString();
+    var toDate = new Date(Number(to)).toISOString();
+    var searchParameters: any = {user: user};
+    searchParameters['timestamp'] = {$gt: fromDate, $lt: toDate }
+    searchParameters['code'] = ["WAKE_UP", "CONTENT_DISPLAYE", "SLEEP", "ACTIVITY_TERMINATED"];
+
+    var resultLogs: ILog[] = await logRepository.findManyWithFilter(searchParameters);
+    resultLogs.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+    var chartData = [];
+    var maxSession = 0;
+
+    var sessions : any = [];
+    var timeStart = new Date();
+    var timeEnd = new Date();
+
+    if(timescale == 'd') {
+      timeStart = new Date(Number(from));
+      timeEnd =  new Date(timeStart.getFullYear(), timeStart.getMonth(), timeStart.getDate(), 23, 59, 59, 999);
+    } else if (timescale == 'w') {
+      timeStart = new Date(Number(from));
+      var timeAux = new Date(timeStart);
+      timeAux.setDate(timeStart.getDate()+6);
+      timeEnd = new Date(timeAux.getFullYear(), timeAux.getMonth(), timeAux.getDate(), 23, 59, 59, 999);
+    } else if (timescale == 'm') {
+      var timeStartAux = new Date(Number(from));
+      timeStart = new Date(timeStartAux.getFullYear(), timeStartAux.getMonth(), 1, 0, 0, 0, 0);
+      timeStartAux.setMonth(timeStartAux.getMonth() + 1);
+      timeEnd = new Date(timeStartAux.getFullYear(), timeStartAux.getMonth(), 1, 0, 0, 0, 0);
+    }
+    
+    var stop = false;
+
+    while(!stop){
+
+      let distinctSessions = 0;
+      for(let i = 0; i < resultLogs.length; i++) {
+        let timestamp = new Date(resultLogs[i].timestamp).getTime();
+        if(timestamp >= timeStart.getTime() &&  timestamp < timeEnd.getTime()) {
+          var contentJSON = JSON.parse(resultLogs[i].content);
+          if(contentJSON.hasOwnProperty('session') && !sessions.includes(contentJSON.session)){
+            distinctSessions++;
+            sessions.push(contentJSON.session);
+          }
+        }
+      }
+
+      var timestampResult = '';
+      if(timescale == 'd') {
+        timestampResult = `${timeStart.getMonth() + 1}/${timeStart.getDate()}`;
+      } else if(timescale == 'w') {
+        timestampResult = `${timeStart.getMonth() + 1}/${timeStart.getDate()}`;
+      } else if(timescale == 'm') {
+        timestampResult = `${timeStart.getMonth() + 1}`;
+      }
+
+      chartData.push({timestamp: timestampResult, sessions: distinctSessions});
+      if(distinctSessions > maxSession) maxSession = distinctSessions;
+
+      if(timeEnd.getTime() == new Date(Number(to)).getTime()) {
+        stop = true;
+      } else {
+        if(timescale == 'd') {
+          timeStart.setDate(timeStart.getDate() + 1);
+          timeEnd =  new Date(timeStart.getFullYear(), timeStart.getMonth(), timeStart.getDate(), 23, 59, 59, 999);
+        } else if (timescale == 'w') {
+          
+          timeStart.setDate(timeStart.getDate() + 7);
+          timeAux = new Date(timeStart);
+          timeAux.setDate(timeStart.getDate()+6);
+          timeEnd = new Date(timeAux.getFullYear(), timeAux.getMonth(), timeAux.getDate(), 23, 59, 59, 999);
+
+          if(timeEnd.getTime() > new Date(Number(to)).getTime()) {
+            timeEnd = new Date(Number(to));
+          }
+    
+        } else if (timescale == 'm') {        
+          timeStart.setMonth(timeStart.getMonth() + 1);
+          timeEnd.setMonth(timeEnd.getMonth() + 1);
+
+          if(timeEnd.getTime() > new Date(Number(to)).getTime()) {
+            timeEnd = new Date(Number(to));
+          }
+
+        }
+    }
+      
+  }
+
+    return res.json(new Reply(200, 'success', false, {maxSession, chartData}));
+  }
+
 
   constructor() {
     super();
@@ -227,6 +361,7 @@ export class LogRouter extends BaseRouter {
     this.addRoute('/', HttpMethods.POST, this.store);
     this.addRoute('/usernlogs', HttpMethods.GET, this.usersLogsAmount);
     this.addRoute('/search', HttpMethods.GET, this.search);
+    this.addRoute('/numberOfSessions', HttpMethods.GET, this.numberOfSessions);
   }
 
   setRouter(router: Router): void {

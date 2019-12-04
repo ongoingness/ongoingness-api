@@ -31,7 +31,7 @@ export default class LogHelper {
         break
       
       case LogType.GET_ALL_MEDIA:
-        result.message = `User ${content.use} got all media.`
+        result.message = `User ${content.user} got all media.`
         break
 
       case LogType.GET_INF_MEDIA:

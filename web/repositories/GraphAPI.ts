@@ -223,7 +223,7 @@ const db = dbserver.use({
             try{
                 db
                 .select()
-                .from("SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid='" + uuid +"') MAXDEPTH 1) WHERE @class='collection')) WHERE @class='media'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
+                .from("SELECT FROM (TRAVERSE out('has_media') FROM (SELECT FROM (TRAVERSE out('owns') FROM (SELECT FROM account WHERE uuid='" + uuid +"') MAXDEPTH 1) WHERE @class='collection' AND name!='removed')) WHERE @class='media'" + this.build_query_from_params(query_params) + " LIMIT " + results_limit + " OFFSET " + results_offset)
                 .group('@rid')
                 .all()
                 //@ts-ignore

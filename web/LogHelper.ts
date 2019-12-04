@@ -12,18 +12,18 @@ export default class LogHelper {
     switch(type) {
 
       case LogType.REGISTER:
-        result.message = `New user ${content.user._id}`
+        result.message = `New user ${content.user}`
         break
 
       case LogType.LOGIN:
-        result.message = `User ${content.user._id} logged in.`
+        result.message = `User ${content.user} logged in.`
         break
 
       case LogType.LOGIN_DEVICE:
-        result.message = `User ${content.user.getId()} logged in`
+        result.message = `User ${content.user} logged in`
       
       case LogType.NEW_MEDIA:
-        result.message = `User ${content.user._id} added new media ${content.media._id}.`
+        result.message = `User ${content.user} added new media ${content.media._id}.`
         break
 
       case LogType.DEL_MEDIA:
@@ -31,7 +31,7 @@ export default class LogHelper {
         break
       
       case LogType.GET_ALL_MEDIA:
-        result.message = `User ${content.user._id} got all media.`
+        result.message = `User ${content.use} got all media.`
         break
 
       case LogType.GET_INF_MEDIA:

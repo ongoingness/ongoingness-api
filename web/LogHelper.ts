@@ -20,7 +20,7 @@ export default class LogHelper {
         break
 
       case LogType.LOGIN_DEVICE:
-        result.message = `User ${content.user._id} logged in`
+        result.message = `User ${content.user.getId()} logged in`
       
       case LogType.NEW_MEDIA:
         result.message = `User ${content.user._id} added new media ${content.media._id}.`

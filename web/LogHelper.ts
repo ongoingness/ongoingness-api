@@ -12,35 +12,36 @@ export default class LogHelper {
     switch(type) {
 
       case LogType.REGISTER:
-        result.message = `New user ${content.user}`
-        break
+        result.message = `New user ${content.user}`;
+        break;
 
       case LogType.LOGIN:
-        result.message = `User ${content.user} logged in.`
-        break
+        result.message = `User ${content.user} logged in.`;
+        break;
 
       case LogType.LOGIN_DEVICE:
-        result.message = `User ${content.user} logged in`
+        result.message = `User ${content.user} logged in`;
+        break
       
       case LogType.NEW_MEDIA:
-        result.message = `User ${content.user} added new media ${content.media._id}.`
-        break
+        result.message = `User ${content.user} added new media ${content.media._id}.`;
+        break;
 
       case LogType.DEL_MEDIA:
-        result.message = `Media ${content.media} deleted.`
-        break
+        result.message = `Media ${content.media} deleted.`;
+        break;
       
       case LogType.GET_ALL_MEDIA:
-        result.message = `User ${content.user} got all media.`
-        break
+        result.message = `User ${content.user} got all media.`;
+        break;
 
       case LogType.GET_INF_MEDIA:
-        result.message = `User ${content.user} got inferred media.`
-        break
+        result.message = `User ${content.user} got inferred media.`;
+        break;
 
       case LogType.RECEIVED_LOGS:
-        result.message = 'Received Logs.'
-        break
+        result.message = 'Received Logs.';
+        break;
       
     };
 

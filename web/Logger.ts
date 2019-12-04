@@ -35,7 +35,11 @@ export default class Logger {
     });
 
     static log(type: LogType, content: object) {
-        Logger.logger.log(LogHelper.getLogContent(type, content));  
+        try {
+          Logger.logger.log(LogHelper.getLogContent(type, content));  
+        } catch {
+          console.log("The logger is crashing!!! Ironic")
+        }
     }
 }
 

@@ -115,7 +115,7 @@ export class AuthRouter extends BaseRouter {
 
     const token = authController.generateToken(user);
 
-    Logger.log(LogType.LOGIN_DEVICE, {user: user._id})
+    Logger.log(LogType.LOGIN_DEVICE, {user: user.getId()})
 
     return res.json(new Reply(200, 'success', false, token));
   }

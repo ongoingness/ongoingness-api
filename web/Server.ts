@@ -96,9 +96,11 @@ export class App {
    * Set body parser to access post parameters.
    */
   private setBodyParser(): void {
-    this.express.use(bodyParser.json());
+    this.express.use(bodyParser.json({limit: '50mb'}));
     this.express.use(bodyParser.urlencoded({
+      limit: '50mb',
       extended: true,
+      parameterLimit:50000,
     }));
   }
 

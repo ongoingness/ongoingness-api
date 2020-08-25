@@ -106,7 +106,10 @@ export class LogRouter extends BaseRouter {
     try {
       user = await userRepository.get(res.locals.user.id);
     
-      var logs = JSON.parse(req.body.logs);
+
+      console.log('logs', req.body.logs, req.body.logs.length);
+
+      var logs = req.body.logs;//JSON.parse(req.body.logs);
 
       for(var i = 0; i < logs.length; i++) {
           var data = {} as any
@@ -158,6 +161,7 @@ export class LogRouter extends BaseRouter {
 
   }
 
+  /*
   async search(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
 
     let currentUser = await userRepository.get(res.locals.user.id);
@@ -248,7 +252,7 @@ export class LogRouter extends BaseRouter {
     console.log(payload);
 
     return res.json(new Reply(200, 'success', false, payload));
-  }
+  }*/
 
   async numberOfSessions(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
 
@@ -360,7 +364,7 @@ export class LogRouter extends BaseRouter {
     this.addRoute('/', HttpMethods.GET, this.index);
     this.addRoute('/', HttpMethods.POST, this.store);
     this.addRoute('/usernlogs', HttpMethods.GET, this.usersLogsAmount);
-    this.addRoute('/search', HttpMethods.GET, this.search);
+    //this.addRoute('/search', HttpMethods.GET, this.search);
     this.addRoute('/numberOfSessions', HttpMethods.GET, this.numberOfSessions);
   }
 

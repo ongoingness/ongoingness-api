@@ -29,7 +29,9 @@ COPY ./package.json /app/package.json
 RUN npm install
 
 # Install nodemon
-RUN npm install -g npx nodemon typescript apidoc gifify 
+RUN npm install -g nodemon typescript apidoc gifify 
+
+RUN npm update
 
 COPY App.ts /app/App.ts
 COPY tsconfig.json /app/tsconfig.json
@@ -50,3 +52,4 @@ EXPOSE 80
 
 # Start the server.
 CMD nodemon -L dist/App.js
+

@@ -110,37 +110,48 @@ export default class MediaController {
     const p: string = path.join(__dirname, `../../../uploads/${filename}`);
 
     if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
+      try {
+        fs.writeFileSync(p, image);
+      } catch (e) {
+        throw e;
+      }
+      return filename;
+      /*
       fs.writeFile(p, image, (err) => {
         if (err) {
           console.error(err);
           throw err;
         }
-        return filename;
+        console.log('path', p);
+        
+        return p;//filename;
       });
+      */
+    } else {
+
+      // Update S3 credentials.
+      config.update({
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      });
+
+      const s3: S3 = new S3();
+      const params = {
+        Bucket: process.env.AWS_BUCKET,
+        Body: image,
+        Key: filename,
+      };
+
+      return new Promise<string>(((resolve, reject) => {
+        s3.upload(params).promise()
+          .then((data: any) => {
+            resolve(data.Key);
+          })
+          .catch((e) => {
+            reject(e);
+          });
+      }));
     }
-
-    // Update S3 credentials.
-    config.update({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    });
-
-    const s3: S3 = new S3();
-    const params = {
-      Bucket: process.env.AWS_BUCKET,
-      Body: image,
-      Key: filename,
-    };
-
-    return new Promise<string>(((resolve, reject) => {
-      s3.upload(params).promise()
-        .then((data: any) => {
-          resolve(data.Key);
-        })
-        .catch((e) => {
-          reject(e);
-        });
-    }));
   }
 
   /**
@@ -208,32 +219,32 @@ export default class MediaController {
     // if local
     if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
       filenames.forEach(async f => await unlink(path.join(__dirname, `../../../uploads/${f}`)));
+    } else {
+      config.update({
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      });
+
+      const s3: S3 = new S3();
+      const params = {
+        Bucket: process.env.AWS_BUCKET,
+        Delete: {
+          Objects: filenames.map((f) => {
+            return { Key: f };
+          }),
+        },
+      };
+
+      return new Promise<void>(((resolve, reject) => {
+        s3.deleteObjects(params).promise()
+          .then(() => {
+            resolve();
+          })
+          .catch((err: Error) => {
+            reject(err);
+          });
+      }));
     }
-
-    config.update({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    });
-
-    const s3: S3 = new S3();
-    const params = {
-      Bucket: process.env.AWS_BUCKET,
-      Delete: {
-        Objects: filenames.map((f) => {
-          return { Key: f };
-        }),
-      },
-    };
-
-    return new Promise<void>(((resolve, reject) => {
-      s3.deleteObjects(params).promise()
-        .then(() => {
-          resolve();
-        })
-        .catch((err: Error) => {
-          reject(err);
-        });
-    }));
   }
 
   async fetchImage(key: string): Promise<any> {
@@ -247,28 +258,29 @@ export default class MediaController {
           resolve(data);
         });
       });
+    } else {
+
+      // Update S3 credentials.
+      config.update({
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      });
+
+      const s3: S3 = new S3();
+      const params = {
+        Bucket: process.env.AWS_BUCKET,
+        Key: key,
+      };
+
+      return new Promise<any>(((resolve, reject) => {
+        s3.getObject(params).promise()
+          .then(async (data: any) => {
+            resolve(data.Body);
+          }).catch((e) => {
+            reject(e);
+          });
+      }));
     }
-
-    // Update S3 credentials.
-    config.update({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    });
-
-    const s3: S3 = new S3();
-    const params = {
-      Bucket: process.env.AWS_BUCKET,
-      Key: key,
-    };
-
-    return new Promise<any>(((resolve, reject) => {
-      s3.getObject(params).promise()
-        .then(async (data: any) => {
-          resolve(data.Body);
-        }).catch((e) => {
-          reject(e);
-        });
-    }));
   }
 
   /**

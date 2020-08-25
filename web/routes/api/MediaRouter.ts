@@ -84,7 +84,7 @@ export class MediaRouter
     req.setTimeout(1000000, () => {next(new Error("Timeout"))});
 
     const mediaId: any = req.params.id;
-    const rsize: string = req.query.size;
+    const rsize: string = req.query.size as string;
     let size: number;
     const defaultSize: number = 600;
     const maxSize: number = 1024;
@@ -246,7 +246,7 @@ export class MediaRouter
   async getCollectionMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     try {
       const userId: any = res.locals.user.id;
-      const collectionName : string = req.query.collection;
+      const collectionName : string = req.query.collection as string;
       let ga = new GraphAdaptor();
       
       var results = await ga.get_collection_media(userId,collectionName,[],-1,0,1);
@@ -269,8 +269,8 @@ export class MediaRouter
   async getInferredLinkedMedia(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     try {
       const userId: any = res.locals.user.id;
-      const mediaId: string = req.query.mediaId;
-      const numResults: number = req.query.numResults;
+      const mediaId: string = req.query.mediaId as string;
+      const numResults: number = parseInt(req.query.numResults as string) as number;
       let ga = new GraphAdaptor();
 
       var results = await ga.get_related_media_all(mediaId, [], numResults, 0);
@@ -294,8 +294,8 @@ export class MediaRouter
     try {      
       
       const userId: any = res.locals.user.id;
-      let mediaId: string = req.query.mediaId;
-      const drawIfNew: number = req.query.drawIfNew
+      let mediaId: string = req.query.mediaId as string;
+      const drawIfNew: number = parseInt(req.query.drawIfNew as string);
 
       let ga = new GraphAdaptor();
 
@@ -590,6 +590,8 @@ export class MediaRouter
         user._id,
       );
 
+      console.log('imagePath', imagePath);
+
       //Group 'emotions' into various tag groups
       var tags_array : string[] = [];
       var people_array : string[] = [];
@@ -618,14 +620,21 @@ export class MediaRouter
 
      let ga = new GraphAdaptor();
      media = await ga.create_media_object(user._id,"'" + imagePath + "'","'" + mimetype + "'",req.headers['links'],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
+      console.log('media', media);
     } catch (e) {       
+      console.log('what');
       console.error(e);
       e.message = '500';
       return next(e);
     }
 
     try {
-      let data = await mediaController.getMediaFromS3(media.payload, 600);
+      let data;
+      if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
+        data = await mediaController.getMediaFromS3(media.payload, 600);
+      } else {
+        data = await mediaController.fetchImage(media.payload);
+      }
       let dataString = String(data);
       let dataHash = CryptoHelper.hashString(dataString);
       Logger.log(LogType.NEW_MEDIA, {user: user._id, hash: dataHash, media: media.payload})
@@ -650,7 +659,7 @@ export class MediaRouter
   async getTagSuggestions(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
     try {
       const userId: any = res.locals.user.id;
-      const term = req.query.term.toLowerCase();
+      const term = (req.query.term as string).toLowerCase();
 
       let ga = new GraphAdaptor();
 

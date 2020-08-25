@@ -2,18 +2,55 @@
 import orientjs = require("orientjs");
 import * as dotenv from 'dotenv';
 import { rejects } from "assert";
+import * as vertices from '../schemas/orientdb/vertices.json';
+
 dotenv.load();
 
 const dbserver = orientjs({
-    host: 'dig-mysql.ncl.ac.uk',
-    port: 2424
+        host: 'orientdb',//process.env.ORIENTDB_HOST,//'dig-mysql.ncl.ac.uk',
+        port: 2424,
+        useToken: true
     });
 
 const db = dbserver.use({
-    name: process.env.ORIENTDB_DATABASE,
-    username: process.env.ORIENTDB_USER,
-    password: process.env.ORIENTDB_PASSWORD
+        name: process.env.ORIENTDB_DATABASE,
+        username: process.env.ORIENTDB_USER,
+        password: process.env.ORIENTDB_PASSWORD
     });
+
+const createSchemaClasses = async() => {
+    for(const vertexSchema of vertices) {
+        try {
+            const newClass = await db.class.create(vertexSchema.name, 'V');
+            await newClass.property.create(vertexSchema.parameters);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    /*
+   for(const schema of vertices) {
+         console.log(vertices)
+         
+        try {
+        const newClass = await db.class.create(schema.name, 'V');
+        await newClass.property.create(schema.parameters);
+        } catch (e) {
+
+        }
+    }*/
+
+    /*
+    for(const schema of edgesSchemas) {
+        try {
+        const newClass = await db.class.create(schema.name, 'E');
+        const result = await newClass.property.create(schema.parameters);
+        } catch (e) {
+
+        }
+    }
+    */
+
+}
 
  class GraphAPI {
 

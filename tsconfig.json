@@ -4,7 +4,8 @@
         "module": "commonjs",
         "outDir": "/app/dist",
         "lib": ["ES2015", "dom"],
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "resolveJsonModule": true,
     },
     "compileOnSave": true,
     "include": [

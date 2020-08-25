@@ -1,0 +1,6 @@
+{
+    "name": "account",
+    "parameters": [
+        { "name": "uuid", "type": "STRING" }
+    ]
+}

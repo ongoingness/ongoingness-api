@@ -1,0 +1,16 @@
+[
+    {
+        "name": "account",
+        "parameters": [
+            { "name": "uuid", "type": "STRING" }
+        ]
+    },
+    {
+        "name": "collection",
+        "parameters": [
+            { "name": "name", "type": "STRING"},
+            { "name": "created_at", "type": "DATETIME", "defaultValue": "sysdate()" }
+        ]
+    }
+
+]

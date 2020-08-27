@@ -107,11 +107,15 @@ export class LogRouter extends BaseRouter {
       user = await userRepository.get(res.locals.user.id);
     
 
-      console.log('logs', req.body.logs, req.body.logs.length);
+      //console.log('logs', req.body.logs, req.body.logs.length);
 
       var logs = req.body.logs;//JSON.parse(req.body.logs);
 
       for(var i = 0; i < logs.length; i++) {
+
+        console.log(i, logs[i]);
+
+        if(logs[i] != undefined && logs[i].timestamp != undefined)
           var data = {} as any
           data['level'] = logs[i].level
           data['code'] = logs[i].code

@@ -128,7 +128,6 @@ export default class MediaController {
       });
       */
     } else {
-
       // Update S3 credentials.
       config.update({
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,

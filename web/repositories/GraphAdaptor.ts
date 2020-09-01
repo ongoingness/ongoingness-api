@@ -92,6 +92,12 @@ export class GraphAdaptor {
         /*
         * Loop through linked_media and create edges
         */
+        /* TODO NOT WORKING, NOT SURE WHY - NOT IN USE SO DISABLED FOR NOW
+        console.log('linked_media', linked_media, Object.getOwnPropertyNames(linked_media));
+
+        for(let ll of linked_media)
+          console.log(ll, linked_media[ll]);
+
         if(linked_media !== '')
         {
           var linked_media_array : Array<any> = linked_media.split(",");
@@ -103,6 +109,7 @@ export class GraphAdaptor {
             });
           }
         }
+        */
 
          /*
          * Loop through each place that has been passed to the function

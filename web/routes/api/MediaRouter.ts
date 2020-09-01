@@ -590,8 +590,6 @@ export class MediaRouter
         user._id,
       );
 
-      console.log('imagePath', imagePath);
-
       //Group 'emotions' into various tag groups
       var tags_array : string[] = [];
       var people_array : string[] = [];
@@ -620,9 +618,7 @@ export class MediaRouter
 
      let ga = new GraphAdaptor();
      media = await ga.create_media_object(user._id,"'" + imagePath + "'","'" + mimetype + "'",req.headers['links'],tags_array,places_array,people_array,time_array,req.headers['locket'] as string);
-      console.log('media', media);
     } catch (e) {       
-      console.log('what');
       console.error(e);
       e.message = '500';
       return next(e);
@@ -631,9 +627,9 @@ export class MediaRouter
     try {
       let data;
       if (process.env.LOCAL === 'true' || process.env.TEST === 'true') {
-        data = await mediaController.getMediaFromS3(media.payload, 600);
-      } else {
         data = await mediaController.fetchImage(media.payload);
+      } else {
+        data = await mediaController.getMediaFromS3(media.payload, 600);
       }
       let dataString = String(data);
       let dataHash = CryptoHelper.hashString(dataString);
@@ -641,7 +637,6 @@ export class MediaRouter
     } catch (e) {
       console.log(e)
     }
-
     return res.json(new Reply(200, 'success', false, media));
   }
 

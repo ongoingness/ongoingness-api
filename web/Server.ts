@@ -46,6 +46,17 @@ export class App {
     this.setAppSecret();
     this.addRoutes(this.express);
     this.setErrorHandler();
+
+
+    this.express.use(express.static(__dirname + '/webapp/'));
+
+    // Handle MPA
+    this.express.get('/webapp/anew/', (req, res) => res.sendFile(__dirname + '/webapp/anew.html'));
+    this.express.get('/webapp/ivvor/', (req, res) => res.sendFile(__dirname + '/webapp/ivvor.html'));
+    this.express.get('/webapp/locket/', (req, res) => res.sendFile(__dirname + '/webapp/locket.html'));
+    this.express.get('/webapp/logs/', (req, res) => res.sendFile(__dirname + '/webapp/logs.html'));
+    this.express.get('/webapp/refind/', (req, res) => res.sendFile(__dirname + '/webapp/refind.html'));
+    
   }
 
   /**

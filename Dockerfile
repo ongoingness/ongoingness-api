@@ -47,6 +47,9 @@ RUN apidoc -i /app/web -o /app/static
 
 RUN npm run build
 
+COPY webapp /app/dist/web/webapp
+
+
 # Expose port 80
 EXPOSE 80
 

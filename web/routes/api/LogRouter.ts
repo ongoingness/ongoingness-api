@@ -165,14 +165,14 @@ export class LogRouter extends BaseRouter {
 
   }
 
-  /*
+  
   async search(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
 
     let currentUser = await userRepository.get(res.locals.user.id);
     if(currentUser.role != UserRole.ADMIN)
       return res.json(new Reply(404, 'success', false, []));
 
-    var codes = req.query.codes;
+    var stringCodes = req.query.codes as String;
     var user = req.query.user;
     const firstPage = Number(req.query.firstPage);
     const pageAmount = Number(req.query.pageAmount);
@@ -180,9 +180,9 @@ export class LogRouter extends BaseRouter {
     const from = req.query.from;
     const to = req.query.to;
   
-    codes = codes.split(',');
+    var codes = stringCodes.split(',');
 
-    console.log(codes + user)
+    console.log(stringCodes, codes, user)
 
     console.log(`fistPage: ${firstPage} pageAmount: ${pageAmount} pageSize: ${pageSize}`);
 
@@ -190,7 +190,7 @@ export class LogRouter extends BaseRouter {
 
     var searchParameters : any = {user: user};
 
-    if(from != 0 && to != 0) {
+    if(Number(from) != 0 && Number(to) != 0) {
       var fromDate = new Date(Number(from)).toISOString();
       var toDate = new Date(Number(to)).toISOString();
       searchParameters['timestamp'] = {$gt: fromDate, $lt: toDate }
@@ -256,7 +256,7 @@ export class LogRouter extends BaseRouter {
     console.log(payload);
 
     return res.json(new Reply(200, 'success', false, payload));
-  }*/
+  }
 
   async numberOfSessions(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
 
@@ -368,7 +368,7 @@ export class LogRouter extends BaseRouter {
     this.addRoute('/', HttpMethods.GET, this.index);
     this.addRoute('/', HttpMethods.POST, this.store);
     this.addRoute('/usernlogs', HttpMethods.GET, this.usersLogsAmount);
-    //this.addRoute('/search', HttpMethods.GET, this.search);
+    this.addRoute('/search', HttpMethods.GET, this.search);
     this.addRoute('/numberOfSessions', HttpMethods.GET, this.numberOfSessions);
   }
 

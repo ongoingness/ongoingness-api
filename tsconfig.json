@@ -3,7 +3,7 @@
         "target": "es6",
         "module": "commonjs",
         "outDir": "/app/dist",
-        "lib": ["ES2015", "dom"],
+        "lib": ["ES2015", "dom", "es2017"],
         "noImplicitAny": true,
         "resolveJsonModule": true,
     },

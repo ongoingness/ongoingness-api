@@ -36,7 +36,6 @@ Or the image can be built using `docker build .`, or can be pulled from `openlab
 
 ## Route Structure
 # /
-Full docs for routes are found here.
 
 ## Auth
 | Route | Method | Description |
@@ -148,7 +147,7 @@ extended to use the new interface.
     ```
     docker run -d --name orientdb -p 2480:2480 -v graph_data:/orientdb/config -v graph_data:/orientdb/databases -v graph_data:/orientdb/backup -e ORIENTDB_ROOT_PASSWORD=... orientdb
     ```
-8. Replace the 'server.sh' in the container with the one present in this repository. The configurations in this file allows OrientDB to run in a memory restrict enviroment. [More info](https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-orientdb-on-ubuntu-16-04#step-2-%E2%80%94-configuring-orientdb-to-use-less-ram-optional).
+8. Replace the 'server.sh' in the container with the one present in this repository. The configurations in this file allow OrientDB to run in a memory restricted enviroment. [More info](https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-orientdb-on-ubuntu-16-04#step-2-%E2%80%94-configuring-orientdb-to-use-less-ram-optional).
     ```
     docker cp server.sh orientdb:/orientdb/bin/server.sh
     ```
